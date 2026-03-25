@@ -1,0 +1,16 @@
+# backend/config/settings.py
+
+MAX_FILE_SIZE_MB = 50
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+
+SUPPORTED_HEADERS = ["YouTube"]
+
+SHORTS_TITLE_KEYWORDS = ["#shorts", "#short"]
+SHORTS_URL_PATTERN = "/shorts/"
+
+WATCH_TITLE_PREFIX = "Watched "
+SEARCH_TITLE_PREFIX = "Searched for "
+
+DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000"
+
+SUPABASE_STORAGE_BUCKET = "takeout-backups"
