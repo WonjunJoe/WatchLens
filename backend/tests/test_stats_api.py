@@ -66,3 +66,44 @@ def test_daily(mock_get_sb):
     assert len(data) == 2
     assert data[0]["date"] == "2026-01-10"
     assert data[0]["count"] == 2
+
+
+@patch("app.routers.stats.get_supabase_client")
+def test_top_channels(mock_get_sb):
+    mock_get_sb.return_value = _mock_supabase_select(_mock_watch_records())
+    res = client.get("/api/stats/top-channels")
+    assert res.status_code == 200
+    data = res.json()
+    assert data[0]["channel_name"] == "Ch A"
+    assert data[0]["count"] == 3
+    assert data[1]["channel_name"] == "Ch B"
+    assert data[1]["count"] == 1
+
+
+@patch("app.routers.stats.get_supabase_client")
+def test_shorts(mock_get_sb):
+    mock_get_sb.return_value = _mock_supabase_select(_mock_watch_records())
+    res = client.get("/api/stats/shorts")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["shorts_count"] == 2
+    assert data["regular_count"] == 2
+    assert data["shorts_ratio"] == 0.5
+
+
+def _mock_search_records():
+    return [
+        {"query": "python tutorial", "searched_at": "2026-01-10T10:00:00Z"},
+        {"query": "python tutorial", "searched_at": "2026-01-10T11:00:00Z"},
+        {"query": "react hooks", "searched_at": "2026-01-11T09:00:00Z"},
+    ]
+
+
+@patch("app.routers.stats.get_supabase_client")
+def test_search_keywords(mock_get_sb):
+    mock_get_sb.return_value = _mock_supabase_select(_mock_search_records())
+    res = client.get("/api/stats/search-keywords")
+    assert res.status_code == 200
+    data = res.json()
+    assert data[0]["keyword"] == "python tutorial"
+    assert data[0]["count"] == 2

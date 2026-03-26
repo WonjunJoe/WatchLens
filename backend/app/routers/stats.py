@@ -2,7 +2,7 @@ from collections import Counter
 from datetime import datetime
 from fastapi import APIRouter, Query
 from app.db.supabase import get_supabase_client
-from app.models.schemas import SummaryStats, HourlyCount, DailyCount
+from app.models.schemas import SummaryStats, HourlyCount, DailyCount, ChannelCount, ShortsStats, CategoryCount, KeywordCount
 from config.settings import DEFAULT_USER_ID
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
@@ -58,4 +58,88 @@ def get_daily(user_id: str = Query(default=DEFAULT_USER_ID)):
     return sorted(
         [DailyCount(date=d, count=c) for d, c in day_counts.items()],
         key=lambda x: x.date,
+    )
+
+
+@router.get("/top-channels", response_model=list[ChannelCount])
+def get_top_channels(user_id: str = Query(default=DEFAULT_USER_ID)):
+    records = _fetch_watch_records(user_id)
+    channel_counts = Counter(r["channel_name"] for r in records if r["channel_name"])
+
+    return sorted(
+        [ChannelCount(channel_name=ch, count=c) for ch, c in channel_counts.most_common(20)],
+        key=lambda x: -x.count,
+    )
+
+
+@router.get("/shorts", response_model=ShortsStats)
+def get_shorts(user_id: str = Query(default=DEFAULT_USER_ID)):
+    records = _fetch_watch_records(user_id)
+    shorts = sum(1 for r in records if r["is_shorts"])
+    regular = len(records) - shorts
+    ratio = round(shorts / len(records), 2) if records else 0
+
+    # Weekly trend
+    week_shorts = Counter()
+    week_total = Counter()
+    for r in records:
+        date = r["watched_at"][:10]
+        dt = datetime.fromisoformat(date)
+        week_key = dt.strftime("%Y-W%W")
+        week_total[week_key] += 1
+        if r["is_shorts"]:
+            week_shorts[week_key] += 1
+
+    weekly_trend = sorted([
+        {"week": w, "shorts_ratio": round(week_shorts[w] / week_total[w], 2)}
+        for w in week_total
+    ], key=lambda x: x["week"])
+
+    return ShortsStats(
+        shorts_count=shorts,
+        regular_count=regular,
+        shorts_ratio=ratio,
+        weekly_trend=weekly_trend,
+    )
+
+
+@router.get("/categories", response_model=list[CategoryCount])
+def get_categories(user_id: str = Query(default=DEFAULT_USER_ID)):
+    sb = get_supabase_client()
+
+    watch_result = sb.table("watch_records").select("video_id").eq(
+        "user_id", user_id
+    ).limit(QUERY_LIMIT).execute()
+    video_ids = [r["video_id"] for r in watch_result.data if r["video_id"]]
+
+    if not video_ids:
+        return []
+
+    meta_result = sb.table("video_metadata").select(
+        "video_id, category_name"
+    ).in_("video_id", video_ids).execute()
+    id_to_category = {r["video_id"]: r["category_name"] for r in meta_result.data}
+
+    category_counts = Counter(
+        id_to_category.get(vid, "Unknown") for vid in video_ids
+    )
+
+    return sorted(
+        [CategoryCount(category_name=cat, count=c) for cat, c in category_counts.most_common()],
+        key=lambda x: -x.count,
+    )
+
+
+@router.get("/search-keywords", response_model=list[KeywordCount])
+def get_search_keywords(user_id: str = Query(default=DEFAULT_USER_ID)):
+    sb = get_supabase_client()
+    result = sb.table("search_records").select("query").eq(
+        "user_id", user_id
+    ).limit(QUERY_LIMIT).execute()
+
+    query_counts = Counter(r["query"] for r in result.data)
+
+    return sorted(
+        [KeywordCount(keyword=q, count=c) for q, c in query_counts.most_common(30)],
+        key=lambda x: -x.count,
     )
