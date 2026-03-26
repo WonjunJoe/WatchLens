@@ -5,6 +5,7 @@ from app.parsers.watch_history import parse_watch_history
 from app.parsers.search_history import parse_search_history
 from app.models.schemas import WatchUploadResponse, SearchUploadResponse
 from app.db.supabase import get_supabase_client
+from app.services.youtube import fetch_and_store_metadata
 from config.settings import MAX_FILE_SIZE_BYTES, DEFAULT_USER_ID, SUPABASE_STORAGE_BUCKET
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
@@ -52,6 +53,10 @@ async def upload_watch_history(file: UploadFile = File(...)):
     sb.table("watch_records").delete().eq("user_id", DEFAULT_USER_ID).execute()
     if result.records:
         _batch_insert(sb, "watch_records", result.records)
+
+    # Fetch YouTube metadata and update is_shorts
+    video_ids = [r["video_id"] for r in result.records if r.get("video_id")]
+    fetch_and_store_metadata(video_ids)
 
     timestamp = _upload_timestamp()
     stored = _store_original(sb, file_bytes, "watch-history.json", timestamp)
