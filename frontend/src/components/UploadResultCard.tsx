@@ -3,7 +3,6 @@ interface WatchResult {
   total: number;
   skipped: number;
   period: string;
-  original_file_stored: boolean;
 }
 
 interface SearchResult {
@@ -11,7 +10,6 @@ interface SearchResult {
   total: number;
   skipped: number;
   period: string;
-  original_file_stored: boolean;
 }
 
 type UploadResult = WatchResult | SearchResult;
@@ -24,9 +22,8 @@ export function UploadResultCard({ result }: { result: UploadResult }) {
       </h3>
       <div className="space-y-2 text-sm">
         <p>저장된 레코드: <span className="font-bold">{result.total.toLocaleString()}건</span></p>
-        <p>스킵된 레코드: <span className="font-bold">{result.skipped}건</span></p>
+        <p>스킵된 레코드: <span className="font-bold">{result.skipped.toLocaleString()}건</span></p>
         <p>기간: <span className="font-bold">{result.period}</span></p>
-        <p>원본 백업: {result.original_file_stored ? "O" : "X"}</p>
       </div>
     </div>
   );

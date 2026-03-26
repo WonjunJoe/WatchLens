@@ -38,11 +38,16 @@ class ChannelCount(BaseModel):
     count: int
 
 
+class TopChannelsSplit(BaseModel):
+    longform: list[ChannelCount]
+    shorts: list[ChannelCount]
+
+
 class ShortsStats(BaseModel):
     shorts_count: int
     regular_count: int
     shorts_ratio: float
-    weekly_trend: list[dict]
+    daily_trend: list[dict]
 
 
 class CategoryCount(BaseModel):
@@ -50,6 +55,20 @@ class CategoryCount(BaseModel):
     count: int
 
 
+class CategorySplit(BaseModel):
+    longform: list[CategoryCount]
+    shorts: list[CategoryCount]
+
+
 class KeywordCount(BaseModel):
     keyword: str
     count: int
+
+
+class WatchTimeStats(BaseModel):
+    total_min_hours: float
+    total_max_hours: float
+    daily_min_hours: float
+    daily_max_hours: float
+    gap_based_count: int
+    estimated_count: int

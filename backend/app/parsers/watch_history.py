@@ -29,7 +29,6 @@ def parse_watch_history(data: list[dict]) -> WatchParseResult:
     records = []
     skipped = 0
     timestamps = []
-
     for entry in data:
         header = entry.get("header", "")
         if header not in SUPPORTED_HEADERS:

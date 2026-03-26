@@ -7,21 +7,30 @@ interface FileUploaderProps {
   onResult: (data: any) => void;
 }
 
+interface Progress {
+  step: string;
+  percent: number;
+}
+
 export function FileUploader({ label, accept, endpoint, onResult }: FileUploaderProps) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
 
   const MAX_SIZE = 50 * 1024 * 1024;
 
   const uploadFile = useCallback(async (file: File) => {
     setError(null);
+    setProgress(null);
     if (file.size > MAX_SIZE) {
       setError("파일 크기가 50MB를 초과합니다");
       return;
     }
 
     setUploading(true);
+    setProgress({ step: "파일 업로드 중...", percent: 5 });
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -36,8 +45,36 @@ export function FileUploader({ label, accept, endpoint, onResult }: FileUploader
         throw new Error(body?.detail || `업로드 실패 (${res.status})`);
       }
 
-      const data = await res.json();
-      onResult(data);
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error("스트림을 읽을 수 없습니다");
+
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const block of lines) {
+          const eventMatch = block.match(/^event: (.+)$/m);
+          const dataMatch = block.match(/^data: (.+)$/m);
+          if (!eventMatch || !dataMatch) continue;
+
+          const event = eventMatch[1];
+          const data = JSON.parse(dataMatch[1]);
+
+          if (event === "progress") {
+            setProgress({ step: data.step, percent: data.percent });
+          } else if (event === "done") {
+            onResult(data);
+          } else if (event === "error") {
+            throw new Error(data.detail);
+          }
+        }
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -79,7 +116,17 @@ export function FileUploader({ label, accept, endpoint, onResult }: FileUploader
           disabled={uploading}
         />
       </label>
-      {uploading && <p className="text-blue-600 mt-2">업로드 중...</p>}
+      {uploading && progress && (
+        <div className="mt-3">
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-500"
+              style={{ width: `${progress.percent}%` }}
+            />
+          </div>
+          <p className="text-blue-600 text-sm">{progress.step}</p>
+        </div>
+      )}
       {error && <p className="text-red-600 mt-2">{error}</p>}
     </div>
   );

@@ -1,4 +1,12 @@
 import { Link } from "react-router-dom";
+import { SummaryCards } from "../components/SummaryCards";
+import { WatchTime } from "../components/WatchTime";
+import { HourlyChart } from "../components/HourlyChart";
+import { DailyChart } from "../components/DailyChart";
+import { TopChannels } from "../components/TopChannels";
+import { ShortsStats } from "../components/ShortsStats";
+import { Categories } from "../components/Categories";
+import { SearchKeywords } from "../components/SearchKeywords";
 
 export function DashboardPage() {
   return (
@@ -10,8 +18,26 @@ export function DashboardPage() {
         </Link>
       </div>
       <div className="space-y-8">
-        {/* Chart components will be added in Tasks 8 and 9 */}
-        <p className="text-gray-400">Dashboard sections coming soon...</p>
+        <SummaryCards />
+        <WatchTime />
+        <HourlyChart />
+        <DailyChart />
+        <TopChannels />
+        <ShortsStats />
+        <Categories />
+
+        <hr className="border-gray-300" />
+
+        <SearchKeywords />
+      </div>
+
+      <div className="mt-12 text-center">
+        <Link
+          to="/"
+          className="inline-block px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+        >
+          다시 업로드하기
+        </Link>
       </div>
     </div>
   );

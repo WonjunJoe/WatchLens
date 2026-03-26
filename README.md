@@ -53,13 +53,22 @@ npm run dev
 
 ## TODO
 
-### Step 1 검증 (데이터 확인)
-- [ ] Supabase Table Editor에서 watch_records 데이터 샘플 확인
-- [ ] is_shorts=true인 레코드가 실제 Sh지 orts인확인
-- [ ] 스킵된 167건이 의도한 것인지 (삭제된 영상, 비-YouTube 등)
-- [ ] 프론트엔드 업로드 UI 직접 테스트 (localhost:5173)
+### Step 1 ✅ 데이터 업로드/파싱
+- [x] Supabase 테이블 + 파서 구현
+- [x] 업로드 API + 프론트엔드 UI
+- [x] E2E 테스트 통과 (시청 10,533건 / 검색 3,228건)
 
-### Step 2 (대시보드/분석)
-- [ ] brainstorming: 어떤 차트/분석을 넣을지 정하기
-- [ ] 설계 스펙 작성
-- [ ] 구현
+### Step 2 🔧 대시보드/분석 ← 현재
+- [x] brainstorming: 분석 항목 + 아키텍처 결정 → [설계 스펙](docs/superpowers/specs/2026-03-26-dashboard-analytics-design.md)
+- [ ] Shorts ≤60초 가설 검증
+- [ ] 리팩토링: `is_shorts` 판별 YouTube API 전환, `source` 필드 제거
+- [ ] YouTube Data API 연동 (메타데이터 + duration, 업로드 시 배치)
+- [ ] 분석 API 7개 구현
+- [ ] 프론트엔드 대시보드 (Recharts, 싱글 페이지)
+
+### Step 3 소셜 비교
+- [ ] 친구와 시청 습관/취향 비교 기능
+
+### Step 4 Polish & Launch
+- [ ] 대시보드 디자인 리터치
+- [ ] 배포
