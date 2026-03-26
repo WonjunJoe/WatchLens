@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { FileUploader } from "../components/FileUploader";
 import { UploadResultCard, type UploadResult } from "../components/UploadResultCard";
 
@@ -38,6 +39,12 @@ export function UploadPage() {
           </div>
         </div>
       )}
+
+      <div className="mt-6 text-center">
+        <Link to="/dashboard" className="text-blue-600 hover:underline font-medium">
+          대시보드 보기 →
+        </Link>
+      </div>
     </div>
   );
 }
