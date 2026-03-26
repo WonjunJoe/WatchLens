@@ -1,4 +1,4 @@
-from app.parsers.watch_history import parse_watch_history
+from app.parsers.watch_history import parse_watch_history, extract_video_id
 
 def test_parse_normal_record():
     raw = [{
@@ -18,34 +18,6 @@ def test_parse_normal_record():
     assert rec["video_id"] == "ABC123"
     assert rec["video_title"] == "테스트 영상 제목"
     assert rec["channel_name"] == "테스트채널"
-    assert rec["is_shorts"] is False
-
-def test_parse_shorts_by_title():
-    raw = [{
-        "header": "YouTube",
-        "title": "Watched 재밌는 영상 #shorts",
-        "titleUrl": "https://www.youtube.com/watch?v\u003dDEF456",
-        "subtitles": [{"name": "채널", "url": "https://www.youtube.com/channel/UC456"}],
-        "time": "2026-01-15T15:00:00.000Z",
-        "products": ["YouTube"],
-        "activityControls": ["YouTube watch history"]
-    }]
-    result = parse_watch_history(raw)
-    assert result.records[0]["is_shorts"] is True
-
-def test_parse_shorts_by_url():
-    raw = [{
-        "header": "YouTube",
-        "title": "Watched 쇼츠 영상",
-        "titleUrl": "https://www.youtube.com/shorts/GHI789",
-        "subtitles": [{"name": "채널", "url": "https://www.youtube.com/channel/UC789"}],
-        "time": "2026-01-15T16:00:00.000Z",
-        "products": ["YouTube"],
-        "activityControls": ["YouTube watch history"]
-    }]
-    result = parse_watch_history(raw)
-    assert result.records[0]["is_shorts"] is True
-    assert result.records[0]["video_id"] == "GHI789"
 
 def test_skip_no_title_url():
     raw = [{
@@ -110,31 +82,18 @@ def test_video_id_from_youtu_be():
     result = parse_watch_history(raw)
     assert result.records[0]["video_id"] == "SHORT123"
 
-def test_parse_shorts_by_title_singular():
+def test_video_id_from_shorts_url():
     raw = [{
         "header": "YouTube",
-        "title": "Watched 재밌는 영상 #short",
-        "titleUrl": "https://www.youtube.com/watch?v\u003dSHORT1",
-        "subtitles": [{"name": "채널", "url": "https://www.youtube.com/channel/UC"}],
-        "time": "2026-01-15T15:00:00.000Z",
+        "title": "Watched 쇼츠 영상",
+        "titleUrl": "https://www.youtube.com/shorts/GHI789",
+        "subtitles": [{"name": "채널", "url": "https://www.youtube.com/channel/UC789"}],
+        "time": "2026-01-15T16:00:00.000Z",
         "products": ["YouTube"],
         "activityControls": ["YouTube watch history"]
     }]
     result = parse_watch_history(raw)
-    assert result.records[0]["is_shorts"] is True
-
-def test_parse_shorts_case_insensitive():
-    raw = [{
-        "header": "YouTube",
-        "title": "Watched 재밌는 영상 #SHORTS",
-        "titleUrl": "https://www.youtube.com/watch?v\u003dSHORT2",
-        "subtitles": [{"name": "채널", "url": "https://www.youtube.com/channel/UC"}],
-        "time": "2026-01-15T15:00:00.000Z",
-        "products": ["YouTube"],
-        "activityControls": ["YouTube watch history"]
-    }]
-    result = parse_watch_history(raw)
-    assert result.records[0]["is_shorts"] is True
+    assert result.records[0]["video_id"] == "GHI789"
 
 def test_video_id_with_extra_params():
     raw = [{

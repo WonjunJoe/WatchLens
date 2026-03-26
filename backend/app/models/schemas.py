@@ -4,7 +4,6 @@ from pydantic import BaseModel
 class WatchUploadResponse(BaseModel):
     total: int
     skipped: int
-    shorts: int
     period: str
     original_file_stored: bool
 

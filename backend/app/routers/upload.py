@@ -59,7 +59,6 @@ async def upload_watch_history(file: UploadFile = File(...)):
     return WatchUploadResponse(
         total=result.total,
         skipped=result.skipped,
-        shorts=result.shorts,
         period=result.period,
         original_file_stored=stored,
     )

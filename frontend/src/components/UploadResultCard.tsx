@@ -2,7 +2,6 @@ interface WatchResult {
   type: "watch";
   total: number;
   skipped: number;
-  shorts: number;
   period: string;
   original_file_stored: boolean;
 }
@@ -26,9 +25,6 @@ export function UploadResultCard({ result }: { result: UploadResult }) {
       <div className="space-y-2 text-sm">
         <p>저장된 레코드: <span className="font-bold">{result.total.toLocaleString()}건</span></p>
         <p>스킵된 레코드: <span className="font-bold">{result.skipped}건</span></p>
-        {result.type === "watch" && (
-          <p>Shorts 영상: <span className="font-bold">{result.shorts}건</span></p>
-        )}
         <p>기간: <span className="font-bold">{result.period}</span></p>
         <p>원본 백업: {result.original_file_stored ? "O" : "X"}</p>
       </div>

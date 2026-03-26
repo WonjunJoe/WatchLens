@@ -36,7 +36,6 @@ def parse_search_history(data: list[dict]) -> SearchParseResult:
             "query": query,
             "search_url": search_url,
             "searched_at": time_str,
-            "source": "takeout",
         })
 
     period = ""
