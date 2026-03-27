@@ -1,15 +1,38 @@
 export const PASTEL_COLORS = [
-  "#C9BDE0", "#B5DDD1", "#B8D4E3", "#F2C6C2",
-  "#F5D5C0", "#A8A0C4", "#95C5B6", "#9ABDD1",
+  "var(--accent-lavender)",
+  "var(--accent-mint)",
+  "var(--accent-sky)",
+  "var(--accent-rose)",
+  "var(--accent-peach)",
 ];
 
-export const TOOLTIP_STYLE = {
-  borderRadius: 16,
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-  fontSize: 12,
+export const CHART_GRADIENTS = {
+  lavender: ["rgba(190, 176, 217, 0.5)", "rgba(190, 176, 217, 0)"],
+  mint: ["rgba(163, 212, 198, 0.5)", "rgba(163, 212, 198, 0)"],
+  sky: ["rgba(165, 200, 220, 0.5)", "rgba(165, 200, 220, 0)"],
+  rose: ["rgba(235, 179, 174, 0.5)", "rgba(235, 179, 174, 0)"],
+  peach: ["rgba(240, 200, 172, 0.5)", "rgba(240, 200, 172, 0)"],
 };
 
-export const GRID_STROKE = "rgba(0,0,0,0.04)";
+export const TOOLTIP_STYLE = {
+  backgroundColor: "var(--surface-glass)",
+  backdropFilter: "blur(12px)",
+  borderRadius: "20px",
+  border: "1px solid var(--border-glass)",
+  boxShadow: "var(--shadow-glass)",
+  fontSize: "13px",
+  padding: "12px 16px",
+  color: "var(--text-primary)",
+  fontWeight: "bold",
+};
 
-export const AXIS_TICK = { fontSize: 11, fill: "#9C9C98" };
+export const GRID_STROKE = "var(--border-subtle)";
+
+export const AXIS_TICK = { 
+  fontSize: 11, 
+  fill: "var(--text-tertiary)", 
+  fontWeight: "bold",
+  letterSpacing: "0.05em",
+};
+
+export const AREA_FILL_OPACITY = 0.4;

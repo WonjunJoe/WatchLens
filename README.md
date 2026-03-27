@@ -163,6 +163,11 @@ WatchLens/
   - 접이식 사이드바 + 중첩 라우팅
   - 21개 컴포넌트 파스텔 테마 적용
   - 미사용 컴포넌트 정리 (BingeSessions, DiversityIndex)
+- **[Step 2-1] 2026 High-End Aesthetic Transformation 시작**
+  - Blurmorphism (Glassmorphism 2.0) & Optical Depth 반영
+  - Tactile & Organic UI (Claymorphism) 적용
+  - Framer Motion 기반 Cinematic Motion 도입
+  - Bento Grid 2.0 레이아웃 리팩토링 및 Dual Theme(Light/Dark) 지원
 
 ---
 
@@ -179,7 +184,17 @@ WatchLens/
 - [x] 기간 선택 UI (최근 30일 / 전체 / 커스텀)
 - [x] 도파민 지수, 시청 유형, 캘린더 히트맵, 요일별 차트
 - [x] 프론트엔드 디자인 오버홀 (파스텔 시스템)
-- [ ] UI 디테일 보완 (진행 중)
+
+### Step 2-1 — 2026 High-End Aesthetic
+- [x] Blurmorphism & Optical Depth (Glassmorphism 2.0)
+- [x] Tactile & Organic UI (Claymorphism & 2rem+ curves)
+- [x] Framer Motion (Staggered Layout, Magnetic Effect, Glow)
+- [x] Bento Grid 2.0 Layout (Top 3: 시청 시간, 최애 채널, 도파민 지수)
+- [x] Dual Theme (Light & Dark) 및 Ambient Mesh Gradient
+- [x] Share Card (9:16 Kinetic Typography View)
+- [x] **UI Stability Hotfixes:**
+  - `recharts` / `lucide-react` / `framer-motion` 라이브러리 임포트 최적화
+  - 신규 디자인 시스템에 따른 `UploadPage` 및 `Layout` 안정성 강화
 
 ### Step 3 — 소셜 비교
 - [ ] 친구와 시청 습관/취향 비교 기능

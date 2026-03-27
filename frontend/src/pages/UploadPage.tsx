@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { FileUploader } from "../components/FileUploader";
 import { UploadResultCard, type UploadResult } from "../components/UploadResultCard";
 import { PeriodSelector } from "../components/PeriodSelector";
-import { Database } from "lucide-react";
+import { Database, Sparkles, UploadCloud } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API_BASE = "http://localhost:8000";
 
@@ -48,39 +49,55 @@ export function UploadPage() {
   };
 
   return (
-    <div className="px-8 py-10">
-      {/* Hero */}
-      <section className="max-w-2xl mx-auto text-center mb-12">
-        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[var(--lavender-light)] text-[var(--lavender-text)] text-[12px] font-medium rounded-full mb-5">
-          YouTube 시청 습관 분석
-        </div>
-        <h1 className="text-[20px] font-medium text-[var(--text-primary)] leading-[1.3] mb-3">
-          당신의 시청 패턴을 한눈에 분석하세요
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-4xl mx-auto py-12 px-6"
+    >
+      {/* Hero Section */}
+      <section className="text-center mb-16">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 bg-[var(--accent-lavender)]/10 text-[var(--accent-lavender)] text-[12px] font-black uppercase tracking-widest rounded-full mb-6 border border-[var(--accent-lavender)]/20"
+        >
+          <Sparkles size={14} />
+          2026 High-End Analysis
+        </motion.div>
+        
+        <h1 className="text-[48px] font-black text-[var(--text-primary)] tracking-tighter leading-none mb-6">
+          Unveil Your <span className="text-[var(--accent-lavender)]">Identity.</span>
         </h1>
-        <p className="text-[14px] text-[var(--text-secondary)] leading-[1.7] max-w-lg mx-auto mb-5">
-          Google Takeout 데이터를 업로드하면 시청 시간, Shorts 중독도, 도파민 지수 등 플랫폼이 알려주지 않는 인사이트를 제공합니다.
+        
+        <p className="text-[16px] text-[var(--text-secondary)] font-medium max-w-xl mx-auto leading-relaxed mb-10">
+          Google Takeout 데이터를 업로드하여 당신만의 시청 정체성을 발견하세요.<br/>
+          도파민 지수, 시청 유형, 그리고 숨겨진 패턴이 공개됩니다.
         </p>
+
         <button
           onClick={handleLoadExisting}
-          className="inline-flex items-center gap-1.5 text-[12px] text-[var(--lavender-text)] hover:text-[var(--text-primary)] transition-all duration-200"
+          className="group inline-flex items-center gap-2.5 px-6 py-3 bg-[var(--text-primary)]/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/10 transition-all duration-300 rounded-2xl text-[14px] font-bold"
         >
-          <Database size={14} />
-          기존 데이터로 분석하기
+          <Database size={16} className="group-hover:rotate-12 transition-transform" />
+          기존 데이터로 바로 분석하기
         </button>
       </section>
 
-      {/* Upload Cards */}
-      <section className="max-w-2xl mx-auto mb-8">
-        <div className="grid gap-5 md:grid-cols-2">
+      {/* Upload Grid */}
+      <section className="grid gap-8 md:grid-cols-2 mb-12">
+        <div className="clay-card p-2">
           <FileUploader
-            label="시청 기록"
+            label="Watch History"
             accept=".json"
             endpoint="/api/upload/watch-history"
             onResult={(data) => setWatchResult({ type: "watch", ...data })}
             subtitle="watch-history.json"
           />
+        </div>
+        <div className="clay-card p-2">
           <FileUploader
-            label="검색 기록"
+            label="Search History"
             accept=".json"
             endpoint="/api/upload/search-history"
             onResult={(data) => setSearchResult({ type: "search", ...data })}
@@ -89,30 +106,50 @@ export function UploadPage() {
         </div>
       </section>
 
-      {/* Results */}
+      {/* Results Section */}
       {(watchResult || searchResult) && (
-        <section className="max-w-2xl mx-auto mb-8">
-          <div className="grid gap-4 md:grid-cols-2">
-            {watchResult && <div className="order-1"><UploadResultCard result={watchResult} /></div>}
-            {searchResult && <div className="order-2"><UploadResultCard result={searchResult} /></div>}
-          </div>
-        </section>
+        <motion.section 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="grid gap-6 md:grid-cols-2 mb-12"
+        >
+          {watchResult && <UploadResultCard result={watchResult} />}
+          {searchResult && <UploadResultCard result={searchResult} />}
+        </motion.section>
       )}
 
-      {loadingPeriod && (
-        <p className="text-center text-[var(--text-tertiary)] text-[12px] py-8">데이터 기간 확인 중...</p>
-      )}
+      {/* Progress / Period Selector */}
+      <AnimatePresence>
+        {loadingPeriod && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center py-12"
+          >
+            <div className="w-10 h-10 border-4 border-[var(--accent-lavender)]/20 border-t-[var(--accent-lavender)] rounded-full animate-spin mb-4" />
+            <p className="text-[var(--text-tertiary)] text-[13px] font-black uppercase tracking-widest">Scanning History...</p>
+          </motion.div>
+        )}
 
-      {period && (
-        <section className="max-w-2xl mx-auto pb-12">
-          <PeriodSelector
-            dateFrom={period.date_from}
-            dateTo={period.date_to}
-            totalDays={period.total_days}
-            onSelect={handlePeriodSelect}
-          />
-        </section>
-      )}
-    </div>
+        {period && !loadingPeriod && (
+          <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-8 sm:p-12 relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <UploadCloud size={120} className="text-[var(--accent-lavender)]" />
+            </div>
+            <PeriodSelector
+              dateFrom={period.date_from}
+              dateTo={period.date_to}
+              totalDays={period.total_days}
+              onSelect={handlePeriodSelect}
+            />
+          </motion.section>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

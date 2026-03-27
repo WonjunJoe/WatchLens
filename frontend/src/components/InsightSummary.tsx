@@ -1,16 +1,18 @@
 import { emojiToIcon } from "../utils/iconMap";
+import { motion } from "framer-motion";
+import { Zap } from "lucide-react";
 
 interface InsightItem {
   icon: string;
   text: string;
 }
 
-const CARD_ACCENTS = [
-  { bg: "bg-[var(--lavender-light)]", border: "border-[var(--lavender)]", num: "text-[var(--lavender-text)]", icon: "text-[var(--lavender-text)]" },
-  { bg: "bg-[var(--sky-light)]", border: "border-[var(--sky)]", num: "text-[var(--sky-text)]", icon: "text-[var(--sky-text)]" },
-  { bg: "bg-[var(--rose-light)]", border: "border-[var(--rose)]", num: "text-[var(--rose-text)]", icon: "text-[var(--rose-text)]" },
-  { bg: "bg-[var(--mint-light)]", border: "border-[var(--mint)]", num: "text-[var(--mint-text)]", icon: "text-[var(--mint-text)]" },
-  { bg: "bg-[var(--peach-light)]", border: "border-[var(--peach)]", num: "text-[var(--peach-text)]", icon: "text-[var(--peach-text)]" },
+const ACCENT_COLORS = [
+  "var(--accent-lavender)",
+  "var(--accent-sky)",
+  "var(--accent-rose)",
+  "var(--accent-mint)",
+  "var(--accent-peach)",
 ];
 
 function extractKeyNumber(text: string): string | null {
@@ -22,25 +24,51 @@ export function InsightSummary({ data }: { data: InsightItem[] | null }) {
   if (!data || data.length === 0) return null;
 
   return (
-    <section className="bg-[var(--bg-white)] border border-[var(--border-default)] rounded-[16px] p-6 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-[2px] transition-all duration-200">
-      <h2 className="text-[15px] font-medium text-[var(--text-primary)] mb-5">한눈에 보는 인사이트</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <section className="glass-card p-10 h-full flex flex-col group relative overflow-hidden">
+      <div className="flex items-center justify-between mb-10 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-[var(--accent-sky)]/15 text-[var(--accent-sky)] rounded-2xl flex items-center justify-center shadow-inner">
+            <Zap size={28} />
+          </div>
+          <div>
+            <h2 className="text-[24px] font-black text-[var(--text-primary)] tracking-tight">Smart Insights</h2>
+            <p className="text-[12px] text-[var(--text-tertiary)] font-bold uppercase tracking-widest">AI-Generated Analysis</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10 h-full overflow-y-auto pr-2 custom-scrollbar">
         {data.map((item, i) => {
           const keyNum = extractKeyNumber(item.text);
-          const accent = CARD_ACCENTS[i % CARD_ACCENTS.length];
+          const color = ACCENT_COLORS[i % ACCENT_COLORS.length];
           return (
-            <div
+            <motion.div
               key={i}
-              className={`${accent.bg} ${accent.border} border rounded-xl px-5 py-5`}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6 + i * 0.1 }}
+              className="group/item relative p-6 rounded-[2rem] bg-[var(--text-primary)]/5 hover:bg-white dark:hover:bg-[var(--surface-clay)] transition-all duration-500 border border-transparent hover:border-white/20 hover:shadow-2xl overflow-hidden"
             >
-              <div className="flex items-center gap-2.5 mb-2">
-                <span className="flex-shrink-0">{emojiToIcon(item.icon, 20, accent.icon)}</span>
+              <div 
+                className="absolute -right-4 -bottom-4 w-24 h-24 blur-3xl opacity-0 group-hover/item:opacity-20 transition-opacity duration-500" 
+                style={{ backgroundColor: color }}
+              />
+              
+              <div className="flex items-start gap-4 mb-4">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                  style={{ backgroundColor: `${color}15`, color: color }}
+                >
+                  {emojiToIcon(item.icon, 20)}
+                </div>
                 {keyNum && (
-                  <p className={`text-xl font-medium ${accent.num} leading-tight`}>{keyNum}</p>
+                  <p className="text-[28px] font-black tracking-tighter leading-none" style={{ color }}>{keyNum}</p>
                 )}
               </div>
-              <p className="text-[13px] text-[var(--text-secondary)] leading-[1.7]">{item.text}</p>
-            </div>
+              <p className="text-[14px] text-[var(--text-secondary)] font-medium leading-relaxed group-hover/item:text-[var(--text-primary)] transition-colors">
+                {item.text}
+              </p>
+            </motion.div>
           );
         })}
       </div>
