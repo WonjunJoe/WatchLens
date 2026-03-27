@@ -1,36 +1,22 @@
-import { useStats } from "../hooks/useStats";
+interface ChannelCount { channel_name: string; count: number; }
+interface TopChannelsSplit { longform: ChannelCount[]; shorts: ChannelCount[]; }
 
-interface ChannelCount {
-  channel_name: string;
-  count: number;
-}
-
-interface TopChannelsSplit {
-  longform: ChannelCount[];
-  shorts: ChannelCount[];
-}
-
-function ChannelBar({ data, color }: { data: ChannelCount[]; color: string }) {
-  if (data.length === 0) return <p className="text-sm text-gray-400">데이터 없음</p>;
+function ChannelList({ data, color }: { data: ChannelCount[]; color: string }) {
+  if (data.length === 0) return <p className="text-[12px] text-[var(--text-tertiary)] leading-[1.4]">데이터 없음</p>;
   const max = data[0].count;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {data.map((ch, i) => (
-        <div key={ch.channel_name} className="flex items-center gap-3">
-          <span className="w-6 text-right text-sm text-gray-400 font-mono">
-            {i + 1}
-          </span>
-          <div className="flex-1">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium truncate">{ch.channel_name}</span>
-              <span className="text-gray-500">{ch.count}</span>
+        <div key={ch.channel_name} className="flex items-center gap-2.5">
+          <span className="w-5 text-right text-[11px] text-[var(--text-tertiary)]">{i + 1}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between text-[12px] mb-1">
+              <span className="font-medium text-[var(--text-secondary)] truncate">{ch.channel_name}</span>
+              <span className="text-[var(--text-tertiary)] flex-shrink-0 ml-2">{ch.count}</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${color}`}
-                style={{ width: `${(ch.count / max) * 100}%` }}
-              />
+            <div className="h-1 bg-[var(--bg-base)] rounded-full overflow-hidden">
+              <div className={`h-full rounded-full ${color}`} style={{ width: `${(ch.count / max) * 100}%` }} />
             </div>
           </div>
         </div>
@@ -39,24 +25,21 @@ function ChannelBar({ data, color }: { data: ChannelCount[]; color: string }) {
   );
 }
 
-export function TopChannels() {
-  const { data, loading, error } = useStats<TopChannelsSplit>("/api/stats/top-channels");
-
-  if (loading) return <p className="text-gray-400">채널 로딩 중...</p>;
-  if (error) return <p className="text-red-500">오류: {error}</p>;
+export function TopChannels({ data }: { data: TopChannelsSplit | null }) {
   if (!data) return null;
 
   return (
-    <section>
-      <h2 className="text-lg font-semibold mb-4">Top 채널</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow p-5">
-          <p className="text-sm font-medium text-gray-600 mb-4">일반 영상 (롱폼)</p>
-          <ChannelBar data={data.longform} color="bg-indigo-500" />
+    <section className="bg-[var(--bg-white)] border border-[var(--border-default)] rounded-[16px] p-5 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-[2px] transition-all duration-200">
+      <h2 className="text-[15px] font-medium text-[var(--text-primary)] mb-4">Top 채널</h2>
+      <div className="space-y-6">
+        <div>
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)] leading-[1.4] mb-3">일반 영상</p>
+          <ChannelList data={data.longform} color="bg-[var(--lavender)]" />
         </div>
-        <div className="bg-white rounded-xl shadow p-5">
-          <p className="text-sm font-medium text-gray-600 mb-4">Shorts</p>
-          <ChannelBar data={data.shorts} color="bg-violet-500" />
+        <div className="h-px bg-[var(--border-default)]" />
+        <div>
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)] leading-[1.4] mb-3">Shorts</p>
+          <ChannelList data={data.shorts} color="bg-[var(--mint)]" />
         </div>
       </div>
     </section>

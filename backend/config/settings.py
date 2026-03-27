@@ -10,10 +10,6 @@ SEARCH_TITLE_PREFIX = "Searched for "
 
 DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000"
 
-# Stats date range filter (local dates, converted to UTC at query time)
-STATS_DATE_FROM = "2026-01-01"
-STATS_DATE_TO = "2026-01-31"
-
 SUPABASE_STORAGE_BUCKET = "takeout-backups"
 
 # Timezone offset (hours from UTC). KST = +9
@@ -27,6 +23,15 @@ SHORTS_MAX_DURATION_SECONDS = 180
 WATCH_TIME_CAP_SECONDS = 3600  # Cap video duration at 1 hour for estimation
 AVG_RETENTION_SHORTS = 0.85
 AVG_RETENTION_LONGFORM = 0.5
+
+# Dopamine index weights (sum = 100)
+# Score 0-100: higher = more dopamine-seeking pattern
+DOPAMINE_WEIGHTS = {
+    "shorts_ratio": 40,        # High Shorts ratio → higher dopamine
+    "late_night_ratio": 30,    # Late night (22:00-04:00) viewing ratio
+    "short_duration": 30,      # Average viewed duration under 5 min
+}
+LATE_NIGHT_HOURS = list(range(22, 24)) + list(range(0, 4))  # 22:00-03:59
 
 YOUTUBE_CATEGORY_MAP = {
     1: "Film & Animation",

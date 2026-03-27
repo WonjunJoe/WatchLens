@@ -72,3 +72,50 @@ class WatchTimeStats(BaseModel):
     daily_max_hours: float
     gap_based_count: int
     estimated_count: int
+
+
+class BingeSession(BaseModel):
+    start_time: str
+    end_time: str
+    video_count: int
+    duration_minutes: int
+    channels: list[str]
+
+
+class BingeStats(BaseModel):
+    sessions: list[BingeSession]
+    total_binge_videos: int
+    total_binge_hours: float
+
+
+class WeeklyComparison(BaseModel):
+    week_label: str     # e.g. "01/06 ~ 01/12"
+    total: int
+    shorts: int
+    longform: int
+    daily_avg: float
+
+
+class DiversityStats(BaseModel):
+    top5_concentration: float    # top-5 channels as % of total views
+    top5_channels: list[dict]    # [{name, count, percent}]
+    unique_channels: int
+    total_views: int
+    entropy_normalized: float    # 0 = one channel, 1 = perfectly spread
+
+
+class DopamineStats(BaseModel):
+    score: int                    # 0-100
+    grade: str                    # e.g. "높음", "보통", "낮음"
+    breakdown: dict               # {factor_name: {value, score, weight, description}}
+
+
+class InsightItem(BaseModel):
+    icon: str       # emoji or symbol
+    text: str
+
+
+class PeriodInfo(BaseModel):
+    date_from: str
+    date_to: str
+    total_days: int

@@ -1,0 +1,99 @@
+<h2>접근법 비교: API-first vs 한방 API</h2>
+<p class="subtitle">데이터 흐름과 구조 차이를 비교해보세요</p>
+
+<div class="split">
+  <div class="mockup" style="flex:1">
+    <div class="mockup-header">A. API-first (추천)</div>
+    <div class="mockup-body" style="font-size:13px; line-height:1.6;">
+      <div style="background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="text-align:center;font-weight:bold;color:#7c83ff;margin-bottom:12px;">Frontend (React)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#2a2a4a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">요약 카드</div>
+          <div style="background:#2a2a4a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">시간대 히트맵</div>
+          <div style="background:#2a2a4a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">Top 채널</div>
+          <div style="background:#2a2a4a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">Shorts 비율</div>
+          <div style="background:#2a2a4a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">일별 트렌드</div>
+          <div style="background:#2a2a4a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">검색 키워드</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:#7c83ff;font-size:18px;margin:4px 0;">↕ 각각 독립 호출</div>
+      <div style="background:#1a2e1a;color:#e0e0e0;border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="text-align:center;font-weight:bold;color:#83ff7c;margin-bottom:12px;">Backend (FastAPI)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#2a4a2a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">/stats/summary</div>
+          <div style="background:#2a4a2a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">/stats/hourly</div>
+          <div style="background:#2a4a2a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">/stats/top-channels</div>
+          <div style="background:#2a4a2a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">/stats/shorts</div>
+          <div style="background:#2a4a2a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">/stats/daily</div>
+          <div style="background:#2a4a2a;border-radius:4px;padding:6px;text-align:center;font-size:11px;">/stats/search</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:#83ff7c;font-size:18px;margin:4px 0;">↕</div>
+      <div style="background:#2e1a1a;color:#e0e0e0;border-radius:8px;padding:12px;text-align:center;">
+        <span style="color:#ff7c83;font-weight:bold;">Supabase DB</span>
+      </div>
+      <div style="margin-top:16px;padding:12px;background:#1a2e2e;border-radius:8px;">
+        <div style="color:#7cffff;font-weight:bold;margin-bottom:6px;">✅ 장점</div>
+        <ul style="margin:0;padding-left:18px;font-size:11px;color:#ccc;">
+          <li>빠른 차트가 먼저 뜸 (느린 건 나중에)</li>
+          <li>소셜 비교 시 같은 API 재사용</li>
+          <li>하나 고장나도 나머지는 정상</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup" style="flex:1">
+    <div class="mockup-header">B. 한방 API</div>
+    <div class="mockup-body" style="font-size:13px; line-height:1.6;">
+      <div style="background:#1a1a2e;color:#e0e0e0;border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="text-align:center;font-weight:bold;color:#7c83ff;margin-bottom:12px;">Frontend (React)</div>
+        <div style="background:#2a2a4a;border-radius:6px;padding:12px;text-align:center;">
+          대시보드 전체
+        </div>
+      </div>
+      <div style="text-align:center;color:#ff7c83;font-size:18px;margin:4px 0;">↕ 한 번에 전부</div>
+      <div style="background:#1a2e1a;color:#e0e0e0;border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="text-align:center;font-weight:bold;color:#83ff7c;margin-bottom:12px;">Backend (FastAPI)</div>
+        <div style="background:#2a4a2a;border-radius:6px;padding:12px;text-align:center;">
+          /stats/dashboard<br>
+          <span style="font-size:11px;color:#aaa;">(모든 분석을 한번에 계산)</span>
+        </div>
+      </div>
+      <div style="text-align:center;color:#83ff7c;font-size:18px;margin:4px 0;">↕</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;background:#2e1a1a;color:#e0e0e0;border-radius:8px;padding:12px;text-align:center;">
+          <span style="color:#ff7c83;font-weight:bold;">Supabase DB</span>
+        </div>
+        <div style="flex:1;background:#2e2e1a;color:#e0e0e0;border-radius:8px;padding:12px;text-align:center;">
+          <span style="color:#ffff7c;font-weight:bold;">YouTube API</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px;background:#2e1a1a;border-radius:8px;">
+        <div style="color:#ff7c83;font-weight:bold;margin-bottom:6px;">⚠️ 단점</div>
+        <ul style="margin:0;padding-left:18px;font-size:11px;color:#ccc;">
+          <li>YouTube API 느리면 전체가 대기</li>
+          <li>하나 에러 → 전체 실패</li>
+          <li>소셜 비교 확장 어려움</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top:24px;">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>API-first (추천)</h3>
+      <p>API 분리 → 빠른 차트 먼저 표시, 소셜 비교 확장 용이</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>한방 API</h3>
+      <p>단순하지만 느린 작업이 전체를 블로킹</p>
+    </div>
+  </div>
+</div>

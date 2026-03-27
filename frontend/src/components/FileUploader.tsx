@@ -1,7 +1,9 @@
 import { useCallback, useState } from "react";
+import { Upload } from "lucide-react";
 
 interface FileUploaderProps {
   label: string;
+  subtitle: string;
   accept: string;
   endpoint: string;
   onResult: (data: any) => void;
@@ -12,7 +14,7 @@ interface Progress {
   percent: number;
 }
 
-export function FileUploader({ label, accept, endpoint, onResult }: FileUploaderProps) {
+export function FileUploader({ label, subtitle, accept, endpoint, onResult }: FileUploaderProps) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function FileUploader({ label, accept, endpoint, onResult }: FileUploader
     }
 
     setUploading(true);
-    setProgress({ step: "파일 업로드 중...", percent: 5 });
+    setProgress({ step: "업로드 중...", percent: 5 });
 
     try {
       const formData = new FormData();
@@ -99,15 +101,19 @@ export function FileUploader({ label, accept, endpoint, onResult }: FileUploader
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-        dragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
+      className={`group relative bg-[var(--bg-white)] border-2 border-dashed rounded-[16px] p-8 text-center cursor-pointer transition-all duration-200 ${
+        dragging
+          ? "border-[var(--lavender)] bg-[var(--lavender-light)]/30"
+          : "border-[var(--border-default)] hover:border-[var(--lavender)] hover:bg-[var(--lavender-light)]/20"
       }`}
     >
-      <label className="cursor-pointer">
-        <p className="text-lg font-medium mb-2">{label}</p>
-        <p className="text-sm text-gray-500 mb-4">
-          파일을 드래그하거나 클릭하여 선택하세요 (최대 50MB)
-        </p>
+      <label className="cursor-pointer block">
+        <div className="w-12 h-12 mx-auto mb-4 bg-[var(--lavender-light)] rounded-xl flex items-center justify-center group-hover:bg-[var(--lavender-light)] transition-colors">
+          <Upload size={20} className="text-[var(--lavender-text)]" />
+        </div>
+        <p className="text-[15px] font-medium text-[var(--text-primary)] mb-1">{label}</p>
+        <p className="text-sm text-[var(--text-tertiary)] mb-1">{subtitle}</p>
+        <p className="text-[12px] text-[var(--text-tertiary)] leading-[1.4]">드래그 또는 클릭 (최대 50MB)</p>
         <input
           type="file"
           accept={accept}
@@ -116,18 +122,19 @@ export function FileUploader({ label, accept, endpoint, onResult }: FileUploader
           disabled={uploading}
         />
       </label>
+
       {uploading && progress && (
-        <div className="mt-3">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+        <div className="mt-5">
+          <div className="h-1.5 bg-[var(--bg-base)] rounded-full overflow-hidden mb-2">
             <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-500"
+              className="h-full bg-[var(--lavender)] rounded-full transition-all duration-500"
               style={{ width: `${progress.percent}%` }}
             />
           </div>
-          <p className="text-blue-600 text-sm">{progress.step}</p>
+          <p className="text-[var(--lavender-text)] text-[12px] font-medium">{progress.step}</p>
         </div>
       )}
-      {error && <p className="text-red-600 mt-2">{error}</p>}
+      {error && <p className="text-[var(--rose-text)] text-[12px] mt-3">{error}</p>}
     </div>
   );
 }

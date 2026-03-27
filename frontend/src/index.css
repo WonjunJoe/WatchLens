@@ -1,8 +1,58 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
+
+:root {
+  --bg-base: #FAFAFA;
+  --bg-white: #FFFFFF;
+
+  --lavender: #BEB0D9;
+  --lavender-light: #E8E0F3;
+  --lavender-text: #4A3968;
+  --mint: #A3D4C6;
+  --mint-light: #DDF0EA;
+  --mint-text: #2B5A4D;
+  --sky: #A5C8DC;
+  --sky-light: #DCE9F2;
+  --sky-text: #2E5269;
+  --rose: #EBB3AE;
+  --rose-light: #FAE4E2;
+  --rose-text: #7A3A36;
+  --peach: #F0C8AC;
+  --peach-light: #FAEADE;
+  --peach-text: #6B4730;
+
+  --text-primary: #1E1E1C;
+  --text-secondary: #555553;
+  --text-tertiary: #8A8A86;
+
+  --border-default: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.10);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+}
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Pretendard Variable', 'Pretendard', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: fadeSlideUp 0.4s ease forwards;
 }
