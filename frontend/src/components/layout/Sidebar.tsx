@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { Upload, BarChart3, PanelLeftClose, PanelLeftOpen, Eye } from "lucide-react";
+import { Home, BarChart3, PanelLeftClose, PanelLeftOpen, Eye } from "lucide-react";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -7,8 +7,9 @@ interface SidebarProps {
 }
 
 const MENU = [
-  { label: "업로드", icon: Upload, path: "/" },
-  { label: "대시보드", icon: BarChart3, path: "/dashboard" },
+  { label: "홈", icon: Home, path: "/" },
+  { label: "YouTube 대시보드", icon: BarChart3, path: "/youtube/dashboard" },
+  { label: "Instagram 대시보드", icon: Eye, path: "/instagram/dashboard" },
 ];
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {

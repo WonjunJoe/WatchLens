@@ -51,3 +51,19 @@ YOUTUBE_CATEGORY_MAP = {
     28: "Science & Technology",
     29: "Nonprofits & Activism",
 }
+
+# ---------------------------------------------------------------------------
+# Instagram
+# ---------------------------------------------------------------------------
+INSTAGRAM_SOURCE_FILES = {
+    "liked_posts": "your_instagram_activity/likes/liked_posts.json",
+    "story_likes": "your_instagram_activity/story_interactions/story_likes.json",
+    "messages_inbox": "your_instagram_activity/messages/inbox",
+    "following": "connections/followers_and_following/following.json",
+    "unfollowed": "connections/followers_and_following/recently_unfollowed_profiles.json",
+    "posts_viewed": "ads_information/ads_and_topics/posts_viewed.json",
+    "videos_watched": "ads_information/ads_and_topics/videos_watched.json",
+    "topics": "preferences/your_topics/recommended_topics.json",
+}
+MAX_ZIP_SIZE_MB = 100
+MAX_ZIP_SIZE_BYTES = MAX_ZIP_SIZE_MB * 1024 * 1024
