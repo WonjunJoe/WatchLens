@@ -17,7 +17,7 @@ export function ViewerType({ data }: { data: ViewerTypeData | null }) {
   if (!data || data.code === "----") return null;
 
   return (
-    <section className="card p-5">
+    <section className="card p-5 animate-fadeIn">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-5">시청자 유형</h2>
 
       <div className="text-center mb-6">

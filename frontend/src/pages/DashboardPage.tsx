@@ -111,7 +111,7 @@ export function DashboardPage() {
         {progress.loaded > 0 ? (
           <>
             <div className="w-64 h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-              <div className="h-full bg-[var(--accent)] rounded-full transition-all" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-[var(--accent)] rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
             </div>
             <p className="text-[13px] text-[var(--text-tertiary)]">{progress.step}</p>
           </>
@@ -129,7 +129,7 @@ export function DashboardPage() {
         <div className="card p-8 text-center max-w-sm">
           <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">오류 발생</p>
           <p className="text-[14px] text-[var(--text-secondary)] mb-6">{error}</p>
-          <Link to="/" className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90">
+          <Link to="/" className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity">
             <RefreshCw size={14} />
             다시 시도
           </Link>
@@ -163,6 +163,13 @@ export function DashboardPage() {
         <SummaryCards data={data.summary} />
       </div>
 
+      {/* Row: Viewer Type + Dopamine + Watch Time — 핵심 정보 상단 배치 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <ViewerType data={data.viewer_type} />
+        <DopamineIndex data={data.dopamine} />
+        <WatchTime data={data.watch_time} />
+      </div>
+
       {/* Row: Charts 2-col */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <HourlyChart data={data.hourly} />
@@ -180,19 +187,12 @@ export function DashboardPage() {
         <Categories data={data.categories} />
       </div>
 
-      {/* Row: Watch Time + Dopamine + Viewer Type */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <WatchTime data={data.watch_time} />
-        <DopamineIndex data={data.dopamine} />
-        <ViewerType data={data.viewer_type} />
-      </div>
-
-      {/* Row: Search Keywords + Insights */}
+      {/* Row: Insights + Search Keywords */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <InsightSummary data={data.insights} />
         {data.search_keywords && data.search_keywords.length > 0 && (
           <SearchKeywords data={data.search_keywords} />
         )}
-        <InsightSummary data={data.insights} />
       </div>
     </div>
   );

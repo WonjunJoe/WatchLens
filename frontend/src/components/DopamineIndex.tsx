@@ -31,7 +31,7 @@ export function DopamineIndex({ data }: { data: DopamineData | null }) {
   const color = scoreColor(data.score);
 
   return (
-    <section className="card p-5">
+    <section className="card p-5 animate-fadeIn">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">도파민 지수</h2>
         <span className="text-[12px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${color}15`, color }}>

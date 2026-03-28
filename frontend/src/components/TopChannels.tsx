@@ -19,7 +19,7 @@ function ChannelList({ title, data, color }: { title: string; data: ChannelCount
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[14px] text-[var(--text-primary)] truncate">{ch.channel_name}</span>
-                <span className="text-[13px] text-[var(--text-secondary)] ml-2 flex-shrink-0">{ch.count}</span>
+                <span className="text-[13px] text-[var(--text-secondary)] ml-2 flex-shrink-0">{ch.count}회</span>
               </div>
               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
