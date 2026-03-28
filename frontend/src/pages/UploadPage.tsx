@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FileUploader } from "../components/FileUploader";
 import { UploadResultCard, type UploadResult } from "../components/UploadResultCard";
 import { PeriodSelector } from "../components/PeriodSelector";
-import { Database, Sparkles, UploadCloud } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Database, Loader2 } from "lucide-react";
 
 const API_BASE = "http://localhost:8000";
 
@@ -26,9 +25,7 @@ export function UploadPage() {
     setLoadingPeriod(true);
     fetch(`${API_BASE}/api/stats/period`)
       .then((res) => res.json())
-      .then((data) => {
-        if (data.date_from) setPeriod(data);
-      })
+      .then((data) => { if (data.date_from) setPeriod(data); })
       .catch(() => {})
       .finally(() => setLoadingPeriod(false));
   }, [watchResult]);
@@ -37,9 +34,7 @@ export function UploadPage() {
     setLoadingPeriod(true);
     fetch(`${API_BASE}/api/stats/period`)
       .then((res) => res.json())
-      .then((data) => {
-        if (data.date_from) setPeriod(data);
-      })
+      .then((data) => { if (data.date_from) setPeriod(data); })
       .catch(() => {})
       .finally(() => setLoadingPeriod(false));
   };
@@ -49,55 +44,36 @@ export function UploadPage() {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto py-12 px-6"
-    >
-      {/* Hero Section */}
-      <section className="text-center mb-16">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 bg-[var(--accent-lavender)]/10 text-[var(--accent-lavender)] text-[12px] font-black uppercase tracking-widest rounded-full mb-6 border border-[var(--accent-lavender)]/20"
-        >
-          <Sparkles size={14} />
-          2026 High-End Analysis
-        </motion.div>
-        
-        <h1 className="text-[48px] font-black text-[var(--text-primary)] tracking-tighter leading-none mb-6">
-          Unveil Your <span className="text-[var(--accent-lavender)]">Identity.</span>
-        </h1>
-        
-        <p className="text-[16px] text-[var(--text-secondary)] font-medium max-w-xl mx-auto leading-relaxed mb-10">
-          Google Takeout 데이터를 업로드하여 당신만의 시청 정체성을 발견하세요.<br/>
-          도파민 지수, 시청 유형, 그리고 숨겨진 패턴이 공개됩니다.
+    <div className="max-w-3xl mx-auto py-8">
+      {/* Header */}
+      <section className="mb-10">
+        <h1 className="text-[24px] font-bold text-[var(--text-primary)] mb-2">데이터 업로드</h1>
+        <p className="text-[15px] text-[var(--text-secondary)] mb-4">
+          Google Takeout에서 내보낸 YouTube 시청 기록을 업로드하세요.
         </p>
-
         <button
           onClick={handleLoadExisting}
-          className="group inline-flex items-center gap-2.5 px-6 py-3 bg-[var(--text-primary)]/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--text-primary)]/10 transition-all duration-300 rounded-2xl text-[14px] font-bold"
+          className="inline-flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <Database size={16} className="group-hover:rotate-12 transition-transform" />
-          기존 데이터로 바로 분석하기
+          <Database size={14} />
+          기존 데이터로 분석
         </button>
       </section>
 
       {/* Upload Grid */}
-      <section className="grid gap-8 md:grid-cols-2 mb-12">
-        <div className="clay-card p-2">
+      <section className="grid gap-4 md:grid-cols-2 mb-8">
+        <div className="card p-1">
           <FileUploader
-            label="Watch History"
+            label="시청 기록"
             accept=".json"
             endpoint="/api/upload/watch-history"
             onResult={(data) => setWatchResult({ type: "watch", ...data })}
             subtitle="watch-history.json"
           />
         </div>
-        <div className="clay-card p-2">
+        <div className="card p-1">
           <FileUploader
-            label="Search History"
+            label="검색 기록"
             accept=".json"
             endpoint="/api/upload/search-history"
             onResult={(data) => setSearchResult({ type: "search", ...data })}
@@ -106,50 +82,31 @@ export function UploadPage() {
         </div>
       </section>
 
-      {/* Results Section */}
+      {/* Results */}
       {(watchResult || searchResult) && (
-        <motion.section 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="grid gap-6 md:grid-cols-2 mb-12"
-        >
+        <section className="grid gap-4 md:grid-cols-2 mb-8">
           {watchResult && <UploadResultCard result={watchResult} />}
           {searchResult && <UploadResultCard result={searchResult} />}
-        </motion.section>
+        </section>
       )}
 
-      {/* Progress / Period Selector */}
-      <AnimatePresence>
-        {loadingPeriod && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center py-12"
-          >
-            <div className="w-10 h-10 border-4 border-[var(--accent-lavender)]/20 border-t-[var(--accent-lavender)] rounded-full animate-spin mb-4" />
-            <p className="text-[var(--text-tertiary)] text-[13px] font-black uppercase tracking-widest">Scanning History...</p>
-          </motion.div>
-        )}
+      {/* Loading / Period Selector */}
+      {loadingPeriod && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 size={24} className="text-[var(--accent)] animate-spin" />
+        </div>
+      )}
 
-        {period && !loadingPeriod && (
-          <motion.section 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-8 sm:p-12 relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <UploadCloud size={120} className="text-[var(--accent-lavender)]" />
-            </div>
-            <PeriodSelector
-              dateFrom={period.date_from}
-              dateTo={period.date_to}
-              totalDays={period.total_days}
-              onSelect={handlePeriodSelect}
-            />
-          </motion.section>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {period && !loadingPeriod && (
+        <section className="card p-6">
+          <PeriodSelector
+            dateFrom={period.date_from}
+            dateTo={period.date_to}
+            totalDays={period.total_days}
+            onSelect={handlePeriodSelect}
+          />
+        </section>
+      )}
+    </div>
   );
 }

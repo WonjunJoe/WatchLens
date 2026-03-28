@@ -3,101 +3,37 @@
 
 @theme {
   --font-sans: 'Pretendard Variable', 'Pretendard', system-ui, -apple-system, sans-serif;
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
-  --radius-3xl: 3rem;
-  --radius-organic: 2.5rem;
 }
 
 :root {
-  --bg-base: #F8F9FA;
-  --surface-glass: rgba(255, 255, 255, 0.7);
-  --surface-clay: #FFFFFF;
-  --text-primary: #1A1A18;
-  --text-secondary: #4A4A48;
-  --text-tertiary: #80807E;
-  --border-glass: rgba(255, 255, 255, 0.4);
-  --border-subtle: rgba(0, 0, 0, 0.05);
-  --accent-lavender: #BEB0D9;
-  --accent-mint: #A3D4C6;
-  --accent-sky: #A5C8DC;
-  --accent-rose: #EBB3AE;
-  --accent-peach: #F0C8AC;
-  --shadow-clay: 0 10px 30px -10px rgba(0,0,0,0.04), inset 0 1px 2px rgba(255,255,255,0.8);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.03);
-}
-
-.dark {
-  --bg-base: #0B0B0F;
-  --surface-glass: rgba(20, 20, 25, 0.7);
-  --surface-clay: #16161D;
-  --text-primary: #F8F9FA;
-  --text-secondary: #B0B0B5;
-  --text-tertiary: #6C6C72;
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.03);
-  --accent-lavender: #8B5CF6;
-  --accent-mint: #10B981;
-  --accent-sky: #3B82F6;
-  --accent-rose: #F43F5E;
-  --accent-peach: #F59E0B;
-  --shadow-clay: 0 20px 40px -15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --bg: #F9FAFB;
+  --surface: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --border: #E5E7EB;
+  --accent: #6366F1;
+  --accent-light: #EEF2FF;
+  --green: #10B981;
+  --green-light: #ECFDF5;
+  --amber: #F59E0B;
+  --amber-light: #FFFBEB;
+  --rose: #F43F5E;
+  --rose-light: #FFF1F2;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--bg-base);
+  background-color: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
-  /* Prevent scroll chaining issues with blur */
-  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Ambient Mesh - Static, no animation for performance */
-.ambient-mesh {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  overflow: hidden;
-  opacity: 0.35;
-  filter: blur(80px);
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 20%, var(--accent-lavender) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, var(--accent-mint) 0%, transparent 40%),
-    radial-gradient(circle at 80% 10%, var(--accent-rose) 0%, transparent 30%),
-    var(--bg-base);
-}
-
-.glass-card {
-  background: var(--surface-glass);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-organic);
-  box-shadow: var(--shadow-glass);
-}
-
-.clay-card {
-  background: var(--surface-clay);
-  border-radius: var(--radius-organic);
-  box-shadow: var(--shadow-clay);
-  border: 1px solid var(--border-subtle);
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--border-glass);
-  border-radius: 10px;
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }

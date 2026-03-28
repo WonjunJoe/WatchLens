@@ -101,19 +101,19 @@ export function FileUploader({ label, subtitle, accept, endpoint, onResult }: Fi
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      className={`group relative bg-[var(--bg-white)] border-2 border-dashed rounded-[16px] p-8 text-center cursor-pointer transition-all duration-200 ${
+      className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
         dragging
-          ? "border-[var(--lavender)] bg-[var(--lavender-light)]/30"
-          : "border-[var(--border-default)] hover:border-[var(--lavender)] hover:bg-[var(--lavender-light)]/20"
+          ? "border-[var(--accent)] bg-[var(--accent-light)]"
+          : "border-gray-200 hover:border-[var(--accent)] hover:bg-[var(--accent-light)]"
       }`}
     >
       <label className="cursor-pointer block">
-        <div className="w-12 h-12 mx-auto mb-4 bg-[var(--lavender-light)] rounded-xl flex items-center justify-center group-hover:bg-[var(--lavender-light)] transition-colors">
-          <Upload size={20} className="text-[var(--lavender-text)]" />
+        <div className="w-10 h-10 mx-auto mb-3 bg-[var(--accent-light)] rounded-lg flex items-center justify-center">
+          <Upload size={18} className="text-[var(--accent)]" />
         </div>
-        <p className="text-[15px] font-medium text-[var(--text-primary)] mb-1">{label}</p>
-        <p className="text-sm text-[var(--text-tertiary)] mb-1">{subtitle}</p>
-        <p className="text-[12px] text-[var(--text-tertiary)] leading-[1.4]">드래그 또는 클릭 (최대 50MB)</p>
+        <p className="text-[14px] font-medium text-[var(--text-primary)] mb-0.5">{label}</p>
+        <p className="text-[13px] text-[var(--text-tertiary)] mb-0.5">{subtitle}</p>
+        <p className="text-[12px] text-[var(--text-tertiary)]">드래그 또는 클릭 (최대 50MB)</p>
         <input
           type="file"
           accept={accept}
@@ -124,17 +124,17 @@ export function FileUploader({ label, subtitle, accept, endpoint, onResult }: Fi
       </label>
 
       {uploading && progress && (
-        <div className="mt-5">
-          <div className="h-1.5 bg-[var(--bg-base)] rounded-full overflow-hidden mb-2">
+        <div className="mt-4">
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
             <div
-              className="h-full bg-[var(--lavender)] rounded-full transition-all duration-500"
+              className="h-full bg-[var(--accent)] rounded-full transition-all"
               style={{ width: `${progress.percent}%` }}
             />
           </div>
-          <p className="text-[var(--lavender-text)] text-[12px] font-medium">{progress.step}</p>
+          <p className="text-[var(--accent)] text-[12px]">{progress.step}</p>
         </div>
       )}
-      {error && <p className="text-[var(--rose-text)] text-[12px] mt-3">{error}</p>}
+      {error && <p className="text-[var(--rose)] text-[12px] mt-3">{error}</p>}
     </div>
   );
 }

@@ -1,38 +1,26 @@
 export const PASTEL_COLORS = [
-  "var(--accent-lavender)",
-  "var(--accent-mint)",
-  "var(--accent-sky)",
-  "var(--accent-rose)",
-  "var(--accent-peach)",
+  "#6366F1", // indigo
+  "#10B981", // green
+  "#F59E0B", // amber
+  "#F43F5E", // rose
+  "#8B5CF6", // violet
+  "#06B6D4", // cyan
+  "#EC4899", // pink
 ];
 
-export const CHART_GRADIENTS = {
-  lavender: ["rgba(190, 176, 217, 0.5)", "rgba(190, 176, 217, 0)"],
-  mint: ["rgba(163, 212, 198, 0.5)", "rgba(163, 212, 198, 0)"],
-  sky: ["rgba(165, 200, 220, 0.5)", "rgba(165, 200, 220, 0)"],
-  rose: ["rgba(235, 179, 174, 0.5)", "rgba(235, 179, 174, 0)"],
-  peach: ["rgba(240, 200, 172, 0.5)", "rgba(240, 200, 172, 0)"],
-};
-
-export const TOOLTIP_STYLE = {
-  backgroundColor: "var(--surface-glass)",
-  backdropFilter: "blur(12px)",
-  borderRadius: "20px",
-  border: "1px solid var(--border-glass)",
-  boxShadow: "var(--shadow-glass)",
+export const TOOLTIP_STYLE: React.CSSProperties = {
+  backgroundColor: "#fff",
+  borderRadius: "8px",
+  border: "1px solid #E5E7EB",
+  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
   fontSize: "13px",
-  padding: "12px 16px",
-  color: "var(--text-primary)",
-  fontWeight: "bold",
+  padding: "8px 12px",
+  color: "#111827",
 };
 
-export const GRID_STROKE = "var(--border-subtle)";
+export const GRID_STROKE = "#F3F4F6";
 
-export const AXIS_TICK = { 
-  fontSize: 11, 
-  fill: "var(--text-tertiary)", 
-  fontWeight: "bold",
-  letterSpacing: "0.05em",
+export const AXIS_TICK = {
+  fontSize: 12,
+  fill: "#9CA3AF",
 };
-
-export const AREA_FILL_OPACITY = 0.4;

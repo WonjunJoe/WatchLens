@@ -48,46 +48,44 @@ export function PeriodSelector({ dateFrom, dateTo, totalDays, onSelect }: Period
   ];
 
   return (
-    <div className="bg-[var(--bg-white)] border border-[var(--border-default)] rounded-[16px] p-8 shadow-[var(--shadow-sm)]">
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-medium text-[var(--text-primary)] mb-1">분석 기간 선택</h2>
-        <p className="text-sm text-[var(--text-tertiary)]">
-          {dateFrom} ~ {dateTo} 범위의 {totalDays}일간 데이터
-        </p>
-      </div>
+    <div>
+      <h2 className="text-[16px] font-semibold text-[var(--text-primary)] mb-1">분석 기간 선택</h2>
+      <p className="text-[14px] text-[var(--text-secondary)] mb-5">
+        {dateFrom} ~ {dateTo} 범위의 {totalDays}일간 데이터
+      </p>
 
-      <div className="space-y-3 mb-8">
+      <div className="space-y-2 mb-6">
         {options.map((opt) => (
           <button
             key={opt.key}
             onClick={() => setMode(opt.key)}
-            className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-150 ${
+            className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
               mode === opt.key
-                ? "border-[var(--lavender)] bg-[var(--lavender-light)]/30"
-                : "border-[var(--border-default)] hover:border-[var(--border-default)]"
+                ? "border-[var(--accent)] bg-[var(--accent-light)]"
+                : "border-[var(--border)] hover:bg-gray-50"
             }`}
           >
             <div className="flex items-center gap-3">
               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                mode === opt.key ? "border-[var(--lavender)]" : "border-[var(--text-tertiary)]"
+                mode === opt.key ? "border-[var(--accent)]" : "border-gray-300"
               }`}>
-                {mode === opt.key && <div className="w-2 h-2 rounded-full bg-[var(--lavender)]" />}
+                {mode === opt.key && <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />}
               </div>
               <div>
-                <p className="font-medium text-[var(--text-primary)] text-sm">{opt.label}</p>
-                <p className="text-[12px] text-[var(--text-tertiary)] leading-[1.4] mt-0.5">{opt.desc}</p>
+                <p className="text-[14px] font-medium text-[var(--text-primary)]">{opt.label}</p>
+                <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5">{opt.desc}</p>
               </div>
             </div>
 
             {opt.key === "custom" && mode === "custom" && (
-              <div className="flex gap-3 mt-4 ml-7" onClick={(e) => e.stopPropagation()}>
+              <div className="flex gap-3 mt-3 ml-7" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="date"
                   value={customFrom}
                   min={dateFrom}
                   max={dateTo}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="border border-[var(--border-default)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--lavender)]"
+                  className="border border-[var(--border)] rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--accent)]"
                 />
                 <span className="text-[var(--text-tertiary)] self-center">~</span>
                 <input
@@ -96,7 +94,7 @@ export function PeriodSelector({ dateFrom, dateTo, totalDays, onSelect }: Period
                   min={customFrom}
                   max={dateTo}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="border border-[var(--border-default)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--lavender)]"
+                  className="border border-[var(--border)] rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
             )}
@@ -106,7 +104,7 @@ export function PeriodSelector({ dateFrom, dateTo, totalDays, onSelect }: Period
 
       <button
         onClick={() => onSelect(selectedRange.from, selectedRange.to)}
-        className="w-full py-3.5 bg-[var(--lavender)] text-[var(--lavender-text)] rounded-[12px] font-medium hover:opacity-90 transition-colors text-sm"
+        className="w-full py-3 bg-[var(--accent)] text-white rounded-lg font-medium text-[14px] hover:opacity-90 transition-opacity"
       >
         분석 시작하기
       </button>
