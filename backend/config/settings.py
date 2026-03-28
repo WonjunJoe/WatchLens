@@ -17,6 +17,7 @@ USER_TZ_OFFSET_HOURS = 9
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 YOUTUBE_BATCH_SIZE = 50
+DB_CHUNK_SIZE = 500
 SHORTS_MAX_DURATION_SECONDS = 180
 
 # Watch time estimation

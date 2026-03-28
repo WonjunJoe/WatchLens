@@ -56,7 +56,7 @@ body {
   overscroll-behavior: none;
 }
 
-/* Ambient Mesh - Optimized and Safer */
+/* Ambient Mesh - Static, no animation for performance */
 .ambient-mesh {
   position: fixed;
   top: 0;
@@ -65,36 +65,20 @@ body {
   bottom: 0;
   z-index: -1;
   overflow: hidden;
-  opacity: 0.4;
-  filter: blur(60px);
+  opacity: 0.35;
+  filter: blur(80px);
   pointer-events: none;
-  background-color: var(--bg-base);
-}
-
-.ambient-mesh::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(circle at 30% 30%, var(--accent-lavender) 0%, transparent 25%),
-    radial-gradient(circle at 70% 70%, var(--accent-mint) 0%, transparent 25%),
-    radial-gradient(circle at 50% 50%, var(--accent-sky) 0%, transparent 30%),
-    radial-gradient(circle at 80% 20%, var(--accent-rose) 0%, transparent 20%);
-  animation: mesh-rotate 30s linear infinite;
-}
-
-@keyframes mesh-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  background:
+    radial-gradient(circle at 20% 20%, var(--accent-lavender) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, var(--accent-mint) 0%, transparent 40%),
+    radial-gradient(circle at 80% 10%, var(--accent-rose) 0%, transparent 30%),
+    var(--bg-base);
 }
 
 .glass-card {
   background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-organic);
   box-shadow: var(--shadow-glass);

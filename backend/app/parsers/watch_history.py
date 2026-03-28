@@ -1,14 +1,7 @@
-from dataclasses import dataclass, field
 from urllib.parse import urlparse, parse_qs
+from app.models.schemas import ParseResult
+from app.utils import parse_period
 from config.settings import SUPPORTED_HEADERS, WATCH_TITLE_PREFIX, DEFAULT_USER_ID
-
-
-@dataclass
-class WatchParseResult:
-    records: list = field(default_factory=list)
-    total: int = 0
-    skipped: int = 0
-    period: str = ""
 
 
 def extract_video_id(url: str) -> str | None:
@@ -25,7 +18,7 @@ def extract_video_id(url: str) -> str | None:
     return None
 
 
-def parse_watch_history(data: list[dict]) -> WatchParseResult:
+def parse_watch_history(data: list[dict]) -> ParseResult:
     records = []
     skipped = 0
     timestamps = []
@@ -62,14 +55,9 @@ def parse_watch_history(data: list[dict]) -> WatchParseResult:
             "watched_at": time_str,
         })
 
-    period = ""
-    if timestamps:
-        dates = sorted(t[:10] for t in timestamps)
-        period = f"{dates[0]} ~ {dates[-1]}"
-
-    return WatchParseResult(
+    return ParseResult(
         records=records,
         total=len(records),
         skipped=skipped,
-        period=period,
+        period=parse_period(timestamps),
     )

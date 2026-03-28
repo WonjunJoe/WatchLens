@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import { SummaryCards } from "../components/SummaryCards";
 import { WatchTime } from "../components/WatchTime";
 import { HourlyChart } from "../components/HourlyChart";
@@ -38,25 +38,6 @@ interface DashboardState {
   insights: any;
 }
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
-};
-
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: "spring", stiffness: 300, damping: 24 }
-  }
-};
 
 export function DashboardPage() {
   const [params] = useSearchParams();
@@ -189,15 +170,10 @@ export function DashboardPage() {
   }
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="pb-20"
-    >
+    <div className="pb-20">
       {/* Header Area */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <motion.div variants={itemVariants}>
+        <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--accent-lavender)]/10 text-[var(--accent-lavender)] rounded-full text-[11px] font-bold uppercase tracking-wider mb-3">
             <Sparkles size={12} />
             Analysis Complete
@@ -209,9 +185,9 @@ export function DashboardPage() {
               {dateFrom} — {dateTo}
             </div>
           </div>
-        </motion.div>
-        
-        <motion.div variants={itemVariants} className="flex gap-4">
+        </div>
+
+        <div className="flex gap-4">
           <button
             onClick={() => setIsShareOpen(true)}
             className="group flex items-center gap-2.5 px-6 py-4 bg-[var(--accent-lavender)] text-black rounded-3xl hover:scale-[1.05] active:scale-[0.95] transition-all duration-300 shadow-xl shadow-[var(--accent-lavender)]/20"
@@ -227,71 +203,71 @@ export function DashboardPage() {
             <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
             <span className="text-[15px] font-bold">New Analysis</span>
           </Link>
-        </motion.div>
+        </div>
       </header>
 
       {/* Main Bento Grid */}
       <div className="grid grid-cols-12 gap-6">
         {/* Row 1: Viewer Type & Insight Summary */}
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-5">
+        <div className="col-span-12 lg:col-span-5">
           <ViewerType data={data.viewer_type} />
-        </motion.div>
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-7">
+        </div>
+        <div className="col-span-12 lg:col-span-7">
           <InsightSummary data={data.insights} />
-        </motion.div>
+        </div>
 
         {/* Row 2: Summary Cards (Full Width) */}
-        <motion.div variants={itemVariants} className="col-span-12">
+        <div className="col-span-12">
           <SummaryCards data={data.summary} />
-        </motion.div>
+        </div>
 
         {/* Row 3: Watch Time (P1) & Dopamine (P3) */}
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-8">
+        <div className="col-span-12 lg:col-span-8">
           <WatchTime data={data.watch_time} />
-        </motion.div>
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4">
+        </div>
+        <div className="col-span-12 lg:col-span-4">
           <DopamineIndex data={data.dopamine} />
-        </motion.div>
+        </div>
 
         {/* Row 4: Calendar Heatmap */}
-        <motion.div variants={itemVariants} className="col-span-12">
+        <div className="col-span-12">
           <CalendarHeatmap data={data.daily} />
-        </motion.div>
+        </div>
 
         {/* Row 5: Weekly Watch Time & Shorts Stats */}
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-8">
+        <div className="col-span-12 lg:col-span-8">
           <WeeklyWatchTime data={data.weekly_watch_time} />
-        </motion.div>
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-4">
+        </div>
+        <div className="col-span-12 lg:col-span-4">
           <ShortsStats data={data.shorts} />
-        </motion.div>
+        </div>
 
         {/* Row 6: Top Channels (P2) & Charts */}
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-6">
+        <div className="col-span-12 lg:col-span-6">
           <TopChannels data={data.top_channels} />
-        </motion.div>
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-6 grid grid-cols-1 gap-6">
+        </div>
+        <div className="col-span-12 lg:col-span-6 grid grid-cols-1 gap-6">
           <HourlyChart data={data.hourly} />
           <DayOfWeekChart data={data.day_of_week} />
-        </motion.div>
+        </div>
 
         {/* Row 7: Daily Detailed Chart */}
-        <motion.div variants={itemVariants} className="col-span-12">
+        <div className="col-span-12">
           <DailyChart data={data.daily} />
-        </motion.div>
+        </div>
 
         {/* Row 8: Weekly Comparison & Categories */}
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-6">
+        <div className="col-span-12 lg:col-span-6">
           <WeeklyComparison data={data.weekly} />
-        </motion.div>
-        <motion.div variants={itemVariants} className="col-span-12 lg:col-span-6">
+        </div>
+        <div className="col-span-12 lg:col-span-6">
           <Categories data={data.categories} />
-        </motion.div>
+        </div>
 
         {/* Row 9: Search Keywords */}
-        <motion.div variants={itemVariants} className="col-span-12">
+        <div className="col-span-12">
           <SearchKeywords data={data.search_keywords} />
-        </motion.div>
+        </div>
       </div>
 
       <ShareCard 
@@ -304,6 +280,6 @@ export function DashboardPage() {
           dopamine: data.dopamine?.score || 0
         }}
       />
-    </motion.div>
+    </div>
   );
 }

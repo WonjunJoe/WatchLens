@@ -1,8 +1,8 @@
-# app/services/youtube.py
 import os
 import re
 import httpx
 from app.db.supabase import get_supabase_client
+from app.utils import chunk_list
 from config.settings import (
     YOUTUBE_API_URL, YOUTUBE_BATCH_SIZE, YOUTUBE_CATEGORY_MAP,
     SHORTS_MAX_DURATION_SECONDS, DEFAULT_USER_ID,
@@ -23,7 +23,6 @@ def parse_duration(iso_duration: str) -> int:
 
 
 def _build_metadata_record(item: dict) -> dict:
-    """Convert a YouTube API video item to a DB record."""
     snippet = item.get("snippet", {})
     content = item.get("contentDetails", {})
     stats = item.get("statistics", {})
@@ -46,7 +45,6 @@ def _build_metadata_record(item: dict) -> dict:
 
 
 def _fetch_batch(video_ids: list[str]) -> list[dict]:
-    """Fetch metadata for up to 50 video IDs from YouTube API."""
     if not YOUTUBE_API_KEY:
         return []
     response = httpx.get(
@@ -63,22 +61,18 @@ def _fetch_batch(video_ids: list[str]) -> list[dict]:
 
 
 def fetch_and_store_metadata(video_ids: list[str], user_id: str = DEFAULT_USER_ID):
-    """Fetch metadata for all video_ids in batches, store in DB, update is_shorts."""
     unique_ids = [vid for vid in set(video_ids) if vid]
     if not unique_ids:
         return
 
     sb = get_supabase_client()
 
-    # Check which IDs already have metadata (skip re-fetching) — chunked to avoid URL too long
     existing_ids: set[str] = set()
-    for i in range(0, len(unique_ids), 500):
-        chunk = unique_ids[i : i + 500]
+    for chunk in chunk_list(unique_ids):
         resp = sb.table("video_metadata").select("video_id").in_("video_id", chunk).execute()
         existing_ids.update(r["video_id"] for r in resp.data)
     new_ids = [vid for vid in unique_ids if vid not in existing_ids]
 
-    # Fetch & store metadata for new videos only
     if new_ids:
         all_records = []
         for i in range(0, len(new_ids), YOUTUBE_BATCH_SIZE):
@@ -91,25 +85,20 @@ def fetch_and_store_metadata(video_ids: list[str], user_id: str = DEFAULT_USER_I
                 continue
 
         if all_records:
-            for i in range(0, len(all_records), 500):
-                batch = all_records[i : i + 500]
-                sb.table("video_metadata").upsert(batch).execute()
+            for chunk in chunk_list(all_records):
+                sb.table("video_metadata").upsert(chunk).execute()
 
-    # Update is_shorts from ALL metadata (including previously fetched)
+    # Determine shorts from metadata durations
     shorts_ids: list[str] = []
-    for i in range(0, len(unique_ids), 500):
-        chunk = unique_ids[i : i + 500]
+    for chunk in chunk_list(unique_ids):
         meta = sb.table("video_metadata").select("video_id, duration_seconds").in_("video_id", chunk).execute()
         shorts_ids.extend(
             r["video_id"] for r in meta.data
             if r["duration_seconds"] and r["duration_seconds"] <= SHORTS_MAX_DURATION_SECONDS
         )
 
-    # Reset all to false first, then set shorts to true
-    for i in range(0, len(unique_ids), 500):
-        chunk = unique_ids[i : i + 500]
+    for chunk in chunk_list(unique_ids):
         sb.table("watch_records").update({"is_shorts": False}).eq("user_id", user_id).in_("video_id", chunk).execute()
 
-    for i in range(0, len(shorts_ids), 500):
-        chunk = shorts_ids[i : i + 500]
+    for chunk in chunk_list(shorts_ids):
         sb.table("watch_records").update({"is_shorts": True}).eq("user_id", user_id).in_("video_id", chunk).execute()

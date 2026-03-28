@@ -1,16 +1,9 @@
-from dataclasses import dataclass, field
+from app.models.schemas import ParseResult
+from app.utils import parse_period
 from config.settings import SUPPORTED_HEADERS, SEARCH_TITLE_PREFIX, DEFAULT_USER_ID
 
 
-@dataclass
-class SearchParseResult:
-    records: list = field(default_factory=list)
-    total: int = 0
-    skipped: int = 0
-    period: str = ""
-
-
-def parse_search_history(data: list[dict]) -> SearchParseResult:
+def parse_search_history(data: list[dict]) -> ParseResult:
     records = []
     skipped = 0
     timestamps = []
@@ -38,14 +31,9 @@ def parse_search_history(data: list[dict]) -> SearchParseResult:
             "searched_at": time_str,
         })
 
-    period = ""
-    if timestamps:
-        dates = sorted(t[:10] for t in timestamps)
-        period = f"{dates[0]} ~ {dates[-1]}"
-
-    return SearchParseResult(
+    return ParseResult(
         records=records,
         total=len(records),
         skipped=skipped,
-        period=period,
+        period=parse_period(timestamps),
     )

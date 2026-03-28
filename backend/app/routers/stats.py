@@ -1,5 +1,4 @@
 import json
-import math
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Query
@@ -8,8 +7,9 @@ from app.db.supabase import get_supabase_client
 from app.models.schemas import PeriodInfo
 from app.services.indices import calc_dopamine
 from app.services.insights import generate_insights
+from app.utils import to_local, sse, chunk_list, USER_TZ
 from config.settings import (
-    DEFAULT_USER_ID, USER_TZ_OFFSET_HOURS,
+    DEFAULT_USER_ID,
     WATCH_TIME_CAP_SECONDS, AVG_RETENTION_SHORTS, AVG_RETENTION_LONGFORM,
     LATE_NIGHT_HOURS,
 )
@@ -17,7 +17,27 @@ from config.settings import (
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
 PAGE_SIZE = 1000
-USER_TZ = timezone(timedelta(hours=USER_TZ_OFFSET_HOURS))
+
+DAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
+
+TYPE_NAMES = {
+    "NSBF": ("야행성 숏츠 폭주러", "밤마다 Shorts를 몰아보는 충성 시청자. 알고리즘이 가장 좋아하는 타입."),
+    "NSBE": ("올빼미 탐험가", "밤에 Shorts를 다양한 채널에서 폭주 시청. 새로운 콘텐츠에 목마른 타입."),
+    "NSCF": ("야행성 습관 시청자", "매일 밤 꾸준히 같은 채널의 Shorts를 시청. 루틴형 올빼미."),
+    "NSCE": ("밤산책 감상러", "밤에 이것저것 구경하듯 Shorts를 꾸준히 소비하는 탐색형."),
+    "NLBF": ("심야 정주행러", "밤에 좋아하는 채널의 긴 영상을 몰아보는 집중형 시청자."),
+    "NLBE": ("밤새 서핑러", "다양한 채널의 롱폼을 밤에 몰아보는 자유로운 영혼."),
+    "NLCF": ("충성 올빼미", "매일 밤 꾸준히 즐겨보는 채널의 롱폼 콘텐츠를 시청."),
+    "NLCE": ("야행성 큐레이터", "밤에 다양한 롱폼을 꾸준히 탐색하는 감상형 시청자."),
+    "DSBF": ("주간 숏츠 폭주러", "낮 시간에 같은 채널 Shorts를 몰아보는 패턴. 점심시간 주의."),
+    "DSBE": ("트렌드 서퍼", "낮에 다양한 채널의 Shorts를 폭주 시청. 유행에 민감한 타입."),
+    "DSCF": ("출퇴근 숏츠러", "낮에 꾸준히 Shorts를 시청하는 습관형. 이동 중 시청 가능성 높음."),
+    "DSCE": ("일상 브라우저", "낮에 이것저것 Shorts를 가볍게 둘러보는 일상형 시청자."),
+    "DLBF": ("몰입 학습러", "좋아하는 채널의 롱폼을 낮에 집중 시청. 학습·정보 탐구형."),
+    "DLBE": ("주간 정주행러", "낮에 다양한 롱폼을 몰아보는 탐색형 시청자."),
+    "DLCF": ("꾸준한 구독자", "매일 즐겨보는 채널의 롱폼을 꾸준히 시청하는 안정형."),
+    "DLCE": ("롱폼 탐험가", "다양한 채널의 롱폼을 매일 꾸준히 탐색하는 호기심 가득한 시청자."),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -34,11 +54,6 @@ def _local_date_to_utc(local_date: str, end_of_day: bool = False) -> str:
             hour=0, minute=0, second=0, tzinfo=USER_TZ
         )
     return local_dt.astimezone(timezone.utc).isoformat()
-
-
-def _to_local(watched_at: str) -> datetime:
-    dt = datetime.fromisoformat(watched_at.replace("Z", "+00:00"))
-    return dt.astimezone(USER_TZ)
 
 
 def _fetch_all_rows(query, page_size: int = PAGE_SIZE) -> list[dict]:
@@ -73,49 +88,33 @@ def _fetch_search_records(user_id: str, date_from: str, date_to: str) -> list[di
     return _fetch_all_rows(query)
 
 
-def _fetch_durations(video_ids: list[str]) -> dict[str, int]:
+def _fetch_video_metadata(video_ids: list[str]) -> tuple[dict[str, int], dict[str, str]]:
+    """Fetch durations and categories in a single pass over video_metadata."""
     sb = get_supabase_client()
     id_to_duration: dict[str, int] = {}
-    for i in range(0, len(video_ids), 500):
-        chunk = video_ids[i : i + 500]
+    id_to_category: dict[str, str] = {}
+    for chunk in chunk_list(video_ids):
         meta = sb.table("video_metadata").select(
-            "video_id, duration_seconds"
+            "video_id, duration_seconds, category_name"
         ).in_("video_id", chunk).execute()
         for r in meta.data:
             if r["duration_seconds"]:
                 id_to_duration[r["video_id"]] = r["duration_seconds"]
-    return id_to_duration
-
-
-def _fetch_categories(video_ids: list[str]) -> dict[str, str]:
-    sb = get_supabase_client()
-    id_to_category: dict[str, str] = {}
-    for i in range(0, len(video_ids), 500):
-        chunk = video_ids[i : i + 500]
-        result = sb.table("video_metadata").select(
-            "video_id, category_name"
-        ).in_("video_id", chunk).execute()
-        for r in result.data:
             id_to_category[r["video_id"]] = r["category_name"]
-    return id_to_category
+    return id_to_duration, id_to_category
 
 
 # ---------------------------------------------------------------------------
 # Computation functions (pure logic, no DB calls)
 # ---------------------------------------------------------------------------
 
-def _active_days(records: list[dict]) -> int:
-    """Number of unique days with at least one viewing record."""
-    return len({_to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records}) or 1
-
-
 def _compute_summary(records: list[dict]) -> dict:
     if not records:
         return {"total_watched": 0, "total_channels": 0, "period": "", "daily_average": 0, "shorts_count": 0}
     channels = {r["channel_name"] for r in records if r["channel_name"]}
-    local_dates = sorted({_to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records})
+    local_dates = sorted({to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records})
     period = f"{local_dates[0]} ~ {local_dates[-1]}" if local_dates else ""
-    num_days = _active_days(records)
+    num_days = len(local_dates) or 1
     shorts_count = sum(1 for r in records if r["is_shorts"])
     return {
         "total_watched": len(records),
@@ -129,12 +128,12 @@ def _compute_summary(records: list[dict]) -> dict:
 def _compute_hourly(records: list[dict]) -> list[dict]:
     hour_counts = Counter()
     for r in records:
-        hour_counts[_to_local(r["watched_at"]).hour] += 1
+        hour_counts[to_local(r["watched_at"]).hour] += 1
     return [{"hour": h, "count": hour_counts.get(h, 0)} for h in range(24)]
 
 
 def _compute_daily(records: list[dict]) -> list[dict]:
-    day_counts = Counter(_to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records)
+    day_counts = Counter(to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records)
     return sorted(
         [{"date": d, "count": c} for d, c in day_counts.items()],
         key=lambda x: x["date"],
@@ -167,7 +166,7 @@ def _compute_shorts(records: list[dict]) -> dict:
     day_shorts: Counter[str] = Counter()
     day_total: Counter[str] = Counter()
     for r in records:
-        date = _to_local(r["watched_at"]).strftime("%Y-%m-%d")
+        date = to_local(r["watched_at"]).strftime("%Y-%m-%d")
         day_total[date] += 1
         if r["is_shorts"]:
             day_shorts[date] += 1
@@ -197,7 +196,7 @@ def _compute_categories(records: list[dict], id_to_category: dict[str, str]) -> 
         vid = r["video_id"]
         if not vid:
             continue
-        cat = id_to_category.get(vid, "Unknown")
+        cat = id_to_category.get(vid, "미분류")
         if cat == "Unknown":
             cat = "미분류"
         if r["is_shorts"]:
@@ -237,8 +236,8 @@ def _compute_watch_time(records: list[dict], id_to_duration: dict[str, int]) -> 
         capped = min(duration, WATCH_TIME_CAP_SECONDS)
 
         if idx < len(sorted_records) - 1:
-            current_dt = datetime.fromisoformat(rec["watched_at"].replace("Z", "+00:00"))
-            next_dt = datetime.fromisoformat(sorted_records[idx + 1]["watched_at"].replace("Z", "+00:00"))
+            current_dt = to_local(rec["watched_at"])
+            next_dt = to_local(sorted_records[idx + 1]["watched_at"])
             gap_seconds = (next_dt - current_dt).total_seconds()
             if 0 < gap_seconds < duration:
                 total_min_seconds += gap_seconds
@@ -251,13 +250,13 @@ def _compute_watch_time(records: list[dict], id_to_duration: dict[str, int]) -> 
         total_max_seconds += capped
         estimated_count += 1
 
-    num_days = _active_days(records)
+    active_days = len({to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records}) or 1
 
     return {
         "total_min_hours": round(total_min_seconds / 3600, 1),
         "total_max_hours": round(total_max_seconds / 3600, 1),
-        "daily_min_hours": round(total_min_seconds / 3600 / num_days, 1),
-        "daily_max_hours": round(total_max_seconds / 3600 / num_days, 1),
+        "daily_min_hours": round(total_min_seconds / 3600 / active_days, 1),
+        "daily_max_hours": round(total_max_seconds / 3600 / active_days, 1),
         "gap_based_count": gap_based_count,
         "estimated_count": estimated_count,
     }
@@ -271,8 +270,12 @@ def _compute_search_keywords(search_records: list[dict]) -> list[dict]:
     )
 
 
+def _get_week_key(dt: datetime) -> str:
+    iso = dt.isocalendar()
+    return f"{iso.year}-W{iso.week:02d}"
+
+
 def _compute_weekly_watch_time(records: list[dict], id_to_duration: dict[str, int]) -> list[dict]:
-    """Per-week watch time estimation using the same gap-based + retention logic."""
     if not records:
         return []
 
@@ -289,14 +292,13 @@ def _compute_weekly_watch_time(records: list[dict], id_to_duration: dict[str, in
             continue
 
         capped = min(duration, WATCH_TIME_CAP_SECONDS)
-        local = _to_local(rec["watched_at"])
-        iso = local.isocalendar()
-        week_key = f"{iso.year}-W{iso.week:02d}"
+        local = to_local(rec["watched_at"])
+        week_key = _get_week_key(local)
         week_dates.setdefault(week_key, set()).add(local.strftime("%Y-%m-%d"))
 
         if idx < len(sorted_records) - 1:
-            current_dt = datetime.fromisoformat(rec["watched_at"].replace("Z", "+00:00"))
-            next_dt = datetime.fromisoformat(sorted_records[idx + 1]["watched_at"].replace("Z", "+00:00"))
+            current_dt = local
+            next_dt = to_local(sorted_records[idx + 1]["watched_at"])
             gap = (next_dt - current_dt).total_seconds()
             if 0 < gap < duration:
                 week_min[week_key] += gap
@@ -336,15 +338,13 @@ def _compute_weekly_watch_time(records: list[dict], id_to_duration: dict[str, in
 
 
 def _compute_weekly(records: list[dict]) -> list[dict]:
-    """Group records into ISO weeks and return per-week stats."""
     if not records:
         return []
 
     week_data: dict[str, dict] = {}
     for r in records:
-        local = _to_local(r["watched_at"])
-        iso = local.isocalendar()
-        week_key = f"{iso.year}-W{iso.week:02d}"
+        local = to_local(r["watched_at"])
+        week_key = _get_week_key(local)
         if week_key not in week_data:
             week_data[week_key] = {"total": 0, "shorts": 0, "dates": set()}
         week_data[week_key]["total"] += 1
@@ -370,12 +370,10 @@ def _compute_weekly(records: list[dict]) -> list[dict]:
 
 
 def _compute_day_of_week(records: list[dict]) -> list[dict]:
-    """Average viewing count per day-of-week (Mon=0 ~ Sun=6)."""
-    DAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
     day_counts: dict[int, Counter] = {i: Counter() for i in range(7)}
 
     for r in records:
-        local = _to_local(r["watched_at"])
+        local = to_local(r["watched_at"])
         weekday = local.weekday()
         date_str = local.strftime("%Y-%m-%d")
         day_counts[weekday][date_str] += 1
@@ -398,13 +396,12 @@ def _compute_day_of_week(records: list[dict]) -> list[dict]:
 
 
 def _compute_viewer_type(records: list[dict], shorts_data: dict, hourly: list[dict]) -> dict:
-    """Compute a 4-letter viewer personality code based on viewing patterns."""
     total = len(records)
     if total == 0:
         return {"code": "----", "type_name": "데이터 없음", "description": "", "axes": []}
 
     # Axis 1: Time — Nocturnal(N) vs Diurnal(D)
-    late_count = sum(1 for r in records if _to_local(r["watched_at"]).hour in LATE_NIGHT_HOURS)
+    late_count = sum(1 for r in records if to_local(r["watched_at"]).hour in LATE_NIGHT_HOURS)
     late_ratio = late_count / total
     is_nocturnal = late_ratio >= 0.3
 
@@ -413,7 +410,7 @@ def _compute_viewer_type(records: list[dict], shorts_data: dict, hourly: list[di
     is_shorts = shorts_ratio >= 0.5
 
     # Axis 3: Pattern — Burst(B) vs Consistent(C)
-    day_counts = Counter(_to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records)
+    day_counts = Counter(to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records)
     counts = list(day_counts.values())
     avg = sum(counts) / len(counts) if counts else 0
     variance = sum((c - avg) ** 2 for c in counts) / len(counts) if counts else 0
@@ -440,25 +437,6 @@ def _compute_viewer_type(records: list[dict], shorts_data: dict, hourly: list[di
         {"axis": "채널", "left": "탐험형", "right": "충성형", "value": round(concentration, 2), "pick": "F" if is_focused else "E"},
     ]
 
-    TYPE_NAMES = {
-        "NSBF": ("야행성 숏츠 폭주러", "밤마다 Shorts를 몰아보는 충성 시청자. 알고리즘이 가장 좋아하는 타입."),
-        "NSBE": ("올빼미 탐험가", "밤에 Shorts를 다양한 채널에서 폭주 시청. 새로운 콘텐츠에 목마른 타입."),
-        "NSCF": ("야행성 습관 시청자", "매일 밤 꾸준히 같은 채널의 Shorts를 시청. 루틴형 올빼미."),
-        "NSCE": ("밤산책 감상러", "밤에 이것저것 구경하듯 Shorts를 꾸준히 소비하는 탐색형."),
-        "NLBF": ("심야 정주행러", "밤에 좋아하는 채널의 긴 영상을 몰아보는 집중형 시청자."),
-        "NLBE": ("밤새 서핑러", "다양한 채널의 롱폼을 밤에 몰아보는 자유로운 영혼."),
-        "NLCF": ("충성 올빼미", "매일 밤 꾸준히 즐겨보는 채널의 롱폼 콘텐츠를 시청."),
-        "NLCE": ("야행성 큐레이터", "밤에 다양한 롱폼을 꾸준히 탐색하는 감상형 시청자."),
-        "DSBF": ("주간 숏츠 폭주러", "낮 시간에 같은 채널 Shorts를 몰아보는 패턴. 점심시간 주의."),
-        "DSBE": ("트렌드 서퍼", "낮에 다양한 채널의 Shorts를 폭주 시청. 유행에 민감한 타입."),
-        "DSCF": ("출퇴근 숏츠러", "낮에 꾸준히 Shorts를 시청하는 습관형. 이동 중 시청 가능성 높음."),
-        "DSCE": ("일상 브라우저", "낮에 이것저것 Shorts를 가볍게 둘러보는 일상형 시청자."),
-        "DLBF": ("몰입 학습러", "좋아하는 채널의 롱폼을 낮에 집중 시청. 학습·정보 탐구형."),
-        "DLBE": ("주간 정주행러", "낮에 다양한 롱폼을 몰아보는 탐색형 시청자."),
-        "DLCF": ("꾸준한 구독자", "매일 즐겨보는 채널의 롱폼을 꾸준히 시청하는 안정형."),
-        "DLCE": ("롱폼 탐험가", "다양한 채널의 롱폼을 매일 꾸준히 탐색하는 호기심 가득한 시청자."),
-    }
-
     type_name, description = TYPE_NAMES.get(code, ("유니크 시청자", "독특한 시청 패턴을 가진 나만의 스타일."))
 
     return {
@@ -470,7 +448,7 @@ def _compute_viewer_type(records: list[dict], shorts_data: dict, hourly: list[di
 
 
 # ---------------------------------------------------------------------------
-# GET /api/stats/period — data range available in DB
+# GET /api/stats/period
 # ---------------------------------------------------------------------------
 
 @router.get("/period", response_model=PeriodInfo)
@@ -486,8 +464,8 @@ def get_period(user_id: str = Query(default=DEFAULT_USER_ID)):
     if not earliest.data or not latest.data:
         return PeriodInfo(date_from="", date_to="", total_days=0)
 
-    date_from = _to_local(earliest.data[0]["watched_at"]).strftime("%Y-%m-%d")
-    date_to = _to_local(latest.data[0]["watched_at"]).strftime("%Y-%m-%d")
+    date_from = to_local(earliest.data[0]["watched_at"]).strftime("%Y-%m-%d")
+    date_to = to_local(latest.data[0]["watched_at"]).strftime("%Y-%m-%d")
     d1 = datetime.strptime(date_from, "%Y-%m-%d")
     d2 = datetime.strptime(date_to, "%Y-%m-%d")
     total_days = (d2 - d1).days + 1
@@ -496,12 +474,8 @@ def get_period(user_id: str = Query(default=DEFAULT_USER_ID)):
 
 
 # ---------------------------------------------------------------------------
-# GET /api/stats/dashboard — SSE endpoint, single DB fetch, streams all sections
+# GET /api/stats/dashboard — SSE endpoint
 # ---------------------------------------------------------------------------
-
-def _sse(event: str, data: dict) -> str:
-    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-
 
 SECTIONS = [
     "summary", "hourly", "daily", "top_channels", "shorts",
@@ -512,89 +486,73 @@ SECTIONS = [
 
 def _dashboard_stream(user_id: str, date_from: str, date_to: str):
     total_sections = len(SECTIONS)
+    loaded = 0
 
-    yield _sse("progress", {"step": "데이터 조회 중...", "loaded": 0, "total": total_sections})
+    yield sse("progress", {"step": "데이터 조회 중...", "loaded": 0, "total": total_sections})
 
     records = _fetch_watch_records(user_id, date_from, date_to)
     search_records = _fetch_search_records(user_id, date_from, date_to)
 
     video_ids = list({r["video_id"] for r in records if r.get("video_id")})
-    id_to_duration = _fetch_durations(video_ids) if video_ids else {}
-    id_to_category = _fetch_categories(video_ids) if video_ids else {}
+    id_to_duration, id_to_category = _fetch_video_metadata(video_ids) if video_ids else ({}, {})
 
-    loaded = 0
-
-    # 1. Summary
     summary = _compute_summary(records)
     loaded += 1
-    yield _sse("section", {"name": "summary", "data": summary, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "summary", "data": summary, "loaded": loaded, "total": total_sections})
 
-    # 2. Hourly
     hourly = _compute_hourly(records)
     loaded += 1
-    yield _sse("section", {"name": "hourly", "data": hourly, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "hourly", "data": hourly, "loaded": loaded, "total": total_sections})
 
-    # 3. Daily
     daily = _compute_daily(records)
     loaded += 1
-    yield _sse("section", {"name": "daily", "data": daily, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "daily", "data": daily, "loaded": loaded, "total": total_sections})
 
-    # 4. Top Channels
     top_channels = _compute_top_channels(records)
     loaded += 1
-    yield _sse("section", {"name": "top_channels", "data": top_channels, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "top_channels", "data": top_channels, "loaded": loaded, "total": total_sections})
 
-    # 5. Shorts
     shorts = _compute_shorts(records)
     loaded += 1
-    yield _sse("section", {"name": "shorts", "data": shorts, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "shorts", "data": shorts, "loaded": loaded, "total": total_sections})
 
-    # 6. Categories
     categories = _compute_categories(records, id_to_category)
     loaded += 1
-    yield _sse("section", {"name": "categories", "data": categories, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "categories", "data": categories, "loaded": loaded, "total": total_sections})
 
-    # 7. Watch Time
     watch_time = _compute_watch_time(records, id_to_duration)
     loaded += 1
-    yield _sse("section", {"name": "watch_time", "data": watch_time, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "watch_time", "data": watch_time, "loaded": loaded, "total": total_sections})
 
-    # 8. Weekly Watch Time
     weekly_watch_time = _compute_weekly_watch_time(records, id_to_duration)
     loaded += 1
-    yield _sse("section", {"name": "weekly_watch_time", "data": weekly_watch_time, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "weekly_watch_time", "data": weekly_watch_time, "loaded": loaded, "total": total_sections})
 
-    # 9. Weekly Comparison
     weekly = _compute_weekly(records)
     loaded += 1
-    yield _sse("section", {"name": "weekly", "data": weekly, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "weekly", "data": weekly, "loaded": loaded, "total": total_sections})
 
-    # 10. Dopamine
     dopamine = calc_dopamine(records, id_to_duration)
     loaded += 1
-    yield _sse("section", {"name": "dopamine", "data": dopamine, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "dopamine", "data": dopamine, "loaded": loaded, "total": total_sections})
 
-    # 11. Day of Week
     day_of_week = _compute_day_of_week(records)
     loaded += 1
-    yield _sse("section", {"name": "day_of_week", "data": day_of_week, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "day_of_week", "data": day_of_week, "loaded": loaded, "total": total_sections})
 
-    # 12. Viewer Type
     viewer_type = _compute_viewer_type(records, shorts, hourly)
     loaded += 1
-    yield _sse("section", {"name": "viewer_type", "data": viewer_type, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "viewer_type", "data": viewer_type, "loaded": loaded, "total": total_sections})
 
-    # 13. Search Keywords
     keywords = _compute_search_keywords(search_records)
     loaded += 1
-    yield _sse("section", {"name": "search_keywords", "data": keywords, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "search_keywords", "data": keywords, "loaded": loaded, "total": total_sections})
 
-    # 14. Insights (depends on all above)
     insights = generate_insights(summary, hourly, shorts, dopamine, watch_time, weekly)
     loaded += 1
-    yield _sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
+    yield sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
 
-    yield _sse("done", {"loaded": total_sections, "total": total_sections})
+    yield sse("done", {"loaded": total_sections, "total": total_sections})
 
 
 @router.get("/dashboard")
