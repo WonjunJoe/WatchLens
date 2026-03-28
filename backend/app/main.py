@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.upload import router as upload_router
 from app.routers.stats import router as stats_router
+from app.routers.instagram import router as instagram_router
 
 app = FastAPI(title="WatchLens API")
 
@@ -16,6 +17,7 @@ app.add_middleware(
 
 app.include_router(upload_router)
 app.include_router(stats_router)
+app.include_router(instagram_router)
 
 @app.get("/health")
 def health():
