@@ -9,7 +9,7 @@ function ChannelList({ title, data, color }: { title: string; data: ChannelCount
     <div>
       <h3 className="text-[13px] font-medium text-[var(--text-secondary)] mb-3">{title}</h3>
       <div className="space-y-2.5">
-        {data.slice(0, 5).map((ch, i) => (
+        {data.slice(0, 10).map((ch, i) => (
           <div key={ch.channel_name} className="flex items-center gap-3">
             <span className={`w-6 h-6 rounded text-[12px] font-semibold flex items-center justify-center flex-shrink-0 ${
               i === 0 ? "bg-[var(--amber-light)] text-[var(--amber)]" : "bg-gray-100 text-[var(--text-secondary)]"

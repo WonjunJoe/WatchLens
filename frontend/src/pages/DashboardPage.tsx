@@ -158,9 +158,14 @@ export function DashboardPage() {
         </Link>
       </header>
 
+      {/* Insights — 핵심 요약 최상단 */}
+      <div className="mb-4">
+        <InsightSummary data={data.insights} />
+      </div>
+
       {/* KPI Cards */}
       <div className="mb-6">
-        <SummaryCards data={data.summary} />
+        <SummaryCards data={data.summary} watchTime={data.watch_time} />
       </div>
 
       {/* Row: Viewer Type + Dopamine + Watch Time — 핵심 정보 상단 배치 */}
@@ -187,13 +192,12 @@ export function DashboardPage() {
         <Categories data={data.categories} />
       </div>
 
-      {/* Row: Insights + Search Keywords */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <InsightSummary data={data.insights} />
-        {data.search_keywords && data.search_keywords.length > 0 && (
+      {/* Search Keywords */}
+      {data.search_keywords && data.search_keywords.length > 0 && (
+        <div className="mt-4">
           <SearchKeywords data={data.search_keywords} />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

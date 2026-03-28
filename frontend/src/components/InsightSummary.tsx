@@ -5,6 +5,21 @@ interface InsightItem {
   text: string;
 }
 
+function formatText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      const inner = part.slice(2, -2);
+      return (
+        <strong key={i} className="font-semibold text-[var(--text-primary)] underline decoration-[var(--accent)]/30 underline-offset-2">
+          {inner}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
 export function InsightSummary({ data }: { data: InsightItem[] | null }) {
   if (!data || data.length === 0) return null;
 
@@ -17,7 +32,7 @@ export function InsightSummary({ data }: { data: InsightItem[] | null }) {
             <span className="text-[var(--accent)] flex-shrink-0 mt-0.5">
               {emojiToIcon(item.icon, 16)}
             </span>
-            <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">{item.text}</p>
+            <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">{formatText(item.text)}</p>
           </div>
         ))}
       </div>

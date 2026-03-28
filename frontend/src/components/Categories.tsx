@@ -30,8 +30,8 @@ function CategoryPie({ title, data }: { title: string; data: CategoryCount[] }) 
   return (
     <div className="flex-1 min-w-0">
       <p className="text-[13px] text-[var(--text-secondary)] mb-1 text-center">{title}</p>
-      <div className="flex items-center gap-2">
-        <div className="w-[140px] h-[140px] flex-shrink-0">
+      <div className="flex flex-col items-center">
+        <div className="w-[140px] h-[140px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -52,7 +52,7 @@ function CategoryPie({ title, data }: { title: string; data: CategoryCount[] }) 
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex-1 space-y-1">
+        <div className="w-full mt-3 space-y-1">
           {chartData.map((item, i) => (
             <div key={item.category_name} className="flex items-center gap-2 text-[12px]">
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PASTEL_COLORS[i % PASTEL_COLORS.length] }} />
