@@ -134,11 +134,11 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
 
 @router.post("/upload")
 async def upload_instagram(file: UploadFile = File(...)):
+    if not file.filename or not file.filename.endswith(".zip"):
+        raise HTTPException(400, "ZIP 파일만 업로드 가능합니다")
     file_bytes = await file.read()
     if len(file_bytes) > MAX_ZIP_SIZE_BYTES:
         raise HTTPException(413, f"파일 크기가 {MAX_ZIP_SIZE_BYTES // (1024*1024)}MB를 초과합니다")
-    if not file.filename or not file.filename.endswith(".zip"):
-        raise HTTPException(400, "ZIP 파일만 업로드 가능합니다")
     return StreamingResponse(_instagram_upload_stream(file_bytes), media_type="text/event-stream")
 
 

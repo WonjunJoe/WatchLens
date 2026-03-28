@@ -8,8 +8,8 @@ interface SidebarProps {
 
 const MENU = [
   { label: "홈", icon: Home, path: "/" },
-  { label: "YouTube 대시보드", icon: BarChart3, path: "/youtube" },
-  { label: "Instagram 대시보드", icon: Eye, path: "/instagram" },
+  { label: "YouTube 대시보드", icon: BarChart3, path: "/youtube/dashboard" },
+  { label: "Instagram 대시보드", icon: Eye, path: "/instagram/dashboard" },
 ];
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
