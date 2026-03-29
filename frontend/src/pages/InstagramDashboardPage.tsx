@@ -44,7 +44,7 @@ export function InstagramDashboardPage() {
           <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">아직 데이터가 없습니다</p>
           <p className="text-[14px] text-[var(--text-secondary)] mb-6">Instagram 데이터를 먼저 업로드해주세요.</p>
           <Link
-            to="/"
+            to="/upload"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity"
           >
             업로드하러 가기
@@ -60,7 +60,7 @@ export function InstagramDashboardPage() {
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Instagram 대시보드</h1>
         <Link
-          to="/"
+          to="/upload"
           className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
         >
           <RefreshCw size={14} />

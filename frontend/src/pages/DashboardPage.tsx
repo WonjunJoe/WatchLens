@@ -99,7 +99,7 @@ export function DashboardPage() {
         <div className="card p-8 text-center max-w-sm">
           <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">오류 발생</p>
           <p className="text-[14px] text-[var(--text-secondary)] mb-6">{error}</p>
-          <Link to="/" className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity">
+          <Link to="/upload" className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity">
             <RefreshCw size={14} />
             다시 시도
           </Link>
@@ -120,7 +120,7 @@ export function DashboardPage() {
           </div>
         </div>
         <Link
-          to="/"
+          to="/upload"
           className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
         >
           <RefreshCw size={14} />
