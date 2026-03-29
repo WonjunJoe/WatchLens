@@ -13,32 +13,16 @@ import { ViewerType } from "../components/ViewerType";
 import { DayOfWeekChart } from "../components/DayOfWeekChart";
 import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
+import { useYouTubeData } from "../contexts/YouTubeDataContext";
 
 const API_BASE = "http://localhost:8000";
-
-interface DashboardState {
-  summary: any;
-  hourly: any;
-  daily: any;
-  top_channels: any;
-  shorts: any;
-  categories: any;
-  watch_time: any;
-  weekly_watch_time: any;
-  weekly: any;
-  dopamine: any;
-  day_of_week: any;
-  viewer_type: any;
-  search_keywords: any;
-  insights: any;
-}
 
 export function DashboardPage() {
   const [params] = useSearchParams();
   const dateFrom = params.get("from") || "";
   const dateTo = params.get("to") || "";
 
-  const [data, setData] = useState<Partial<DashboardState>>({});
+  const { data, setSection, clear } = useYouTubeData();
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState({ loaded: 0, total: 14, step: "" });
   const [error, setError] = useState<string | null>(null);
@@ -52,9 +36,15 @@ export function DashboardPage() {
       return;
     }
 
+    // Skip fetch if data is already cached
+    if (data.summary) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    setData({});
+    clear();
     setProgress({ loaded: 0, total: 14, step: "데이터 로드 중..." });
 
     try {
@@ -64,7 +54,7 @@ export function DashboardPage() {
           if (event === "progress") {
             setProgress({ loaded: payload.loaded || 0, total: payload.total || 14, step: payload.step || "" });
           } else if (event === "section") {
-            setData((prev) => ({ ...prev, [payload.name]: payload.data }));
+            setSection(payload.name, payload.data);
             setProgress({ loaded: payload.loaded, total: payload.total, step: `${payload.loaded}/${payload.total}` });
           } else if (event === "done") {
             setLoading(false);
@@ -76,7 +66,7 @@ export function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo, stream]);
+  }, [dateFrom, dateTo, stream, data.summary, setSection, clear]);
 
   useEffect(() => {
     fetchDashboard();

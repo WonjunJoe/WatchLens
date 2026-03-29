@@ -4,34 +4,26 @@ import { FileUploader } from "../components/FileUploader";
 import { UploadResultCard, type UploadResult } from "../components/UploadResultCard";
 import { PeriodSelector } from "../components/PeriodSelector";
 import { useInstagramData } from "../contexts/InstagramDataContext";
+import { useYouTubeData } from "../contexts/YouTubeDataContext";
 import { Eye, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 
 const API_BASE = "http://localhost:8000";
 
-interface PeriodInfo {
-  date_from: string;
-  date_to: string;
-  total_days: number;
-}
-
 export function HomePage() {
   const navigate = useNavigate();
   const { setSection } = useInstagramData();
+  const { period, fetchPeriod } = useYouTubeData();
 
   // YouTube state
   const [watchResult, setWatchResult] = useState<UploadResult | null>(null);
   const [searchResult, setSearchResult] = useState<UploadResult | null>(null);
-  const [period, setPeriod] = useState<PeriodInfo | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState(false);
 
   // On mount, check if YouTube data already exists in DB
   useEffect(() => {
-    fetch(`${API_BASE}/api/stats/period`)
-      .then((res) => res.json())
-      .then((d) => { if (d.date_from) setPeriod(d); })
-      .catch(() => {});
-  }, []);
+    fetchPeriod();
+  }, [fetchPeriod]);
 
   // Instagram state
   const [igUploading, setIgUploading] = useState(false);
@@ -42,11 +34,7 @@ export function HomePage() {
   const handleWatchResult = (data: any) => {
     setWatchResult({ type: "watch", ...data });
     setLoadingPeriod(true);
-    fetch(`${API_BASE}/api/stats/period`)
-      .then((res) => res.json())
-      .then((d) => { if (d.date_from) setPeriod(d); })
-      .catch(() => {})
-      .finally(() => setLoadingPeriod(false));
+    fetchPeriod().finally(() => setLoadingPeriod(false));
   };
 
   const handlePeriodSelect = (from: string, to: string) => {
