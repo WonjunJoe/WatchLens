@@ -2,16 +2,14 @@
 
 from app.db.supabase import get_supabase_client
 from app.utils import chunk_list
-from config.settings import DB_CHUNK_SIZE, DEFAULT_USER_ID
-
-PAGE_SIZE = 1000
+from config.settings import DB_CHUNK_SIZE, DB_PAGE_SIZE, DEFAULT_USER_ID
 
 
 # ---------------------------------------------------------------------------
 # Pagination helper
 # ---------------------------------------------------------------------------
 
-def _fetch_all_rows(query, page_size: int = PAGE_SIZE) -> list[dict]:
+def _fetch_all_rows(query, page_size: int = DB_PAGE_SIZE) -> list[dict]:
     all_data: list[dict] = []
     offset = 0
     while True:
@@ -28,6 +26,10 @@ def _fetch_all_rows(query, page_size: int = PAGE_SIZE) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def fetch_watch_records(user_id: str, date_from: str, date_to: str) -> list[dict]:
+    """Fetch watch_records for a user within a date range.
+
+    date_from and date_to must be UTC ISO-8601 strings.
+    """
     sb = get_supabase_client()
     query = sb.table("watch_records").select(
         "video_id, video_title, channel_name, watched_at, is_shorts"
@@ -36,6 +38,10 @@ def fetch_watch_records(user_id: str, date_from: str, date_to: str) -> list[dict
 
 
 def fetch_search_records(user_id: str, date_from: str, date_to: str) -> list[dict]:
+    """Fetch search_records for a user within a date range.
+
+    date_from and date_to must be UTC ISO-8601 strings.
+    """
     sb = get_supabase_client()
     query = sb.table("search_records").select("query").eq(
         "user_id", user_id
@@ -79,7 +85,7 @@ def fetch_period(user_id: str) -> tuple[str, str]:
 # Upload helpers
 # ---------------------------------------------------------------------------
 
-def delete_user_records(table: str, user_id: str, timestamp_col: str = "") -> None:
+def delete_user_records(table: str, user_id: str) -> None:
     """Delete all records for a user from the given table."""
     sb = get_supabase_client()
     sb.table(table).delete().eq("user_id", user_id).execute()
@@ -92,7 +98,7 @@ def batch_insert(table: str, records: list) -> None:
         sb.table(table).insert(batch).execute()
 
 
-def store_original_file(bucket: str, path: str, file_bytes: bytes, content_type: str = "") -> bool:
+def store_original_file(bucket: str, path: str, file_bytes: bytes) -> bool:
     """Upload a file to Supabase storage. Returns True on success."""
     sb = get_supabase_client()
     try:

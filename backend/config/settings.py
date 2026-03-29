@@ -18,6 +18,7 @@ USER_TZ_OFFSET_HOURS = 9
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 YOUTUBE_BATCH_SIZE = 50
 DB_CHUNK_SIZE = 500
+DB_PAGE_SIZE = 1000  # Pagination size for fetching rows from Supabase
 SHORTS_MAX_DURATION_SECONDS = 180
 
 # Watch time estimation
