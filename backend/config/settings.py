@@ -65,5 +65,5 @@ INSTAGRAM_SOURCE_FILES = {
     "videos_watched": "ads_information/ads_and_topics/videos_watched.json",
     "topics": "preferences/your_topics/recommended_topics.json",
 }
-MAX_ZIP_SIZE_MB = 100
+MAX_ZIP_SIZE_MB = 500
 MAX_ZIP_SIZE_BYTES = MAX_ZIP_SIZE_MB * 1024 * 1024

@@ -106,30 +106,39 @@ export function HomePage() {
 
   return (
     <div className="max-w-5xl mx-auto py-8">
-      {/* Hero */}
-      <section className="text-center mb-12">
-        <div className="w-14 h-14 mx-auto mb-4 bg-[var(--accent)] rounded-2xl flex items-center justify-center">
-          <Eye size={24} className="text-white" />
+      {/* Hero — 충분한 여백으로 스크롤 유도 */}
+      <section className="text-center mb-16 pt-12">
+        <div className="w-16 h-16 mx-auto mb-6 bg-[var(--accent)] rounded-2xl flex items-center justify-center">
+          <Eye size={28} className="text-white" />
         </div>
-        <h1 className="text-[28px] font-bold text-[var(--text-primary)] mb-2">WatchLens</h1>
-        <p className="text-[16px] text-[var(--text-secondary)] max-w-lg mx-auto">
-          YouTube와 Instagram 사용 패턴을 분석하여 나만의 인사이트를 발견하세요.
+        <h1 className="text-[32px] font-bold text-[var(--text-primary)] mb-3">WatchLens</h1>
+        <p className="text-[17px] text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
+          YouTube와 Instagram 사용 패턴을 분석하여<br />나만의 인사이트를 발견하세요.
         </p>
       </section>
 
-      {/* Upload Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      {/* Upload Grid — 양쪽 높이 맞춤 */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-start">
         {/* YouTube */}
         <div className="card p-6">
           <h2 className="text-[16px] font-semibold text-[var(--text-primary)] mb-1">YouTube</h2>
-          <p className="text-[13px] text-[var(--text-tertiary)] mb-4">Google Takeout의 watch-history.json</p>
-          <FileUploader
-            label="시청 기록"
-            accept=".json"
-            endpoint="/api/upload/watch-history"
-            onResult={handleWatchResult}
-            subtitle="watch-history.json"
-          />
+          <p className="text-[13px] text-[var(--text-tertiary)] mb-4">Google Takeout에서 내보낸 JSON 파일</p>
+          <div className="space-y-3">
+            <FileUploader
+              label="시청 기록"
+              accept=".json"
+              endpoint="/api/upload/watch-history"
+              onResult={handleWatchResult}
+              subtitle="watch-history.json"
+            />
+            <FileUploader
+              label="검색 기록"
+              accept=".json"
+              endpoint="/api/upload/search-history"
+              onResult={(data) => setSearchResult({ type: "search", ...data })}
+              subtitle="search-history.json"
+            />
+          </div>
           {watchResult && (
             <div className="mt-4">
               <UploadResultCard result={watchResult} />
@@ -173,7 +182,7 @@ export function HomePage() {
             <label className="cursor-pointer block">
               <p className="text-[14px] font-medium text-[var(--text-primary)] mb-0.5">Instagram 데이터</p>
               <p className="text-[13px] text-[var(--text-tertiary)] mb-0.5">.zip 파일</p>
-              <p className="text-[12px] text-[var(--text-tertiary)]">드래그 또는 클릭 (최대 100MB)</p>
+              <p className="text-[12px] text-[var(--text-tertiary)]">드래그 또는 클릭 (최대 500MB)</p>
               <input
                 type="file"
                 accept=".zip"
