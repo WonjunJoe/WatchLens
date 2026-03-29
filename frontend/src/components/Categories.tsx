@@ -48,7 +48,7 @@ function CategoryPie({ title, data }: { title: string; data: CategoryCount[] }) 
                   <Cell key={i} fill={PASTEL_COLORS[i % PASTEL_COLORS.length]} fillOpacity={0.85} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v}건`, ""]} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, name: any) => [`${v}건`, name]} />
             </PieChart>
           </ResponsiveContainer>
         </div>

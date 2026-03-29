@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUploader } from "../components/FileUploader";
 import { UploadResultCard, type UploadResult } from "../components/UploadResultCard";
 import { PeriodSelector } from "../components/PeriodSelector";
 import { useInstagramData } from "../contexts/InstagramDataContext";
 import { Eye, Loader2 } from "lucide-react";
+import { useSseStream } from "../hooks/useSseStream";
 
 const API_BASE = "http://localhost:8000";
 
@@ -23,6 +24,14 @@ export function HomePage() {
   const [searchResult, setSearchResult] = useState<UploadResult | null>(null);
   const [period, setPeriod] = useState<PeriodInfo | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState(false);
+
+  // On mount, check if YouTube data already exists in DB
+  useEffect(() => {
+    fetch(`${API_BASE}/api/stats/period`)
+      .then((res) => res.json())
+      .then((d) => { if (d.date_from) setPeriod(d); })
+      .catch(() => {});
+  }, []);
 
   // Instagram state
   const [igUploading, setIgUploading] = useState(false);
@@ -44,6 +53,8 @@ export function HomePage() {
     navigate(`/youtube/dashboard?from=${from}&to=${to}`);
   };
 
+  const { stream } = useSseStream();
+
   const handleInstagramUpload = async (file: File) => {
     setIgError(null);
     setIgDone(false);
@@ -54,37 +65,9 @@ export function HomePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${API_BASE}/api/instagram/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.detail || `업로드 실패 (${res.status})`);
-      }
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      if (!reader) throw new Error("스트림을 읽을 수 없습니다");
-
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const blocks = buffer.split("\n\n");
-        buffer = blocks.pop() || "";
-
-        for (const block of blocks) {
-          const eventMatch = block.match(/^event: (.+)$/m);
-          const dataMatch = block.match(/^data: (.+)$/m);
-          if (!eventMatch || !dataMatch) continue;
-
-          const event = eventMatch[1];
-          const payload = JSON.parse(dataMatch[1]);
-
+      await stream(
+        `${API_BASE}/api/instagram/upload`,
+        ({ event, data: payload }) => {
           if (event === "progress") {
             setIgProgress({ step: payload.step, loaded: payload.loaded || 0, total: payload.total || 9 });
           } else if (event === "section") {
@@ -93,10 +76,11 @@ export function HomePage() {
           } else if (event === "done") {
             setIgDone(true);
           } else if (event === "error") {
-            throw new Error(payload.detail);
+            setIgError(payload.detail || payload.message);
           }
-        }
-      }
+        },
+        { method: "POST", body: formData },
+      );
     } catch (e: any) {
       setIgError(e.message);
     } finally {

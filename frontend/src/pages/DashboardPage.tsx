@@ -12,6 +12,7 @@ import { DopamineIndex } from "../components/DopamineIndex";
 import { ViewerType } from "../components/ViewerType";
 import { DayOfWeekChart } from "../components/DayOfWeekChart";
 import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
+import { useSseStream } from "../hooks/useSseStream";
 
 const API_BASE = "http://localhost:8000";
 
@@ -42,6 +43,8 @@ export function DashboardPage() {
   const [progress, setProgress] = useState({ loaded: 0, total: 14, step: "" });
   const [error, setError] = useState<string | null>(null);
 
+  const { stream } = useSseStream();
+
   const fetchDashboard = useCallback(async () => {
     if (!dateFrom || !dateTo) {
       setError("날짜 범위가 지정되지 않았습니다.");
@@ -55,32 +58,9 @@ export function DashboardPage() {
     setProgress({ loaded: 0, total: 14, step: "데이터 로드 중..." });
 
     try {
-      const res = await fetch(
-        `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      if (!reader) throw new Error("스트림을 읽을 수 없습니다");
-
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const blocks = buffer.split("\n\n");
-        buffer = blocks.pop() || "";
-
-        for (const block of blocks) {
-          const eventMatch = block.match(/^event: (.+)$/m);
-          const dataMatch = block.match(/^data: (.+)$/m);
-          if (!eventMatch || !dataMatch) continue;
-
-          const event = eventMatch[1];
-          const payload = JSON.parse(dataMatch[1]);
-
+      await stream(
+        `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`,
+        ({ event, data: payload }) => {
           if (event === "progress") {
             setProgress({ loaded: payload.loaded || 0, total: payload.total || 14, step: payload.step || "" });
           } else if (event === "section") {
@@ -89,14 +69,14 @@ export function DashboardPage() {
           } else if (event === "done") {
             setLoading(false);
           }
-        }
-      }
+        },
+      );
     } catch (e: any) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, stream]);
 
   useEffect(() => {
     fetchDashboard();
