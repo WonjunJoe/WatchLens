@@ -40,91 +40,94 @@ def _detect_my_username(messages: list[dict]) -> str:
 
 
 def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
-    total_sections = 9
-    loaded = 0
-
-    yield sse("progress", {"step": "ZIP 압축 해제 및 파싱 중...", "loaded": 0, "total": total_sections})
-
     try:
-        parsed = parse_instagram_zip(zip_bytes)
+        total_sections = 9
+        loaded = 0
+
+        yield sse("progress", {"step": "ZIP 압축 해제 및 파싱 중...", "loaded": 0, "total": total_sections})
+
+        try:
+            parsed = parse_instagram_zip(zip_bytes)
+        except Exception as e:
+            yield sse("error", {"detail": f"ZIP 파싱 실패: {str(e)}"})
+            return
+
+        liked = parsed["liked_posts"]
+        story = parsed["story_likes"]
+        msgs = parsed["messages"]
+        following = parsed["following"]
+        unfollowed = parsed["unfollowed"]
+        viewed = parsed["posts_viewed"] + parsed["videos_watched"]
+        topics = parsed["topics"]
+
+        my_username = _detect_my_username(msgs)
+
+        yield sse("progress", {"step": "KPI 계산 중...", "loaded": 0, "total": total_sections})
+
+        # 1. Summary
+        summary = compute_ig_summary(liked, story, msgs, following, viewed)
+        loaded += 1
+        yield sse("section", {"name": "summary", "data": summary, "loaded": loaded, "total": total_sections})
+
+        # 2. Top accounts
+        top_accounts = compute_ig_top_accounts(liked, story, msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "top_accounts", "data": top_accounts, "loaded": loaded, "total": total_sections})
+
+        # 3. Hourly
+        hourly = compute_ig_hourly(liked, story, msgs)
+        loaded += 1
+        yield sse("section", {"name": "hourly", "data": hourly, "loaded": loaded, "total": total_sections})
+
+        # 4. Day of week
+        day_of_week = compute_ig_day_of_week(liked, story, msgs)
+        loaded += 1
+        yield sse("section", {"name": "day_of_week", "data": day_of_week, "loaded": loaded, "total": total_sections})
+
+        # 5. Daily trend
+        daily = compute_ig_daily(liked, story, msgs)
+        loaded += 1
+        yield sse("section", {"name": "daily", "data": daily, "loaded": loaded, "total": total_sections})
+
+        # 6. DM analysis
+        dm_analysis = compute_ig_dm_analysis(msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "dm_analysis", "data": dm_analysis, "loaded": loaded, "total": total_sections})
+
+        # 7. Topics
+        loaded += 1
+        yield sse("section", {"name": "topics", "data": topics, "loaded": loaded, "total": total_sections})
+
+        # 8. Follow network
+        follow_network = compute_ig_follow_network(following, unfollowed)
+        loaded += 1
+        yield sse("section", {"name": "follow_network", "data": follow_network, "loaded": loaded, "total": total_sections})
+
+        # 9. Insights
+        insights = generate_ig_insights(summary, hourly, top_accounts, dm_analysis)
+        loaded += 1
+        yield sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
+
+        # Save results to DB
+        all_results = {
+            "summary": summary,
+            "top_accounts": top_accounts,
+            "hourly": hourly,
+            "day_of_week": day_of_week,
+            "daily": daily,
+            "dm_analysis": dm_analysis,
+            "topics": topics,
+            "follow_network": follow_network,
+            "insights": insights,
+        }
+        try:
+            save_instagram_results(DEFAULT_USER_ID, all_results)
+        except Exception:
+            yield sse("warning", {"message": "대시보드 결과 캐시 저장 실패 (분석 결과에는 영향 없음)"})
+
+        yield sse("done", {"loaded": total_sections, "total": total_sections})
     except Exception as e:
-        yield sse("error", {"detail": f"ZIP 파싱 실패: {str(e)}"})
-        return
-
-    liked = parsed["liked_posts"]
-    story = parsed["story_likes"]
-    msgs = parsed["messages"]
-    following = parsed["following"]
-    unfollowed = parsed["unfollowed"]
-    viewed = parsed["posts_viewed"] + parsed["videos_watched"]
-    topics = parsed["topics"]
-
-    my_username = _detect_my_username(msgs)
-
-    yield sse("progress", {"step": "KPI 계산 중...", "loaded": 0, "total": total_sections})
-
-    # 1. Summary
-    summary = compute_ig_summary(liked, story, msgs, following, viewed)
-    loaded += 1
-    yield sse("section", {"name": "summary", "data": summary, "loaded": loaded, "total": total_sections})
-
-    # 2. Top accounts
-    top_accounts = compute_ig_top_accounts(liked, story, msgs, my_username)
-    loaded += 1
-    yield sse("section", {"name": "top_accounts", "data": top_accounts, "loaded": loaded, "total": total_sections})
-
-    # 3. Hourly
-    hourly = compute_ig_hourly(liked, story, msgs)
-    loaded += 1
-    yield sse("section", {"name": "hourly", "data": hourly, "loaded": loaded, "total": total_sections})
-
-    # 4. Day of week
-    day_of_week = compute_ig_day_of_week(liked, story, msgs)
-    loaded += 1
-    yield sse("section", {"name": "day_of_week", "data": day_of_week, "loaded": loaded, "total": total_sections})
-
-    # 5. Daily trend
-    daily = compute_ig_daily(liked, story, msgs)
-    loaded += 1
-    yield sse("section", {"name": "daily", "data": daily, "loaded": loaded, "total": total_sections})
-
-    # 6. DM analysis
-    dm_analysis = compute_ig_dm_analysis(msgs, my_username)
-    loaded += 1
-    yield sse("section", {"name": "dm_analysis", "data": dm_analysis, "loaded": loaded, "total": total_sections})
-
-    # 7. Topics
-    loaded += 1
-    yield sse("section", {"name": "topics", "data": topics, "loaded": loaded, "total": total_sections})
-
-    # 8. Follow network
-    follow_network = compute_ig_follow_network(following, unfollowed)
-    loaded += 1
-    yield sse("section", {"name": "follow_network", "data": follow_network, "loaded": loaded, "total": total_sections})
-
-    # 9. Insights
-    insights = generate_ig_insights(summary, hourly, top_accounts, dm_analysis)
-    loaded += 1
-    yield sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
-
-    # Save results to DB
-    all_results = {
-        "summary": summary,
-        "top_accounts": top_accounts,
-        "hourly": hourly,
-        "day_of_week": day_of_week,
-        "daily": daily,
-        "dm_analysis": dm_analysis,
-        "topics": topics,
-        "follow_network": follow_network,
-        "insights": insights,
-    }
-    try:
-        save_instagram_results(DEFAULT_USER_ID, all_results)
-    except Exception:
-        pass  # DB save failure is non-fatal
-
-    yield sse("done", {"loaded": total_sections, "total": total_sections})
+        yield sse("error", {"message": f"Instagram 분석 중 오류: {str(e)}"})
 
 
 @router.post("/upload")
