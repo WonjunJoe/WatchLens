@@ -19,7 +19,7 @@ graph TB
     end
 
     subgraph Backend["Backend (FastAPI)"]
-        subgraph Routers
+        subgraph Routers["Routers (Thin)"]
             UR["/api/upload/*"]
             SR["/api/stats/*"]
             IR["/api/instagram/*"]
@@ -30,11 +30,13 @@ graph TB
             IGP[instagram.py]
         end
         subgraph Services
+            SS[stats_service.py<br/>12개 통계 계산]
             YS[youtube.py<br/>메타데이터 조회]
             IS[indices.py<br/>도파민 지수]
             INS[insights.py<br/>인사이트 생성]
             IGS[instagram_stats.py<br/>Instagram 통계]
         end
+        REPO[db/repository.py<br/>중앙 DB 접근]
         CFG[config/settings.py<br/>중앙 설정]
     end
 
@@ -51,13 +53,13 @@ graph TB
 
     UR --> WP & SP
     UR --> YS
-    IR --> IGP
-    IR --> IGS
-    SR --> IS & INS
+    SR --> SS & IS & INS
+    IR --> IGP & IGS
 
+    Routers --> REPO
+    REPO --> SBDB
+    REPO --> SBS
     YS --> YTAPI
-    UR & SR & IR --> SBDB
-    UR --> SBS
     Services --> CFG
     Parsers --> CFG
 ```
@@ -73,7 +75,8 @@ backend/
 ├── app/
 │   ├── main.py              # FastAPI 앱 초기화, CORS, 라우터 등록
 │   ├── db/
-│   │   └── supabase.py      # Supabase 클라이언트 (싱글턴)
+│   │   ├── supabase.py      # Supabase 클라이언트 (싱글턴)
+│   │   └── repository.py    # 중앙 DB 접근 함수 (모든 테이블)
 │   ├── models/
 │   │   └── schemas.py       # Pydantic 모델 (UploadResponse, ParseResult 등)
 │   ├── parsers/
@@ -81,10 +84,11 @@ backend/
 │   │   ├── search_history.py# YouTube 검색 기록 JSON 파싱
 │   │   └── instagram.py     # Instagram ZIP 압축 해제 + 8개 JSON 파싱
 │   ├── routers/
-│   │   ├── upload.py        # POST /api/upload/* (시청/검색 기록 업로드)
-│   │   ├── stats.py         # GET /api/stats/*  (대시보드 데이터)
-│   │   └── instagram.py     # POST/GET /api/instagram/* (Instagram 분석)
+│   │   ├── upload.py        # POST /api/upload/* (Thin Router)
+│   │   ├── stats.py         # GET /api/stats/*  (Thin Router)
+│   │   └── instagram.py     # POST/GET /api/instagram/* (Thin Router)
 │   ├── services/
+│   │   ├── stats_service.py # YouTube 대시보드 12개 통계 계산 (순수 함수)
 │   │   ├── youtube.py       # YouTube Data API v3 메타데이터 조회
 │   │   ├── indices.py       # 도파민 지수 산출
 │   │   ├── insights.py      # 규칙 기반 인사이트 생성
@@ -92,7 +96,7 @@ backend/
 │   └── utils.py             # SSE 포맷터, 시간대 변환, 배치 처리 유틸
 ├── config/
 │   └── settings.py          # 모든 설정값 중앙 관리
-├── tests/                   # pytest 테스트
+├── tests/                   # pytest 69개 테스트
 └── requirements.txt
 ```
 
@@ -100,9 +104,10 @@ backend/
 
 | 레이어 | 역할 | 원칙 |
 |--------|------|------|
-| **Routers** | HTTP 엔드포인트, SSE 스트리밍 | I/O 담당, 비즈니스 로직 없음 |
+| **Routers** | HTTP 엔드포인트, SSE 스트리밍 오케스트레이션 | I/O 담당, 비즈니스 로직 없음 (Thin Router) |
 | **Parsers** | 외부 데이터 포맷 → 내부 레코드 변환 | 순수 변환 함수, 부수효과 없음 |
-| **Services** | 비즈니스 로직 (통계, 지수, 인사이트) | 순수 함수 우선, DB 호출 최소화 |
+| **Services** | 비즈니스 로직 (통계, 지수, 인사이트) | 순수 함수, DB 호출 없음 |
+| **Repository** | 모든 DB 접근 (CRUD, 페이지네이션, 스토리지) | 단일 진입점, 테이블 스키마 캡슐화 |
 | **DB** | Supabase 클라이언트 | 싱글턴 패턴 |
 | **Config** | 임계값, 매핑, 가중치 등 설정 | 단일 파일 중앙 관리 |
 
@@ -125,8 +130,13 @@ backend/
 
 ```
 frontend/src/
-├── App.tsx                    # 라우팅 정의
+├── App.tsx                    # 라우팅 정의 + Provider 구성
 ├── main.tsx                   # 엔트리포인트
+├── hooks/
+│   └── useSseStream.ts        # SSE 파싱 커스텀 훅 (GET/POST 공용)
+├── contexts/
+│   ├── YouTubeDataContext.tsx  # YouTube 대시보드 전역 상태 + 기간 관리
+│   └── InstagramDataContext.tsx # Instagram 대시보드 전역 상태
 ├── pages/
 │   ├── HomePage.tsx           # 파일 업로드 + 기간 선택
 │   ├── DashboardPage.tsx      # YouTube 대시보드
@@ -340,79 +350,25 @@ cd frontend && npm run dev  # localhost:5173
 
 ## 아키텍처 평가
 
-### 잘 된 점
+### 강점
 
 | 항목 | 설명 |
 |------|------|
-| **SSE 기반 점진적 로딩** | 대시보드 14개 섹션을 순차 스트리밍하여 사용자가 기다리지 않고 먼저 도착한 데이터를 바로 볼 수 있다. UX 측면에서 좋은 선택. |
+| **SSE 기반 점진적 로딩** | 대시보드 14개 섹션을 순차 스트리밍하여 사용자가 기다리지 않고 먼저 도착한 데이터를 바로 볼 수 있다. |
 | **중앙 설정 관리** | `config/settings.py` 단일 파일에 임계값·가중치·매핑을 모아 관리. 조정이 쉽다. |
-| **Instagram 서비스 레이어** | `instagram_stats.py`의 `compute_ig_*` 함수들이 순수 함수로 잘 분리되어 있다. 테스트·재사용 용이. |
-| **배치 처리** | DB 삽입(500개), API 호출(50개), 조회(1000개) 모두 배치 단위로 처리하여 대량 데이터를 안정적으로 다룬다. |
+| **순수 함수 서비스 레이어** | `stats_service.py`, `instagram_stats.py` 모두 DB 호출 없는 순수 함수로 구성. 테스트 용이. |
+| **Repository 패턴** | `db/repository.py`에 모든 DB 접근이 집중. 스키마 변경 시 단일 파일만 수정하면 된다. |
+| **Thin Router** | 라우터는 SSE 오케스트레이션만 담당. 비즈니스 로직 없음. |
+| **YouTube/Instagram 대칭** | 두 도메인이 동일한 패턴 (Context + Service + Repository) 사용. |
+| **SSE 훅 통합** | `useSseStream` 커스텀 훅으로 SSE 파싱 로직 일원화. |
+| **일관된 에러 처리** | 모든 SSE 스트림에 try-catch 적용. 실패 시 error 이벤트 전송. |
 
-### 문제점
+### 리팩토링 이력 (2026-03-30)
 
-#### 1. Router에 비즈니스 로직이 집중됨 — **심각**
-
-`stats.py` 라우터가 약 560줄이며, DB 조회 함수(`_fetch_watch_records`, `_fetch_video_metadata`)와 14개 통계 계산 함수(`_compute_summary`, `_compute_hourly` 등)가 모두 라우터 안에 존재한다. 라우터는 HTTP I/O만 담당해야 하는데 비즈니스 로직까지 포함하고 있어 테스트가 어렵고 재사용이 불가능하다.
-
-`upload.py`도 마찬가지로 DB 삽입, 파일 저장, 파싱 호출이 모두 라우터 안에 있다.
-
-```
-현재: Router → (DB 조회 + 계산 + 스트리밍 모두 직접 수행)
-이상: Router → Service (계산) → Repository (DB 조회)
-```
-
-#### 2. YouTube vs Instagram 아키텍처 비대칭 — **심각**
-
-두 도메인이 동일한 "업로드 → 파싱 → 계산 → 스트리밍" 패턴임에도 구조가 다르다:
-
-|  | YouTube | Instagram |
-|--|---------|-----------|
-| 통계 계산 | `stats.py` 라우터 안에 inline | `instagram_stats.py` 서비스로 분리 |
-| 프론트 상태 | DashboardPage 로컬 state | InstagramDataContext (전역) |
-| 캐시 | 없음 (매번 재계산) | DB에 JSONB로 캐시 |
-| 에러 처리 | 없음 (실패 시 불완전 스트림) | try-catch + 무시 (`pass`) |
-
-Instagram 쪽이 더 잘 설계되어 있으며, YouTube 쪽이 이 패턴을 따르지 않고 있다.
-
-#### 3. Frontend SSE 파싱 로직 중복 — **중간**
-
-`DashboardPage.tsx`와 `HomePage.tsx`에서 SSE 스트림을 파싱하는 로직(버퍼 분할, 이벤트 파싱, 진행률 추적)이 거의 동일하게 복사되어 있다. 한쪽을 수정하면 다른 쪽도 수정해야 하는 유지보수 위험이 있다.
-
-```
-개선: hooks/useSseStream.ts 커스텀 훅으로 추출
-```
-
-#### 4. DB 접근 패턴이 산재 — **중간**
-
-모든 라우터가 `get_supabase_client()`를 직접 호출하고 `.table().select().execute()` 체인을 인라인으로 작성한다. 페이지네이션 로직(`_fetch_all_rows`)도 `stats.py`에만 존재하며 재사용되지 않는다. Repository 패턴이 없어 스키마 변경 시 여러 파일을 수정해야 한다.
-
-#### 5. 에러 처리 불일치 — **중간**
-
-- `stats.py` 대시보드 스트리밍: try-catch 없음. 계산 중 실패하면 사용자에게 불완전한 데이터가 전달됨
-- `instagram.py` DB 저장 실패: `except: pass`로 무시
-- 프론트엔드: 에러 타입 구분 없음, 재시도 로직 없음
-
-### 개선 우선순위
-
-```mermaid
-graph LR
-    A["1. stats.py 서비스 추출<br/>(YouTube 계산 로직)"] --> B["2. Repository 패턴 도입<br/>(DB 접근 통합)"]
-    B --> C["3. SSE 커스텀 훅 추출<br/>(프론트 중복 제거)"]
-    C --> D["4. YouTube Context 추가<br/>(Instagram 패턴 통일)"]
-    D --> E["5. 에러 처리 표준화"]
-
-    style A fill:#ff6b6b,color:#fff
-    style B fill:#ff6b6b,color:#fff
-    style C fill:#ffa94d,color:#fff
-    style D fill:#ffa94d,color:#fff
-    style E fill:#ffd43b,color:#333
-```
-
-| 순위 | 작업 | 심각도 | 난이도 |
-|------|------|--------|--------|
-| 1 | stats.py 계산 로직 → services/stats_service.py 추출 | 심각 | 높음 |
-| 2 | Repository 패턴 도입 (DB 접근 중앙화) | 심각 | 높음 |
-| 3 | SSE 파싱 → useSseStream 커스텀 훅 추출 | 중간 | 낮음 |
-| 4 | YouTube Context 생성 (Instagram 패턴 통일) | 중간 | 중간 |
-| 5 | 에러 처리 표준화 (라우터 + 프론트엔드) | 중간 | 중간 |
+| 이전 문제 | 해결 방법 | 상태 |
+|-----------|-----------|------|
+| stats.py 560줄 God Router | → 168줄 Thin Router + stats_service.py (순수 함수) | 해결됨 |
+| DB 접근 산재 (라우터 직접 호출) | → db/repository.py 단일 진입점 | 해결됨 |
+| SSE 파싱 로직 중복 | → hooks/useSseStream.ts 커스텀 훅 | 해결됨 |
+| YouTube Context 없음 (비대칭) | → YouTubeDataContext 추가 | 해결됨 |
+| 에러 처리 불일치 | → 모든 스트림 try-catch + error 이벤트 | 해결됨 |
