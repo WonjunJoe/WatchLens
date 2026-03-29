@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Eye, ArrowRight } from "lucide-react";
-// BarChart3, Clock, Users, TrendingUp, MessageCircle, Search — added in Tasks 5 & 6
+import { Eye, ArrowRight, BarChart3, Clock, Users, TrendingUp, MessageCircle, Search } from "lucide-react";
 
 export function LandingPage() {
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -135,7 +134,103 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Remaining sections (features, how-it-works, CTA, footer) will be added in Tasks 5 & 6 */}
+      {/* Features Section — Bento Grid */}
+      <section id="features" className="relative z-10 py-24 md:py-32 lg:py-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16" data-reveal>
+            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.15em] font-medium bg-indigo-500/10 text-indigo-400 mb-4">
+              주요 기능
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-snug tracking-tight">
+              당신의 데이터가 말해주는<br />숨겨진 패턴
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            {/* Card 1 — Wide (col-span-4) */}
+            <div data-reveal className="md:col-span-4 p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10">
+              <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] p-8 h-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-5">
+                  <BarChart3 size={24} className="text-indigo-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">시청 패턴 분석</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed max-w-[50ch]">
+                  시간대별·요일별·일별 시청 트렌드를 시각화합니다.
+                  가장 많이 보는 시간대, 몰아보기 패턴, 주말과 평일의 차이까지 한눈에 파악하세요.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2 — Narrow (col-span-2) */}
+            <div data-reveal className="md:col-span-2 p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10">
+              <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] p-8 h-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-5">
+                  <Clock size={24} className="text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">시청 시간 추적</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed">
+                  주간·월간 누적 시청 시간과 Shorts 비율을 추적합니다.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3 — Narrow (col-span-2) */}
+            <div data-reveal className="md:col-span-2 p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10">
+              <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] p-8 h-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-5">
+                  <TrendingUp size={24} className="text-amber-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">도파민 지수</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed">
+                  짧은 영상 소비 비율과 심야 시청 패턴으로 도파민 의존도를 측정합니다.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4 — Wide (col-span-4) */}
+            <div data-reveal className="md:col-span-4 p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10">
+              <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] p-8 h-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-5">
+                  <MessageCircle size={24} className="text-rose-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">Instagram DM 분석</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed max-w-[50ch]">
+                  가장 많이 대화한 상대, 답장 속도, 활발한 시간대를 분석합니다.
+                  좋아요·스토리 반응·관심 주제까지 종합적으로 보여드립니다.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 5 (col-span-3) */}
+            <div data-reveal className="md:col-span-3 p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10">
+              <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] p-8 h-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-5">
+                  <Users size={24} className="text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">채널 · 계정 랭킹</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed">
+                  가장 많이 시청한 YouTube 채널과 Instagram에서 가장 많이 소통한 계정을 순위로 보여드립니다.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 6 (col-span-3) */}
+            <div data-reveal className="md:col-span-3 p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10">
+              <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] p-8 h-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-5">
+                  <Search size={24} className="text-violet-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">검색 키워드 분석</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed">
+                  YouTube 검색 기록에서 자주 찾는 키워드와 관심사 변화를 추적합니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Remaining sections (how-it-works, CTA, footer) will be added in Task 6 */}
     </div>
   );
 }
