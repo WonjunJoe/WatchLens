@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
+import { LandingPage } from "./pages/LandingPage";
 import { UploadPage } from "./pages/UploadPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { InstagramDashboardPage } from "./pages/InstagramDashboardPage";
@@ -12,6 +13,9 @@ function App() {
       <InstagramDataProvider>
         <BrowserRouter>
           <Routes>
+            {/* Landing page — no sidebar, fullscreen */}
+            <Route path="/" element={<LandingPage />} />
+            {/* App pages — with sidebar */}
             <Route element={<Layout />}>
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/youtube/dashboard" element={<DashboardPage />} />
