@@ -1,34 +1,24 @@
+"""File upload endpoints for YouTube watch/search history."""
+
 import json
 from collections.abc import Generator
 from datetime import datetime, timezone
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
+
+from config.settings import MAX_FILE_SIZE_BYTES, DEFAULT_USER_ID, SUPABASE_STORAGE_BUCKET
+from app.utils import sse
 from app.parsers.watch_history import parse_watch_history
 from app.parsers.search_history import parse_search_history
-from app.db.supabase import get_supabase_client
 from app.services.youtube import fetch_and_store_metadata
-from app.utils import sse, chunk_list
-from config.settings import MAX_FILE_SIZE_BYTES, DEFAULT_USER_ID, SUPABASE_STORAGE_BUCKET
+from app.db.repository import delete_user_records, batch_insert, store_original_file
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
 
 def _upload_timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-
-
-def _store_original(sb, file_bytes: bytes, filename: str, timestamp: str) -> bool:
-    path = f"takeout/{timestamp}/{filename}"
-    try:
-        sb.storage.from_(SUPABASE_STORAGE_BUCKET).upload(path, file_bytes)
-        return True
-    except Exception:
-        return False
-
-
-def _batch_insert(sb, table: str, records: list):
-    for batch in chunk_list(records):
-        sb.table(table).insert(batch).execute()
 
 
 def _parse_json(file_bytes: bytes) -> list | None:
@@ -52,10 +42,9 @@ def _watch_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
     yield sse("progress", {"step": f"파싱 완료 — {result.total}건 발견 ({result.period})", "percent": 20})
 
     yield sse("progress", {"step": f"DB 저장 중... ({result.period})", "percent": 30})
-    sb = get_supabase_client()
-    sb.table("watch_records").delete().eq("user_id", DEFAULT_USER_ID).execute()
+    delete_user_records("watch_records", DEFAULT_USER_ID)
     if result.records:
-        _batch_insert(sb, "watch_records", result.records)
+        batch_insert("watch_records", result.records)
     yield sse("progress", {"step": f"DB 저장 완료 — {result.total}건", "percent": 50})
 
     video_ids = [r["video_id"] for r in result.records if r.get("video_id")]
@@ -65,7 +54,8 @@ def _watch_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
         yield sse("progress", {"step": "메타데이터 + Shorts 판별 완료", "percent": 90})
 
     timestamp = _upload_timestamp()
-    _store_original(sb, file_bytes, "watch-history.json", timestamp)
+    path = f"takeout/{timestamp}/watch-history.json"
+    store_original_file(SUPABASE_STORAGE_BUCKET, path, file_bytes)
 
     yield sse("done", {
         "total": result.total,
@@ -85,14 +75,14 @@ def _search_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
     yield sse("progress", {"step": f"파싱 완료 — {result.total}건 발견 ({result.period})", "percent": 40})
 
     yield sse("progress", {"step": f"DB 저장 중... ({result.period})", "percent": 50})
-    sb = get_supabase_client()
-    sb.table("search_records").delete().eq("user_id", DEFAULT_USER_ID).execute()
+    delete_user_records("search_records", DEFAULT_USER_ID)
     if result.records:
-        _batch_insert(sb, "search_records", result.records)
+        batch_insert("search_records", result.records)
     yield sse("progress", {"step": f"DB 저장 완료 — {result.total}건", "percent": 80})
 
     timestamp = _upload_timestamp()
-    _store_original(sb, file_bytes, "search-history.json", timestamp)
+    path = f"takeout/{timestamp}/search-history.json"
+    store_original_file(SUPABASE_STORAGE_BUCKET, path, file_bytes)
 
     yield sse("done", {
         "total": result.total,

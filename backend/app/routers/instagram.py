@@ -14,7 +14,7 @@ from app.services.instagram_stats import (
     compute_ig_follow_network,
 )
 from app.services.instagram_insights import generate_ig_insights
-from app.db.supabase import get_supabase_client
+from app.db.repository import save_instagram_results, fetch_instagram_results
 from app.utils import sse
 from config.settings import MAX_ZIP_SIZE_BYTES, DEFAULT_USER_ID
 
@@ -120,12 +120,7 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
         "insights": insights,
     }
     try:
-        sb = get_supabase_client()
-        sb.table("instagram_dashboard_results").delete().eq("user_id", DEFAULT_USER_ID).execute()
-        sb.table("instagram_dashboard_results").insert({
-            "user_id": DEFAULT_USER_ID,
-            "results": all_results,
-        }).execute()
+        save_instagram_results(DEFAULT_USER_ID, all_results)
     except Exception:
         pass  # DB save failure is non-fatal
 
@@ -144,12 +139,7 @@ async def upload_instagram(file: UploadFile = File(...)):
 
 @router.get("/dashboard")
 def get_instagram_dashboard(user_id: str = Query(default=DEFAULT_USER_ID)):
-    sb = get_supabase_client()
-    resp = sb.table("instagram_dashboard_results").select("results").eq(
-        "user_id", user_id
-    ).order("created_at", desc=True).limit(1).execute()
-
-    if not resp.data:
+    results = fetch_instagram_results(user_id)
+    if not results:
         raise HTTPException(404, "저장된 Instagram 대시보드가 없습니다")
-
-    return JSONResponse(content=resp.data[0]["results"])
+    return JSONResponse(content=results)
