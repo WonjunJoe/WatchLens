@@ -230,7 +230,96 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Remaining sections (how-it-works, CTA, footer) will be added in Task 6 */}
+      {/* How It Works */}
+      <section id="how-it-works" className="relative z-10 py-24 md:py-32 lg:py-40 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16" data-reveal>
+            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.15em] font-medium bg-indigo-500/10 text-indigo-400 mb-4">
+              사용법
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-snug tracking-tight">
+              3단계로 시작하세요
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6" data-reveal>
+            {[
+              {
+                step: "01",
+                title: "데이터 내보내기",
+                desc: "Google Takeout에서 YouTube 기록을, Instagram에서 내 데이터를 다운로드하세요.",
+              },
+              {
+                step: "02",
+                title: "파일 업로드",
+                desc: "다운로드한 JSON 또는 ZIP 파일을 WatchLens에 업로드하세요. 모든 처리는 실시간으로 진행됩니다.",
+              },
+              {
+                step: "03",
+                title: "인사이트 확인",
+                desc: "시청 패턴, DM 분석, 도파민 지수 등 다양한 인사이트를 대시보드에서 확인하세요.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="text-center md:text-left">
+                <div className="text-5xl font-bold text-indigo-500/20 mb-4">{item.step}</div>
+                <h3 className="text-xl font-bold mb-2 leading-snug">{item.title}</h3>
+                <p className="text-zinc-400 text-[15px] leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section — Full Bleed */}
+      <section className="relative z-10 py-24 md:py-32 lg:py-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative p-1.5 rounded-[2rem] bg-white/5 ring-1 ring-white/10 overflow-hidden" data-reveal>
+            <div className="bg-zinc-900/80 rounded-[calc(2rem-0.375rem)] px-8 py-16 md:py-24 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] relative">
+              {/* Background glow */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "radial-gradient(circle at 50% 50%, rgba(99,102,241,0.1) 0%, transparent 60%)" }}
+              />
+              <div className="relative z-10">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-snug tracking-tight mb-4">
+                  지금 바로 시작해보세요
+                </h2>
+                <p className="text-zinc-400 text-lg leading-relaxed max-w-[45ch] mx-auto mb-10">
+                  당신의 데이터는 서버에 저장되지 않습니다.
+                  업로드하고, 분석하고, 나만의 인사이트를 발견하세요.
+                </p>
+                <Link
+                  to="/upload"
+                  className="group inline-flex items-center gap-3 bg-indigo-500 hover:bg-indigo-400 text-white font-medium px-8 py-4 rounded-full text-lg active:scale-[0.98] hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]"
+                  style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
+                >
+                  분석 시작하기
+                  <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:translate-x-1" style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+                    <ArrowRight size={16} />
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 bg-indigo-500 rounded-lg flex items-center justify-center">
+                <Eye size={14} className="text-white" />
+              </div>
+              <span className="text-[14px] font-bold text-zinc-400">WatchLens</span>
+            </div>
+            <p className="text-[13px] text-zinc-600">
+              개인 프로젝트 · 데이터는 브라우저에서만 처리됩니다
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
