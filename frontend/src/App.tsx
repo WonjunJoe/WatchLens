@@ -4,6 +4,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { UploadPage } from "./pages/UploadPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { InstagramDashboardPage } from "./pages/InstagramDashboardPage";
+import { WellbeingPage } from "./pages/WellbeingPage";
 import { InstagramDataProvider } from "./contexts/InstagramDataContext";
 import { YouTubeDataProvider } from "./contexts/YouTubeDataContext";
 
@@ -20,6 +21,7 @@ function App() {
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/youtube/dashboard" element={<DashboardPage />} />
               <Route path="/instagram/dashboard" element={<InstagramDashboardPage />} />
+              <Route path="/wellbeing" element={<WellbeingPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

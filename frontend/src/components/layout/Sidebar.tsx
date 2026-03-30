@@ -1,5 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, BarChart3, PanelLeftClose, PanelLeftOpen, Eye, Upload } from "lucide-react";
+import { Home, BarChart3, PanelLeftClose, PanelLeftOpen, Eye, Upload, Heart } from "lucide-react";
+import { useYouTubeData } from "../../contexts/YouTubeDataContext";
+import { useInstagramData } from "../../contexts/InstagramDataContext";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -9,12 +11,20 @@ interface SidebarProps {
 const MENU = [
   { label: "홈", icon: Home, path: "/" },
   { label: "업로드", icon: Upload, path: "/upload" },
-  { label: "YouTube 대시보드", icon: BarChart3, path: "/youtube/dashboard" },
-  { label: "Instagram 대시보드", icon: Eye, path: "/instagram/dashboard" },
+  { label: "YouTube 대시보드", icon: BarChart3, path: "/youtube/dashboard", statusKey: "youtube" as const },
+  { label: "Instagram 대시보드", icon: Eye, path: "/instagram/dashboard", statusKey: "instagram" as const },
+  { label: "디지털 웰빙", icon: Heart, path: "/wellbeing" },
 ];
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { pathname } = useLocation();
+  const { hasData: ytReady } = useYouTubeData();
+  const { hasData: igReady } = useInstagramData();
+
+  const statusMap: Record<string, boolean> = {
+    youtube: ytReady,
+    instagram: igReady,
+  };
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -40,20 +50,48 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {MENU.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
-              isActive(item.path)
-                ? "bg-[var(--accent-light)] text-[var(--accent)] font-semibold"
-                : "text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]"
-            }`}
-          >
-            <item.icon size={18} className="flex-shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
-          </Link>
-        ))}
+        {MENU.map((item) => {
+          const active = isActive(item.path);
+          const statusKey = "statusKey" in item ? item.statusKey : undefined;
+          const ready = statusKey ? statusMap[statusKey] : undefined;
+
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
+                active
+                  ? "bg-[var(--accent-light)] text-[var(--accent)] font-semibold"
+                  : "text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]"
+              }`}
+            >
+              <item.icon size={18} className="flex-shrink-0" />
+              {!collapsed && (
+                <span className="flex items-center gap-2">
+                  {item.label}
+                  {ready !== undefined && (
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+                        ready
+                          ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"
+                          : "bg-gray-300"
+                      }`}
+                    />
+                  )}
+                </span>
+              )}
+              {collapsed && ready !== undefined && (
+                <span
+                  className={`absolute left-14 w-2 h-2 rounded-full ${
+                    ready
+                      ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"
+                      : "bg-gray-300"
+                  }`}
+                />
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Toggle */}
