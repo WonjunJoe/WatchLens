@@ -52,7 +52,7 @@ export function IgLateNight({ data }: Props) {
       </div>
 
       {/* Monthly trend */}
-      {data.trend.length >= 2 && (
+      {data.trend && data.trend.length >= 2 && (
         <div className="mb-4">
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={data.trend}>

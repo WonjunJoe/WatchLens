@@ -59,7 +59,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
                 active
                   ? "bg-[var(--accent-light)] text-[var(--accent)] font-semibold"
                   : "text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]"
@@ -82,7 +82,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               )}
               {collapsed && ready !== undefined && (
                 <span
-                  className={`absolute left-14 w-2 h-2 rounded-full ${
+                  className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
                     ready
                       ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]"
                       : "bg-gray-300"
