@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from collections.abc import Generator
 
 from fastapi import APIRouter, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 
 from config.settings import DEFAULT_USER_ID
 from app.utils import to_local, sse, USER_TZ
@@ -14,6 +14,8 @@ from app.db.repository import (
     fetch_search_records,
     fetch_video_metadata,
     fetch_period,
+    save_youtube_results,
+    fetch_youtube_results,
 )
 from app.services.stats_service import (
     compute_summary,
@@ -32,6 +34,7 @@ from app.services.stats_service import (
     compute_attention_trend,
     compute_time_cost,
     compute_binge_sessions,
+    compute_search_watch_flow,
 )
 from app.services.indices import calc_dopamine
 from app.services.insights import generate_insights
@@ -84,7 +87,7 @@ SECTIONS = [
     "categories", "watch_time", "weekly_watch_time", "weekly",
     "dopamine", "day_of_week", "viewer_type", "search_keywords",
     "content_diversity", "attention_trend", "time_cost", "binge_sessions",
-    "insights",
+    "search_watch_flow", "insights",
 ]
 
 
@@ -174,13 +177,42 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
         loaded += 1
         yield sse("section", {"name": "binge_sessions", "data": binge_sessions, "loaded": loaded, "total": total_sections})
 
+        search_watch_flow = compute_search_watch_flow(search_records, records)
+        loaded += 1
+        yield sse("section", {"name": "search_watch_flow", "data": search_watch_flow, "loaded": loaded, "total": total_sections})
+
         insights = generate_insights(summary, hourly, shorts, dopamine, watch_time, weekly)
         loaded += 1
         yield sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
 
+        # Cache results to DB
+        all_results = {
+            "summary": summary, "hourly": hourly, "daily": daily,
+            "top_channels": top_channels, "shorts": shorts, "categories": categories,
+            "watch_time": watch_time, "weekly_watch_time": weekly_watch_time,
+            "weekly": weekly, "dopamine": dopamine, "day_of_week": day_of_week,
+            "viewer_type": viewer_type, "search_keywords": keywords,
+            "content_diversity": content_diversity, "attention_trend": attention_trend,
+            "time_cost": time_cost, "binge_sessions": binge_sessions,
+            "search_watch_flow": search_watch_flow, "insights": insights,
+        }
+        try:
+            save_youtube_results(user_id, date_from, date_to, all_results)
+        except Exception:
+            pass  # cache save failure is non-critical
+
         yield sse("done", {"loaded": total_sections, "total": total_sections})
     except Exception as e:
         yield sse("error", {"message": f"대시보드 생성 중 오류: {str(e)}"})
+
+
+@router.get("/dashboard/cached")
+def get_cached_dashboard(user_id: str = Query(default=DEFAULT_USER_ID)):
+    """Return cached YouTube dashboard results (instant load)."""
+    cached = fetch_youtube_results(user_id)
+    if not cached:
+        return JSONResponse(status_code=404, content={"detail": "캐시된 대시보드가 없습니다"})
+    return JSONResponse(content=cached)
 
 
 @router.get("/dashboard")

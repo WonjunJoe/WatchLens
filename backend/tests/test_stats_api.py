@@ -77,6 +77,6 @@ def test_dashboard_streams_all_sections(mock_watch, mock_search, mock_meta):
     assert event_types[-1] == "done"
 
     section_names = [e[1]["name"] for e in events if e[0] == "section"]
-    assert len(section_names) == 14
+    assert len(section_names) == 19
     assert "summary" in section_names
     assert "insights" in section_names

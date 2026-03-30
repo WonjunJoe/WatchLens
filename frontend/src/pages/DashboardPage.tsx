@@ -15,6 +15,8 @@ import { ContentDiversity } from "../components/ContentDiversity";
 import { AttentionTrend } from "../components/AttentionTrend";
 import { TimeCost } from "../components/TimeCost";
 import { BingeSessions } from "../components/BingeSessions";
+import { SearchWatchFlow } from "../components/SearchWatchFlow";
+import { WeeklyReport } from "../components/WeeklyReport";
 import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { useYouTubeData } from "../contexts/YouTubeDataContext";
@@ -23,22 +25,36 @@ const API_BASE = "http://localhost:8000";
 
 export function DashboardPage() {
   const [params] = useSearchParams();
-  const dateFrom = params.get("from") || "";
-  const dateTo = params.get("to") || "";
+  const paramFrom = params.get("from") || "";
+  const paramTo = params.get("to") || "";
 
-  const { data, setSection, clear } = useYouTubeData();
+  const { data, period, setSection, clear, fetchPeriod } = useYouTubeData();
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState({ loaded: 0, total: 18, step: "" });
+  const [progress, setProgress] = useState({ loaded: 0, total: 19, step: "" });
   const [error, setError] = useState<string | null>(null);
+
+  // Use URL params if present, otherwise fall back to period from DB
+  const dateFrom = paramFrom || period?.date_from || "";
+  const dateTo = paramTo || period?.date_to || "";
 
   const { stream } = useSseStream();
   const fetchedRef = useRef(false);
+
+  // If no URL params and no period yet, try fetching period from DB
+  useEffect(() => {
+    if (!paramFrom && !paramTo && !period) {
+      fetchPeriod();
+    }
+  }, [paramFrom, paramTo, period, fetchPeriod]);
 
   useEffect(() => {
     if (fetchedRef.current) return;
 
     if (!dateFrom || !dateTo) {
-      setError("날짜 범위가 지정되지 않았습니다.");
+      if (!paramFrom && !paramTo && !period) {
+        return; // Period fetch still in progress
+      }
+      setError("데이터가 없습니다. YouTube 시청 기록을 먼저 업로드해주세요.");
       setLoading(false);
       return;
     }
@@ -49,30 +65,57 @@ export function DashboardPage() {
     }
 
     fetchedRef.current = true;
-    setLoading(true);
-    setError(null);
-    clear();
-    setProgress({ loaded: 0, total: 18, step: "데이터 로드 중..." });
 
-    stream(
-      `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`,
-      ({ event, data: payload }) => {
-        if (event === "progress") {
-          setProgress({ loaded: payload.loaded || 0, total: payload.total || 18, step: payload.step || "" });
-        } else if (event === "section") {
-          setSection(payload.name, payload.data);
-          setProgress({ loaded: payload.loaded, total: payload.total, step: `${payload.loaded}/${payload.total}` });
-        } else if (event === "done") {
-          setLoading(false);
-        } else if (event === "error") {
-          setError(payload.message || payload.detail || "알 수 없는 오류");
+    async function loadDashboard() {
+      setLoading(true);
+      setError(null);
+
+      // Try cache first (instant) — only when using default period (no explicit URL params)
+      if (!paramFrom && !paramTo) {
+        try {
+          const cacheRes = await fetch(`${API_BASE}/api/stats/dashboard/cached`);
+          if (cacheRes.ok) {
+            const cached = await cacheRes.json();
+            if (cached.results && cached.date_from === dateFrom && cached.date_to === dateTo) {
+              for (const [key, value] of Object.entries(cached.results)) {
+                setSection(key, value);
+              }
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // Cache miss — fall through to SSE
         }
-      },
-    ).catch((e: any) => {
-      setError(e.message);
-    }).finally(() => {
-      setLoading(false);
-    });
+      }
+
+      // SSE stream (computes fresh + saves to cache)
+      clear();
+      setProgress({ loaded: 0, total: 19, step: "데이터 로드 중..." });
+      try {
+        await stream(
+          `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`,
+          ({ event, data: payload }) => {
+            if (event === "progress") {
+              setProgress({ loaded: payload.loaded || 0, total: payload.total || 19, step: payload.step || "" });
+            } else if (event === "section") {
+              setSection(payload.name, payload.data);
+              setProgress({ loaded: payload.loaded, total: payload.total, step: `${payload.loaded}/${payload.total}` });
+            } else if (event === "done") {
+              setLoading(false);
+            } else if (event === "error") {
+              setError(payload.message || payload.detail || "알 수 없는 오류");
+            }
+          },
+        );
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboard();
   }, [dateFrom, dateTo]);
 
   // Loading state
@@ -154,6 +197,11 @@ export function DashboardPage() {
         <DayOfWeekChart data={data.day_of_week} />
       </div>
 
+      {/* Weekly Report full-width */}
+      <div className="mb-4">
+        <WeeklyReport weekly={data.weekly} weeklyWatchTime={data.weekly_watch_time} />
+      </div>
+
       {/* Daily trend full-width */}
       <div className="mb-4">
         <DailyChart data={data.daily} />
@@ -181,10 +229,11 @@ export function DashboardPage() {
         <TimeCost data={data.time_cost} />
       </div>
 
-      {/* Search Keywords */}
+      {/* Search Keywords + Search→Watch Flow */}
       {data.search_keywords && data.search_keywords.length > 0 && (
-        <div className="mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <SearchKeywords data={data.search_keywords} />
+          <SearchWatchFlow data={data.search_watch_flow} />
         </div>
       )}
     </div>

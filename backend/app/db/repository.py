@@ -43,7 +43,7 @@ def fetch_search_records(user_id: str, date_from: str, date_to: str) -> list[dic
     date_from and date_to must be UTC ISO-8601 strings.
     """
     sb = get_supabase_client()
-    query = sb.table("search_records").select("query").eq(
+    query = sb.table("search_records").select("query, searched_at").eq(
         "user_id", user_id
     ).gte("searched_at", date_from).lte("searched_at", date_to)
     return _fetch_all_rows(query)
@@ -132,3 +132,31 @@ def fetch_instagram_results(user_id: str) -> dict | None:
     if not resp.data:
         return None
     return resp.data[0]["results"]
+
+
+# ---------------------------------------------------------------------------
+# YouTube dashboard results
+# ---------------------------------------------------------------------------
+
+def save_youtube_results(user_id: str, date_from: str, date_to: str, results: dict) -> None:
+    """Upsert YouTube dashboard results for a user."""
+    sb = get_supabase_client()
+    sb.table("youtube_dashboard_results").delete().eq("user_id", user_id).execute()
+    sb.table("youtube_dashboard_results").insert({
+        "user_id": user_id,
+        "date_from": date_from,
+        "date_to": date_to,
+        "results": results,
+    }).execute()
+
+
+def fetch_youtube_results(user_id: str) -> dict | None:
+    """Fetch the latest cached YouTube dashboard results. Returns None if not found."""
+    sb = get_supabase_client()
+    resp = sb.table("youtube_dashboard_results").select("results, date_from, date_to").eq(
+        "user_id", user_id
+    ).order("created_at", desc=True).limit(1).execute()
+
+    if not resp.data:
+        return None
+    return resp.data[0]

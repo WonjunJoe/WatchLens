@@ -500,6 +500,79 @@ def compute_time_cost(watch_time_data: dict) -> dict:
     }
 
 
+def compute_search_watch_flow(search_records: list[dict], watch_records: list[dict]) -> dict:
+    """Analyze search-to-watch conversion: which searches led to watching videos."""
+    if not search_records or not watch_records:
+        return {"total_searches": len(search_records), "total_watches": len(watch_records),
+                "conversion_rate": 0, "top_converting": [], "top_abandoned": []}
+
+    # Build watch timeline: for each search, check if a video was watched within 10 minutes
+    watch_times = sorted(
+        [(to_local(r["watched_at"]), r.get("channel_name", "")) for r in watch_records],
+        key=lambda x: x[0],
+    )
+
+    search_conversions: Counter = Counter()
+    search_totals: Counter = Counter()
+
+    for sr in search_records:
+        query = sr["query"]
+        search_time = to_local(sr["searched_at"])
+        search_totals[query] += 1
+
+        # Check if any watch happened within 10 minutes after search
+        for watch_time, _ in watch_times:
+            diff = (watch_time - search_time).total_seconds()
+            if diff < 0:
+                continue
+            if diff <= 600:  # 10 minutes
+                search_conversions[query] += 1
+                break
+            if diff > 600:
+                break
+
+    total_converted = sum(search_conversions.values())
+    conversion_rate = round(total_converted / len(search_records) * 100, 1) if search_records else 0
+
+    # Top converting: searches that most often lead to watching
+    top_converting = []
+    for query, total in search_totals.most_common(30):
+        converted = search_conversions.get(query, 0)
+        if converted == 0:
+            continue
+        top_converting.append({
+            "query": query,
+            "searches": total,
+            "converted": converted,
+            "rate": round(converted / total * 100),
+        })
+    top_converting.sort(key=lambda x: -x["converted"])
+    top_converting = top_converting[:10]
+
+    # Top abandoned: frequently searched but rarely watched
+    top_abandoned = []
+    for query, total in search_totals.most_common(30):
+        converted = search_conversions.get(query, 0)
+        abandon_rate = round((1 - converted / total) * 100) if total > 0 else 100
+        if total >= 2 and abandon_rate >= 50:
+            top_abandoned.append({
+                "query": query,
+                "searches": total,
+                "converted": converted,
+                "abandon_rate": abandon_rate,
+            })
+    top_abandoned.sort(key=lambda x: (-x["abandon_rate"], -x["searches"]))
+    top_abandoned = top_abandoned[:10]
+
+    return {
+        "total_searches": len(search_records),
+        "total_watches": len(watch_records),
+        "conversion_rate": conversion_rate,
+        "top_converting": top_converting,
+        "top_abandoned": top_abandoned,
+    }
+
+
 def compute_binge_sessions(records: list[dict]) -> dict:
     """Detect binge sessions: consecutive watches within BINGE_GAP_MINUTES gap."""
     if not records:

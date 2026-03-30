@@ -20,6 +20,7 @@ interface YouTubeData {
   attention_trend?: any;
   time_cost?: any;
   binge_sessions?: any;
+  search_watch_flow?: any;
   insights?: any;
 }
 
@@ -32,6 +33,7 @@ interface PeriodInfo {
 interface YouTubeContextValue {
   data: YouTubeData;
   period: PeriodInfo | null;
+  hasData: boolean;
   setSection: (name: string, value: any) => void;
   setAll: (data: YouTubeData) => void;
   setPeriod: (p: PeriodInfo | null) => void;
@@ -62,8 +64,10 @@ export function YouTubeDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const hasData = period !== null;
+
   return (
-    <YouTubeDataContext.Provider value={{ data, period, setSection, setAll, setPeriod, clear, fetchPeriod }}>
+    <YouTubeDataContext.Provider value={{ data, period, hasData, setSection, setAll, setPeriod, clear, fetchPeriod }}>
       {children}
     </YouTubeDataContext.Provider>
   );
