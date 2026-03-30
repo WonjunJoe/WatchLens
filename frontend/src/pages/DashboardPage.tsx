@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { SummaryCards } from "../components/SummaryCards";
 import { WatchTime } from "../components/WatchTime";
@@ -32,49 +32,48 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { stream } = useSseStream();
+  const fetchedRef = useRef(false);
 
-  const fetchDashboard = useCallback(async () => {
+  useEffect(() => {
+    if (fetchedRef.current) return;
+
     if (!dateFrom || !dateTo) {
       setError("날짜 범위가 지정되지 않았습니다.");
       setLoading(false);
       return;
     }
 
-    // Skip fetch if data is already cached
     if (data.summary) {
       setLoading(false);
       return;
     }
 
+    fetchedRef.current = true;
     setLoading(true);
     setError(null);
     clear();
     setProgress({ loaded: 0, total: 18, step: "데이터 로드 중..." });
 
-    try {
-      await stream(
-        `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`,
-        ({ event, data: payload }) => {
-          if (event === "progress") {
-            setProgress({ loaded: payload.loaded || 0, total: payload.total || 18, step: payload.step || "" });
-          } else if (event === "section") {
-            setSection(payload.name, payload.data);
-            setProgress({ loaded: payload.loaded, total: payload.total, step: `${payload.loaded}/${payload.total}` });
-          } else if (event === "done") {
-            setLoading(false);
-          }
-        },
-      );
-    } catch (e: any) {
+    stream(
+      `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`,
+      ({ event, data: payload }) => {
+        if (event === "progress") {
+          setProgress({ loaded: payload.loaded || 0, total: payload.total || 18, step: payload.step || "" });
+        } else if (event === "section") {
+          setSection(payload.name, payload.data);
+          setProgress({ loaded: payload.loaded, total: payload.total, step: `${payload.loaded}/${payload.total}` });
+        } else if (event === "done") {
+          setLoading(false);
+        } else if (event === "error") {
+          setError(payload.message || payload.detail || "알 수 없는 오류");
+        }
+      },
+    ).catch((e: any) => {
       setError(e.message);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  }, [dateFrom, dateTo, stream, data.summary, setSection, clear]);
-
-  useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    });
+  }, [dateFrom, dateTo]);
 
   // Loading state
   if (loading) {
