@@ -12,7 +12,7 @@ export function IgFollowNetwork({ data }: Props) {
 
   return (
     <div className="card p-5">
-      <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">팔로우 네트워크 성장</h3>
+      <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">팔로잉 네트워크 성장</h3>
 
       {growth.length > 0 && (
         <ResponsiveContainer width="100%" height={200}>
