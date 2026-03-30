@@ -100,6 +100,7 @@ def test_parse_messages():
     assert result[0]["sender"] == "Alice"
     assert result[0]["timestamp"] == 1700000000
     assert result[0]["conversation"] == "conv1"
+    assert result[0]["participant_count"] == 2
 
 
 def test_parse_following():

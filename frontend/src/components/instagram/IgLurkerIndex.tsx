@@ -25,7 +25,7 @@ function scoreLabel(score: number) {
 }
 
 export function IgLurkerIndex({ data }: Props) {
-  if (!data || data.total_viewed === 0) return null;
+  if (!data || !data.total_viewed) return null;
 
   const color = scoreColor(data.lurker_score);
 

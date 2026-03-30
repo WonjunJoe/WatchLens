@@ -4,6 +4,7 @@ interface DmBalanceItem {
   received: number;
   total: number;
   sent_pct: number;
+  is_group: boolean;
 }
 
 interface Props {
@@ -26,7 +27,12 @@ export function IgDmBalance({ data }: Props) {
           return (
             <div key={item.conversation}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[13px] text-[var(--text-secondary)] truncate max-w-[50%]">{item.conversation}</span>
+                <div className="flex items-center gap-1.5 truncate max-w-[50%]">
+                  <span className="text-[13px] text-[var(--text-secondary)] truncate">{item.conversation}</span>
+                  {item.is_group && (
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-gray-100 text-[var(--text-tertiary)] whitespace-nowrap">그룹</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-[var(--text-tertiary)]">{item.total}건</span>
                   <span className="text-[11px] px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: `${sentColor}15`, color: sentColor }}>

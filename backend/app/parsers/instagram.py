@@ -25,6 +25,9 @@ def fix_encoding(obj):
     return obj
 
 
+_USERNAME_LABELS = {"사용자 이름", "Username", "Nom d'utilisateur", "Benutzername", "ユーザーネーム"}
+
+
 def _extract_username(label_values: list[dict]) -> str | None:
     """Extract username from Instagram's nested label_values structure."""
     for item in label_values:
@@ -33,7 +36,7 @@ def _extract_username(label_values: list[dict]) -> str | None:
                 if "dict" in group and isinstance(group["dict"], list):
                     for field in group["dict"]:
                         label = fix_encoding(field.get("label", ""))
-                        if label == "사용자 이름":
+                        if label in _USERNAME_LABELS:
                             return field.get("value")
     return None
 
@@ -65,16 +68,18 @@ def parse_story_likes(data: list[dict]) -> list[dict]:
 
 
 def parse_messages(conversations: dict[str, dict]) -> list[dict]:
-    """Parse message data -> [{sender, timestamp, conversation}]"""
+    """Parse message data -> [{sender, timestamp, conversation, participant_count}]"""
     records = []
     for conv_id, conv_data in conversations.items():
         title = fix_encoding(conv_data.get("title", conv_id))
+        participant_count = len(conv_data.get("participants", []))
         for msg in conv_data.get("messages", []):
             sender = fix_encoding(msg.get("sender_name", ""))
             records.append({
                 "sender": sender,
                 "timestamp": msg["timestamp_ms"] // 1000,
                 "conversation": title,
+                "participant_count": participant_count,
             })
     return records
 

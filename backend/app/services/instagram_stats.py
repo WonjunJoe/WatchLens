@@ -174,55 +174,61 @@ def compute_ig_engagement_balance(
     story_likes: list[dict],
     messages: list[dict],
     my_username: str,
-) -> list[dict]:
-    """Per-account balance: what I gave (likes, story likes, sent DMs) vs received (DMs from them)."""
-    given: Counter = Counter()
-    received: Counter = Counter()
+) -> dict:
+    """Per-account breakdown of MY outbound engagement (likes, story likes, DMs sent).
+
+    Note: Instagram export only contains outbound actions. Received likes/views
+    are not available, so a "balance" comparison is not possible. Instead we show
+    where the user's attention is directed.
+    """
+    likes: Counter = Counter()
+    story: Counter = Counter()
+    dm_sent: Counter = Counter()
 
     for item in liked_posts:
-        given[item["username"]] += 1
+        likes[item["username"]] += 1
     for item in story_likes:
-        given[item["username"]] += 1
+        story[item["username"]] += 1
     for msg in messages:
-        sender = msg["sender"]
-        # Extract other person from conversation
-        if sender == my_username:
-            # I sent → count as "given" to conversation partner
-            # conversation name is typically the other person
-            conv = msg["conversation"]
-            given[conv] += 1
-        else:
-            received[sender] += 1
+        if msg["sender"] == my_username and msg.get("participant_count", 2) == 2:
+            dm_sent[msg["conversation"]] += 1
 
-    all_accounts = set(given) | set(received)
+    all_accounts = set(likes) | set(story) | set(dm_sent)
     results = []
     for acct in all_accounts:
-        g = given.get(acct, 0)
-        r = received.get(acct, 0)
-        total = g + r
-        if total < 3:
+        l = likes.get(acct, 0)
+        s = story.get(acct, 0)
+        d = dm_sent.get(acct, 0)
+        total = l + s + d
+        if total < 2:
             continue
-        ratio = round(g / r, 2) if r > 0 else float("inf")
         results.append({
             "username": acct,
-            "given": g,
-            "received": r,
+            "likes": l,
+            "story_likes": s,
+            "dms_sent": d,
             "total": total,
-            "ratio": ratio if ratio != float("inf") else 999,
-            "balance": "일방적 관심" if (r == 0 or ratio >= 3) else ("균형" if 0.5 <= ratio <= 2 else "수신 위주"),
         })
 
     results.sort(key=lambda x: -x["total"])
-    return results[:15]
+
+    total_all = sum(r["total"] for r in results)
+    return {
+        "accounts": results[:15],
+        "total_engagement": total_all,
+    }
 
 
 def compute_ig_dm_balance(messages: list[dict], my_username: str) -> list[dict]:
     """Per-conversation DM balance: sent vs received ratio."""
     conv_sent: Counter = Counter()
     conv_received: Counter = Counter()
+    conv_participants: dict[str, int] = {}
 
     for msg in messages:
         conv = msg["conversation"]
+        if conv not in conv_participants:
+            conv_participants[conv] = msg.get("participant_count", 2)
         if msg["sender"] == my_username:
             conv_sent[conv] += 1
         else:
@@ -237,12 +243,14 @@ def compute_ig_dm_balance(messages: list[dict], my_username: str) -> list[dict]:
         if total < 5:
             continue
         sent_pct = round(s / total * 100)
+        is_group = conv_participants.get(conv, 2) > 2
         results.append({
             "conversation": conv,
             "sent": s,
             "received": r,
             "total": total,
             "sent_pct": sent_pct,
+            "is_group": is_group,
         })
 
     results.sort(key=lambda x: -x["total"])
@@ -296,7 +304,8 @@ def compute_ig_lurker_index(
 ) -> dict:
     """Ratio of passive viewing vs active engagement."""
     total_viewed = len(content_viewed)
-    total_engagement = len(liked_posts) + len(story_likes) + len(messages)
+    # Only count content interactions (likes/story), not DMs — DMs inflate the ratio
+    total_engagement = len(liked_posts) + len(story_likes)
 
     engagement_rate = round(total_engagement / total_viewed * 100, 1) if total_viewed > 0 else 0
 
@@ -367,4 +376,111 @@ def compute_ig_video_trend(
         "first_video_pct": first_pct,
         "last_video_pct": last_pct,
         "change_pct": round(last_pct - first_pct, 1),
+    }
+
+
+def compute_ig_late_night(
+    liked_posts: list[dict],
+    story_likes: list[dict],
+    messages: list[dict],
+    my_username: str,
+) -> dict:
+    """Analyze late-night activity (22:00~03:59): ratio, top DM partners, monthly trend."""
+    total_actions = 0
+    late_actions = 0
+    late_dm_partners: Counter = Counter()
+    month_total: Counter = Counter()
+    month_late: Counter = Counter()
+
+    all_items = []
+    for item in liked_posts + story_likes:
+        all_items.append(("like", item["timestamp"], None))
+    for msg in messages:
+        all_items.append(("dm", msg["timestamp"], msg["sender"]))
+
+    for action_type, ts, sender in all_items:
+        local = _ts_to_local(ts)
+        hour = local.hour
+        month = local.strftime("%Y-%m")
+        total_actions += 1
+        month_total[month] += 1
+
+        if hour in LATE_NIGHT_HOURS:
+            late_actions += 1
+            month_late[month] += 1
+            if action_type == "dm" and sender and sender != my_username:
+                late_dm_partners[sender] += 1
+
+    late_ratio = round(late_actions / total_actions * 100, 1) if total_actions > 0 else 0
+
+    # Hourly breakdown for late night hours only
+    hour_counts: Counter = Counter()
+    for _, ts, _ in all_items:
+        h = _ts_to_local(ts).hour
+        if h in LATE_NIGHT_HOURS:
+            hour_counts[h] += 1
+    peak_hour = max(hour_counts, key=hour_counts.get) if hour_counts else 0
+
+    # Monthly trend
+    months = sorted(set(month_total) | set(month_late))
+    trend = []
+    for m in months:
+        t = month_total.get(m, 0)
+        l = month_late.get(m, 0)
+        pct = round(l / t * 100, 1) if t > 0 else 0
+        trend.append({"month": m, "total": t, "late": l, "late_pct": pct})
+
+    top_dm_partners = [
+        {"name": name, "count": count}
+        for name, count in late_dm_partners.most_common(5)
+    ]
+
+    return {
+        "total_actions": total_actions,
+        "late_actions": late_actions,
+        "late_ratio": late_ratio,
+        "peak_hour": peak_hour,
+        "top_dm_partners": top_dm_partners,
+        "trend": trend,
+    }
+
+
+def compute_ig_unfollow_timeline(
+    unfollowed: list[dict],
+    liked_posts: list[dict],
+    story_likes: list[dict],
+    messages: list[dict],
+    my_username: str,
+) -> dict:
+    """Timeline of recent unfollows with pre-unfollow interaction history."""
+    if not unfollowed:
+        return {"total_unfollowed": 0, "accounts": []}
+
+    # Build interaction map
+    interaction_counts: Counter = Counter()
+    for item in liked_posts:
+        interaction_counts[item["username"]] += 1
+    for item in story_likes:
+        interaction_counts[item["username"]] += 1
+    for msg in messages:
+        if msg["sender"] != my_username:
+            interaction_counts[msg["sender"]] += 1
+
+    accounts = []
+    for u in unfollowed:
+        username = u["username"]
+        ts = u["timestamp"]
+        interactions = interaction_counts.get(username, 0)
+        accounts.append({
+            "username": username,
+            "timestamp": ts,
+            "date": _ts_to_local(ts).strftime("%Y-%m-%d") if ts > 0 else "",
+            "prior_interactions": interactions,
+        })
+
+    accounts.sort(key=lambda x: -x["timestamp"])
+
+    return {
+        "total_unfollowed": len(accounts),
+        "accounts": accounts[:20],
     }

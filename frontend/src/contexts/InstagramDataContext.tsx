@@ -16,11 +16,14 @@ interface InstagramData {
   following_cleanup: any;
   lurker_index: any;
   video_trend: any;
+  late_night: any;
+  unfollow_timeline: any;
   insights: any;
 }
 
 interface InstagramContextValue {
   data: Partial<InstagramData>;
+  hasData: boolean;
   setSection: (name: string, value: any) => void;
   setAll: (data: InstagramData) => void;
   clear: () => void;
@@ -56,8 +59,10 @@ export function InstagramDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const hasData = !!data.summary;
+
   return (
-    <InstagramDataContext.Provider value={{ data, setSection, setAll, clear, fetchFromDb }}>
+    <InstagramDataContext.Provider value={{ data, hasData, setSection, setAll, clear, fetchFromDb }}>
       {children}
     </InstagramDataContext.Provider>
   );

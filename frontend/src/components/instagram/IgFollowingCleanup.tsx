@@ -17,7 +17,7 @@ function pctColor(pct: number) {
 }
 
 export function IgFollowingCleanup({ data }: Props) {
-  if (!data || data.total_following === 0) return null;
+  if (!data || !data.total_following) return null;
 
   const color = pctColor(data.no_interaction_pct);
 

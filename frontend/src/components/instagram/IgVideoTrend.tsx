@@ -14,7 +14,7 @@ interface Props {
 }
 
 export function IgVideoTrend({ data }: Props) {
-  if (!data || data.trend.length < 2) return null;
+  if (!data || !data.trend || data.trend.length < 2) return null;
 
   const increasing = data.change_pct > 0;
   const color = increasing ? "var(--rose)" : "var(--green)";

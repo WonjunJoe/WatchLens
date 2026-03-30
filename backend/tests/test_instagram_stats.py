@@ -13,8 +13,8 @@ def _make_like(username: str, ts: int) -> dict:
     return {"username": username, "timestamp": ts}
 
 
-def _make_msg(sender: str, ts: int, conv: str = "conv1") -> dict:
-    return {"sender": sender, "timestamp": ts, "conversation": conv}
+def _make_msg(sender: str, ts: int, conv: str = "conv1", participant_count: int = 2) -> dict:
+    return {"sender": sender, "timestamp": ts, "conversation": conv, "participant_count": participant_count}
 
 
 def _make_follow(username: str, ts: int) -> dict:

@@ -15,6 +15,8 @@ import { IgDmBalance } from "../components/instagram/IgDmBalance";
 import { IgFollowingCleanup } from "../components/instagram/IgFollowingCleanup";
 import { IgLurkerIndex } from "../components/instagram/IgLurkerIndex";
 import { IgVideoTrend } from "../components/instagram/IgVideoTrend";
+import { IgLateNight } from "../components/instagram/IgLateNight";
+import { IgUnfollowTimeline } from "../components/instagram/IgUnfollowTimeline";
 import { Loader2, RefreshCw, Upload } from "lucide-react";
 
 export function InstagramDashboardPage() {
@@ -115,6 +117,12 @@ export function InstagramDashboardPage() {
       {/* Video Trend full-width */}
       <div className="mb-4">
         <IgVideoTrend data={data.video_trend} />
+      </div>
+
+      {/* Late Night + Unfollow Timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <IgLateNight data={data.late_night} />
+        <IgUnfollowTimeline data={data.unfollow_timeline} />
       </div>
 
       {/* Topics + Follow Network */}

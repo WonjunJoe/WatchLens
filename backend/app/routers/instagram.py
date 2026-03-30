@@ -17,6 +17,8 @@ from app.services.instagram_stats import (
     compute_ig_following_cleanup,
     compute_ig_lurker_index,
     compute_ig_video_trend,
+    compute_ig_late_night,
+    compute_ig_unfollow_timeline,
 )
 from app.services.instagram_insights import generate_ig_insights
 from app.db.repository import save_instagram_results, fetch_instagram_results
@@ -46,7 +48,7 @@ def _detect_my_username(messages: list[dict]) -> str:
 
 def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
     try:
-        total_sections = 14
+        total_sections = 16
         loaded = 0
 
         yield sse("progress", {"step": "ZIP 압축 해제 및 파싱 중...", "loaded": 0, "total": total_sections})
@@ -133,7 +135,17 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
         loaded += 1
         yield sse("section", {"name": "video_trend", "data": video_trend, "loaded": loaded, "total": total_sections})
 
-        # 14. Insights
+        # 14. Late night
+        late_night = compute_ig_late_night(liked, story, msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "late_night", "data": late_night, "loaded": loaded, "total": total_sections})
+
+        # 15. Unfollow timeline
+        unfollow_timeline = compute_ig_unfollow_timeline(parsed["unfollowed"], liked, story, msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "unfollow_timeline", "data": unfollow_timeline, "loaded": loaded, "total": total_sections})
+
+        # 16. Insights
         insights = generate_ig_insights(summary, hourly, top_accounts, dm_analysis)
         loaded += 1
         yield sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
@@ -153,6 +165,8 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
             "following_cleanup": following_cleanup,
             "lurker_index": lurker_index,
             "video_trend": video_trend,
+            "late_night": late_night,
+            "unfollow_timeline": unfollow_timeline,
             "insights": insights,
         }
         try:
