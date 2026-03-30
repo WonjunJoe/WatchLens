@@ -4,6 +4,7 @@ No DB calls, no I/O — all functions take plain Python data structures and
 return plain Python data structures.
 """
 
+import math
 from collections import Counter
 from datetime import datetime
 
@@ -13,6 +14,8 @@ from config.settings import (
     AVG_RETENTION_SHORTS,
     AVG_RETENTION_LONGFORM,
     LATE_NIGHT_HOURS,
+    BINGE_GAP_MINUTES,
+    BINGE_MIN_COUNT,
 )
 
 DAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
@@ -373,4 +376,178 @@ def compute_viewer_type(records: list[dict], shorts_data: dict, hourly: list[dic
         "type_name": type_name,
         "description": description,
         "axes": axes,
+    }
+
+
+def compute_content_diversity(records: list[dict], id_to_category: dict[str, str]) -> dict:
+    """Shannon entropy on category distribution → 0-100 diversity score."""
+    cat_counts: Counter[str] = Counter()
+    for r in records:
+        vid = r["video_id"]
+        if not vid:
+            continue
+        cat = id_to_category.get(vid, "미분류")
+        if cat == "Unknown":
+            cat = "미분류"
+        cat_counts[cat] += 1
+
+    total = sum(cat_counts.values())
+    if total == 0:
+        return {"score": 0, "category_count": 0, "top_categories": [], "monthly_trend": []}
+
+    # Shannon entropy
+    entropy = 0.0
+    for count in cat_counts.values():
+        p = count / total
+        if p > 0:
+            entropy -= p * math.log2(p)
+
+    num_cats = len(cat_counts)
+    max_entropy = math.log2(num_cats) if num_cats > 1 else 1.0
+    score = round((entropy / max_entropy) * 100) if max_entropy > 0 else 0
+
+    top_categories = [
+        {"category": cat, "count": c, "pct": round(c / total * 100, 1)}
+        for cat, c in cat_counts.most_common(5)
+    ]
+
+    # Monthly trend
+    month_cats: dict[str, Counter] = {}
+    for r in records:
+        vid = r["video_id"]
+        if not vid:
+            continue
+        cat = id_to_category.get(vid, "미분류")
+        if cat == "Unknown":
+            cat = "미분류"
+        month = to_local(r["watched_at"]).strftime("%Y-%m")
+        month_cats.setdefault(month, Counter())[cat] += 1
+
+    monthly_trend = []
+    for month in sorted(month_cats.keys()):
+        counts = month_cats[month]
+        t = sum(counts.values())
+        e = 0.0
+        for c in counts.values():
+            p = c / t
+            if p > 0:
+                e -= p * math.log2(p)
+        nc = len(counts)
+        me = math.log2(nc) if nc > 1 else 1.0
+        s = round((e / me) * 100) if me > 0 else 0
+        monthly_trend.append({"month": month, "score": s})
+
+    return {
+        "score": score,
+        "category_count": num_cats,
+        "top_categories": top_categories,
+        "monthly_trend": monthly_trend,
+    }
+
+
+def compute_attention_trend(records: list[dict], id_to_duration: dict[str, int]) -> dict:
+    """Monthly average video duration + Shorts ratio trend."""
+    month_durations: dict[str, list[int]] = {}
+    month_shorts: dict[str, dict] = {}
+
+    for r in records:
+        month = to_local(r["watched_at"]).strftime("%Y-%m")
+        month_shorts.setdefault(month, {"total": 0, "shorts": 0})
+        month_shorts[month]["total"] += 1
+        if r["is_shorts"]:
+            month_shorts[month]["shorts"] += 1
+
+        vid = r["video_id"]
+        dur = id_to_duration.get(vid, 0) if vid else 0
+        if dur > 0:
+            month_durations.setdefault(month, []).append(dur)
+
+    months = sorted(set(list(month_durations.keys()) + list(month_shorts.keys())))
+    trend = []
+    for m in months:
+        durs = month_durations.get(m, [])
+        avg_dur_min = round(sum(durs) / len(durs) / 60, 1) if durs else 0
+        ms = month_shorts.get(m, {"total": 0, "shorts": 0})
+        shorts_pct = round(ms["shorts"] / ms["total"] * 100, 1) if ms["total"] > 0 else 0
+        trend.append({"month": m, "avg_duration_min": avg_dur_min, "shorts_pct": shorts_pct})
+
+    # Overall change
+    first_dur = trend[0]["avg_duration_min"] if trend else 0
+    last_dur = trend[-1]["avg_duration_min"] if trend else 0
+    change_pct = round((last_dur - first_dur) / first_dur * 100) if first_dur > 0 else 0
+
+    return {
+        "trend": trend,
+        "overall_change_pct": change_pct,
+        "first_avg_min": first_dur,
+        "last_avg_min": last_dur,
+    }
+
+
+def compute_time_cost(watch_time_data: dict) -> dict:
+    """Convert total watch hours into relatable equivalents."""
+    total_hours = watch_time_data.get("total_max_hours", 0)
+
+    return {
+        "total_hours": total_hours,
+        "equivalents": [
+            {"label": "책 읽기", "value": round(total_hours / 5, 1), "unit": "권", "desc": "평균 5시간/권"},
+            {"label": "영화 감상", "value": round(total_hours / 2, 1), "unit": "편", "desc": "평균 2시간/편"},
+            {"label": "언어 학습", "value": round(total_hours / 600 * 100, 1), "unit": "%", "desc": "FSI 기준 600시간"},
+            {"label": "마라톤 훈련", "value": round(total_hours / 200, 1), "unit": "회 완주", "desc": "초보 기준 200시간"},
+            {"label": "수면", "value": round(total_hours / 8, 1), "unit": "일", "desc": "8시간/일 기준"},
+        ],
+    }
+
+
+def compute_binge_sessions(records: list[dict]) -> dict:
+    """Detect binge sessions: consecutive watches within BINGE_GAP_MINUTES gap."""
+    if not records:
+        return {"total_sessions": 0, "binge_sessions": 0, "binge_ratio": 0, "total_binge_videos": 0, "longest_binge": 0, "top_binge_channels": []}
+
+    sorted_recs = sorted(records, key=lambda r: r["watched_at"])
+    gap_seconds = BINGE_GAP_MINUTES * 60
+
+    # Build sessions
+    sessions: list[list[dict]] = []
+    current_session: list[dict] = [sorted_recs[0]]
+
+    for i in range(1, len(sorted_recs)):
+        prev_dt = to_local(sorted_recs[i - 1]["watched_at"])
+        curr_dt = to_local(sorted_recs[i]["watched_at"])
+        diff = (curr_dt - prev_dt).total_seconds()
+
+        if 0 <= diff <= gap_seconds:
+            current_session.append(sorted_recs[i])
+        else:
+            sessions.append(current_session)
+            current_session = [sorted_recs[i]]
+    sessions.append(current_session)
+
+    # Binge = sessions with BINGE_MIN_COUNT+ consecutive videos
+    binge_sessions = [s for s in sessions if len(s) >= BINGE_MIN_COUNT]
+    binge_channel_counts: Counter[str] = Counter()
+    total_binge_videos = 0
+    longest_binge = 0
+
+    for session in binge_sessions:
+        longest_binge = max(longest_binge, len(session))
+        total_binge_videos += len(session)
+        for r in session:
+            ch = r.get("channel_name", "")
+            if ch:
+                binge_channel_counts[ch] += 1
+
+    top_binge_channels = [
+        {"channel": ch, "count": c}
+        for ch, c in binge_channel_counts.most_common(5)
+    ]
+
+    return {
+        "total_sessions": len(sessions),
+        "binge_sessions": len(binge_sessions),
+        "binge_ratio": round(len(binge_sessions) / len(sessions) * 100, 1) if sessions else 0,
+        "total_binge_videos": total_binge_videos,
+        "longest_binge": longest_binge,
+        "top_binge_channels": top_binge_channels,
     }

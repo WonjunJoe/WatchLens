@@ -28,6 +28,10 @@ from app.services.stats_service import (
     compute_weekly,
     compute_day_of_week,
     compute_viewer_type,
+    compute_content_diversity,
+    compute_attention_trend,
+    compute_time_cost,
+    compute_binge_sessions,
 )
 from app.services.indices import calc_dopamine
 from app.services.insights import generate_insights
@@ -78,7 +82,9 @@ def get_period(user_id: str = Query(default=DEFAULT_USER_ID)):
 SECTIONS = [
     "summary", "hourly", "daily", "top_channels", "shorts",
     "categories", "watch_time", "weekly_watch_time", "weekly",
-    "dopamine", "day_of_week", "viewer_type", "search_keywords", "insights",
+    "dopamine", "day_of_week", "viewer_type", "search_keywords",
+    "content_diversity", "attention_trend", "time_cost", "binge_sessions",
+    "insights",
 ]
 
 
@@ -151,6 +157,22 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
         keywords = compute_search_keywords(search_records)
         loaded += 1
         yield sse("section", {"name": "search_keywords", "data": keywords, "loaded": loaded, "total": total_sections})
+
+        content_diversity = compute_content_diversity(records, id_to_category)
+        loaded += 1
+        yield sse("section", {"name": "content_diversity", "data": content_diversity, "loaded": loaded, "total": total_sections})
+
+        attention_trend = compute_attention_trend(records, id_to_duration)
+        loaded += 1
+        yield sse("section", {"name": "attention_trend", "data": attention_trend, "loaded": loaded, "total": total_sections})
+
+        time_cost = compute_time_cost(watch_time)
+        loaded += 1
+        yield sse("section", {"name": "time_cost", "data": time_cost, "loaded": loaded, "total": total_sections})
+
+        binge_sessions = compute_binge_sessions(records)
+        loaded += 1
+        yield sse("section", {"name": "binge_sessions", "data": binge_sessions, "loaded": loaded, "total": total_sections})
 
         insights = generate_insights(summary, hourly, shorts, dopamine, watch_time, weekly)
         loaded += 1

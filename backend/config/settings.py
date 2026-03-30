@@ -35,6 +35,10 @@ DOPAMINE_WEIGHTS = {
 }
 LATE_NIGHT_HOURS = list(range(22, 24)) + list(range(0, 4))  # 22:00-03:59
 
+# Binge session detection
+BINGE_GAP_MINUTES = 30   # Max gap between consecutive watches in one session
+BINGE_MIN_COUNT = 5      # Minimum videos in a session to qualify as "binge"
+
 YOUTUBE_CATEGORY_MAP = {
     1: "Film & Animation",
     2: "Autos & Vehicles",

@@ -16,6 +16,10 @@ interface YouTubeData {
   day_of_week?: any;
   viewer_type?: any;
   search_keywords?: any;
+  content_diversity?: any;
+  attention_trend?: any;
+  time_cost?: any;
+  binge_sessions?: any;
   insights?: any;
 }
 

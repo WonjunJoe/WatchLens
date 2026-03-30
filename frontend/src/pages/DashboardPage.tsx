@@ -11,6 +11,10 @@ import { InsightSummary } from "../components/InsightSummary";
 import { DopamineIndex } from "../components/DopamineIndex";
 import { ViewerType } from "../components/ViewerType";
 import { DayOfWeekChart } from "../components/DayOfWeekChart";
+import { ContentDiversity } from "../components/ContentDiversity";
+import { AttentionTrend } from "../components/AttentionTrend";
+import { TimeCost } from "../components/TimeCost";
+import { BingeSessions } from "../components/BingeSessions";
 import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { useYouTubeData } from "../contexts/YouTubeDataContext";
@@ -24,7 +28,7 @@ export function DashboardPage() {
 
   const { data, setSection, clear } = useYouTubeData();
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState({ loaded: 0, total: 14, step: "" });
+  const [progress, setProgress] = useState({ loaded: 0, total: 18, step: "" });
   const [error, setError] = useState<string | null>(null);
 
   const { stream } = useSseStream();
@@ -45,14 +49,14 @@ export function DashboardPage() {
     setLoading(true);
     setError(null);
     clear();
-    setProgress({ loaded: 0, total: 14, step: "데이터 로드 중..." });
+    setProgress({ loaded: 0, total: 18, step: "데이터 로드 중..." });
 
     try {
       await stream(
         `${API_BASE}/api/stats/dashboard?date_from=${dateFrom}&date_to=${dateTo}`,
         ({ event, data: payload }) => {
           if (event === "progress") {
-            setProgress({ loaded: payload.loaded || 0, total: payload.total || 14, step: payload.step || "" });
+            setProgress({ loaded: payload.loaded || 0, total: payload.total || 18, step: payload.step || "" });
           } else if (event === "section") {
             setSection(payload.name, payload.data);
             setProgress({ loaded: payload.loaded, total: payload.total, step: `${payload.loaded}/${payload.total}` });
@@ -160,6 +164,22 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <TopChannels data={data.top_channels} />
         <Categories data={data.categories} />
+      </div>
+
+      {/* Row: Content Diversity + Binge Sessions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <ContentDiversity data={data.content_diversity} />
+        <BingeSessions data={data.binge_sessions} />
+      </div>
+
+      {/* Attention Trend full-width */}
+      <div className="mb-4">
+        <AttentionTrend data={data.attention_trend} />
+      </div>
+
+      {/* Time Cost full-width */}
+      <div className="mb-4">
+        <TimeCost data={data.time_cost} />
       </div>
 
       {/* Search Keywords */}
