@@ -11,6 +11,11 @@ interface InstagramData {
   dm_analysis: any;
   topics: any;
   follow_network: any;
+  engagement_balance: any;
+  dm_balance: any;
+  following_cleanup: any;
+  lurker_index: any;
+  video_trend: any;
   insights: any;
 }
 

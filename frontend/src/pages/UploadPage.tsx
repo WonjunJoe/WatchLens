@@ -27,7 +27,7 @@ export function UploadPage() {
 
   // Instagram state
   const [igUploading, setIgUploading] = useState(false);
-  const [igProgress, setIgProgress] = useState({ step: "", loaded: 0, total: 9 });
+  const [igProgress, setIgProgress] = useState({ step: "", loaded: 0, total: 14 });
   const [igDone, setIgDone] = useState(false);
   const [igError, setIgError] = useState<string | null>(null);
 
@@ -47,7 +47,7 @@ export function UploadPage() {
     setIgError(null);
     setIgDone(false);
     setIgUploading(true);
-    setIgProgress({ step: "업로드 중...", loaded: 0, total: 9 });
+    setIgProgress({ step: "업로드 중...", loaded: 0, total: 14 });
 
     try {
       const formData = new FormData();

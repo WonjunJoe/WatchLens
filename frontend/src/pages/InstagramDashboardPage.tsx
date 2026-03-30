@@ -10,6 +10,11 @@ import { IgDailyChart } from "../components/instagram/IgDailyChart";
 import { IgDmAnalysis } from "../components/instagram/IgDmAnalysis";
 import { IgTopics } from "../components/instagram/IgTopics";
 import { IgFollowNetwork } from "../components/instagram/IgFollowNetwork";
+import { IgEngagementBalance } from "../components/instagram/IgEngagementBalance";
+import { IgDmBalance } from "../components/instagram/IgDmBalance";
+import { IgFollowingCleanup } from "../components/instagram/IgFollowingCleanup";
+import { IgLurkerIndex } from "../components/instagram/IgLurkerIndex";
+import { IgVideoTrend } from "../components/instagram/IgVideoTrend";
 import { Loader2, RefreshCw, Upload } from "lucide-react";
 
 export function InstagramDashboardPage() {
@@ -93,6 +98,23 @@ export function InstagramDashboardPage() {
       {/* Daily trend */}
       <div className="mb-4">
         <IgDailyChart data={data.daily} />
+      </div>
+
+      {/* Engagement Balance + DM Balance */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <IgEngagementBalance data={data.engagement_balance} />
+        <IgDmBalance data={data.dm_balance} />
+      </div>
+
+      {/* Lurker Index + Following Cleanup */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <IgLurkerIndex data={data.lurker_index} />
+        <IgFollowingCleanup data={data.following_cleanup} />
+      </div>
+
+      {/* Video Trend full-width */}
+      <div className="mb-4">
+        <IgVideoTrend data={data.video_trend} />
       </div>
 
       {/* Topics + Follow Network */}

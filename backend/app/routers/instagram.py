@@ -12,6 +12,11 @@ from app.services.instagram_stats import (
     compute_ig_top_accounts,
     compute_ig_dm_analysis,
     compute_ig_follow_network,
+    compute_ig_engagement_balance,
+    compute_ig_dm_balance,
+    compute_ig_following_cleanup,
+    compute_ig_lurker_index,
+    compute_ig_video_trend,
 )
 from app.services.instagram_insights import generate_ig_insights
 from app.db.repository import save_instagram_results, fetch_instagram_results
@@ -41,7 +46,7 @@ def _detect_my_username(messages: list[dict]) -> str:
 
 def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
     try:
-        total_sections = 9
+        total_sections = 14
         loaded = 0
 
         yield sse("progress", {"step": "ZIP 압축 해제 및 파싱 중...", "loaded": 0, "total": total_sections})
@@ -103,7 +108,32 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
         loaded += 1
         yield sse("section", {"name": "follow_network", "data": follow_network, "loaded": loaded, "total": total_sections})
 
-        # 9. Insights
+        # 9. Engagement balance
+        engagement_balance = compute_ig_engagement_balance(liked, story, msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "engagement_balance", "data": engagement_balance, "loaded": loaded, "total": total_sections})
+
+        # 10. DM balance
+        dm_balance = compute_ig_dm_balance(msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "dm_balance", "data": dm_balance, "loaded": loaded, "total": total_sections})
+
+        # 11. Following cleanup
+        following_cleanup = compute_ig_following_cleanup(following, liked, story, msgs, my_username)
+        loaded += 1
+        yield sse("section", {"name": "following_cleanup", "data": following_cleanup, "loaded": loaded, "total": total_sections})
+
+        # 12. Lurker index
+        lurker_index = compute_ig_lurker_index(liked, story, msgs, viewed)
+        loaded += 1
+        yield sse("section", {"name": "lurker_index", "data": lurker_index, "loaded": loaded, "total": total_sections})
+
+        # 13. Video trend
+        video_trend = compute_ig_video_trend(parsed["posts_viewed"], parsed["videos_watched"])
+        loaded += 1
+        yield sse("section", {"name": "video_trend", "data": video_trend, "loaded": loaded, "total": total_sections})
+
+        # 14. Insights
         insights = generate_ig_insights(summary, hourly, top_accounts, dm_analysis)
         loaded += 1
         yield sse("section", {"name": "insights", "data": insights, "loaded": loaded, "total": total_sections})
@@ -118,6 +148,11 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
             "dm_analysis": dm_analysis,
             "topics": topics,
             "follow_network": follow_network,
+            "engagement_balance": engagement_balance,
+            "dm_balance": dm_balance,
+            "following_cleanup": following_cleanup,
+            "lurker_index": lurker_index,
+            "video_trend": video_trend,
             "insights": insights,
         }
         try:
