@@ -1,28 +1,8 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { API_BASE } from "../config";
+import type { YouTubeData } from "../types/youtube";
 
-const API_BASE = "http://localhost:8000";
-
-interface YouTubeData {
-  summary?: any;
-  hourly?: any;
-  daily?: any;
-  top_channels?: any;
-  shorts?: any;
-  categories?: any;
-  watch_time?: any;
-  weekly_watch_time?: any;
-  weekly?: any;
-  dopamine?: any;
-  day_of_week?: any;
-  viewer_type?: any;
-  search_keywords?: any;
-  content_diversity?: any;
-  attention_trend?: any;
-  time_cost?: any;
-  binge_sessions?: any;
-  search_watch_flow?: any;
-  insights?: any;
-}
+export type { YouTubeData };
 
 interface PeriodInfo {
   date_from: string;
@@ -34,7 +14,7 @@ interface YouTubeContextValue {
   data: YouTubeData;
   period: PeriodInfo | null;
   hasData: boolean;
-  setSection: (name: string, value: any) => void;
+  setSection: (name: string, value: YouTubeData[keyof YouTubeData]) => void;
   setAll: (data: YouTubeData) => void;
   setPeriod: (p: PeriodInfo | null) => void;
   clear: () => void;
@@ -47,7 +27,7 @@ export function YouTubeDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<YouTubeData>({});
   const [period, setPeriod] = useState<PeriodInfo | null>(null);
 
-  const setSection = useCallback((name: string, value: any) => {
+  const setSection = useCallback((name: string, value: YouTubeData[keyof YouTubeData]) => {
     setData((prev) => ({ ...prev, [name]: value }));
   }, []);
 

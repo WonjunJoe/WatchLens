@@ -7,8 +7,7 @@ import { useInstagramData } from "../contexts/InstagramDataContext";
 import { useYouTubeData } from "../contexts/YouTubeDataContext";
 import { Eye, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
-
-const API_BASE = "http://localhost:8000";
+import { API_BASE } from "../config";
 
 export function UploadPage() {
   const navigate = useNavigate();
@@ -27,7 +26,7 @@ export function UploadPage() {
 
   // Instagram state
   const [igUploading, setIgUploading] = useState(false);
-  const [igProgress, setIgProgress] = useState({ step: "", loaded: 0, total: 16 });
+  const [igProgress, setIgProgress] = useState({ step: "", loaded: 0, total: 0 });
   const [igDone, setIgDone] = useState(false);
   const [igError, setIgError] = useState<string | null>(null);
 
@@ -47,7 +46,7 @@ export function UploadPage() {
     setIgError(null);
     setIgDone(false);
     setIgUploading(true);
-    setIgProgress({ step: "업로드 중...", loaded: 0, total: 16 });
+    setIgProgress({ step: "업로드 중...", loaded: 0, total: 0 });
 
     try {
       const formData = new FormData();

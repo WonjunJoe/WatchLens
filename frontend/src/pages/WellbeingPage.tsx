@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Loader2, AlertCircle } from "lucide-react";
-
-const API_BASE = "http://localhost:8000";
+import { API_BASE } from "../config";
 
 interface WellbeingDetail {
   score: number;
@@ -46,13 +45,21 @@ function scoreRing(score: number, color: string) {
   );
 }
 
+function getGradeLabel(score: number, thresholds: [number, string][]): string {
+  for (const [min, label] of thresholds) {
+    if (score >= min) return label;
+  }
+  return thresholds[thresholds.length - 1][1];
+}
+
 function DetailCard({ detail, color }: { detail: WellbeingDetail; color: string }) {
   const barWidth = Math.min(100, detail.score);
+  const grade = getGradeLabel(detail.score, [[60, "경고"], [30, "주의"], [0, "양호"]]);
   return (
     <div className="p-4 bg-gray-50 rounded-xl">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[13px] font-medium text-[var(--text-primary)]">{detail.label}</span>
-        <span className="text-[13px] font-bold" style={{ color }}>{detail.score}</span>
+        <span className="text-[13px] font-bold" style={{ color }}>{detail.score} <span className="text-[11px] font-medium">{grade}</span></span>
       </div>
       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-1.5">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${barWidth}%`, backgroundColor: color }} />

@@ -1,5 +1,6 @@
 """YouTube analytics dashboard API endpoints."""
 
+import logging
 from datetime import datetime, timezone
 from collections.abc import Generator
 
@@ -7,7 +8,9 @@ from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse, JSONResponse
 
 from config.settings import DEFAULT_USER_ID
-from app.utils import to_local, sse, USER_TZ
+from app.utils import to_local, sse, USER_TZ, local_date_to_utc
+
+logger = logging.getLogger(__name__)
 from app.models.schemas import PeriodInfo
 from app.db.repository import (
     fetch_watch_records,
@@ -40,23 +43,6 @@ from app.services.indices import calc_dopamine
 from app.services.insights import generate_insights
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _local_date_to_utc(local_date: str, end_of_day: bool = False) -> str:
-    """Convert local date string (YYYY-MM-DD) to UTC ISO-8601."""
-    if end_of_day:
-        local_dt = datetime.strptime(local_date, "%Y-%m-%d").replace(
-            hour=23, minute=59, second=59, tzinfo=USER_TZ
-        )
-    else:
-        local_dt = datetime.strptime(local_date, "%Y-%m-%d").replace(
-            hour=0, minute=0, second=0, tzinfo=USER_TZ
-        )
-    return local_dt.astimezone(timezone.utc).isoformat()
 
 
 # ---------------------------------------------------------------------------
@@ -99,8 +85,8 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
         yield sse("progress", {"step": "데이터 조회 중...", "loaded": 0, "total": total_sections})
 
         # Fetch data via repository (expects UTC strings)
-        utc_from = _local_date_to_utc(date_from)
-        utc_to = _local_date_to_utc(date_to, end_of_day=True)
+        utc_from = local_date_to_utc(date_from)
+        utc_to = local_date_to_utc(date_to, end_of_day=True)
 
         records = fetch_watch_records(user_id, utc_from, utc_to)
         search_records = fetch_search_records(user_id, utc_from, utc_to)
@@ -198,8 +184,8 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
         }
         try:
             save_youtube_results(user_id, date_from, date_to, all_results)
-        except Exception:
-            pass  # cache save failure is non-critical
+        except Exception as e:
+            logger.warning("YouTube 캐시 저장 실패: %s", e)
 
         yield sse("done", {"loaded": total_sections, "total": total_sections})
     except Exception as e:

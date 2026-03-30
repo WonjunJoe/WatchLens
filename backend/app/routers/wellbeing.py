@@ -1,12 +1,17 @@
 """Cross-platform digital wellbeing dashboard endpoint."""
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
-from config.settings import DEFAULT_USER_ID
-from app.utils import to_local, USER_TZ
+from config.settings import (
+    DEFAULT_USER_ID,
+    WELLBEING_WEIGHTS,
+    WELLBEING_GRADE_THRESHOLDS,
+    BINGE_SCORE_MULTIPLIER,
+    WATCH_INTENSITY_MAX_HOURS,
+    LATE_NIGHT_SCORE_MULTIPLIER,
+)
+from app.utils import to_local, local_date_to_utc
 from app.db.repository import (
     fetch_instagram_results,
     fetch_period,
@@ -19,18 +24,6 @@ from app.services.indices import calc_dopamine
 router = APIRouter(prefix="/api/wellbeing", tags=["wellbeing"])
 
 
-def _local_date_to_utc(local_date: str, end_of_day: bool = False) -> str:
-    if end_of_day:
-        local_dt = datetime.strptime(local_date, "%Y-%m-%d").replace(
-            hour=23, minute=59, second=59, tzinfo=USER_TZ
-        )
-    else:
-        local_dt = datetime.strptime(local_date, "%Y-%m-%d").replace(
-            hour=0, minute=0, second=0, tzinfo=USER_TZ
-        )
-    return local_dt.astimezone(timezone.utc).isoformat()
-
-
 def _fetch_youtube_signals(user_id: str) -> dict:
     """Fetch YouTube data from DB and compute wellbeing-relevant metrics."""
     earliest, latest = fetch_period(user_id)
@@ -40,8 +33,8 @@ def _fetch_youtube_signals(user_id: str) -> dict:
     date_from = to_local(earliest).strftime("%Y-%m-%d")
     date_to = to_local(latest).strftime("%Y-%m-%d")
 
-    utc_from = _local_date_to_utc(date_from)
-    utc_to = _local_date_to_utc(date_to, end_of_day=True)
+    utc_from = local_date_to_utc(date_from)
+    utc_to = local_date_to_utc(date_to, end_of_day=True)
 
     records = fetch_watch_records(user_id, utc_from, utc_to)
     if not records:
@@ -77,7 +70,7 @@ def _compute_wellbeing(youtube_data: dict, instagram_data: dict) -> dict:
 
         binge = youtube_data.get("binge_sessions", {})
         binge_ratio = binge.get("binge_ratio", 0)
-        binge_score = min(100, round(binge_ratio * 2))
+        binge_score = min(100, round(binge_ratio * BINGE_SCORE_MULTIPLIER))
         scores["binge"] = binge_score
         details["binge"] = {
             "score": binge_score,
@@ -87,7 +80,7 @@ def _compute_wellbeing(youtube_data: dict, instagram_data: dict) -> dict:
 
         wt = youtube_data.get("watch_time", {})
         daily_max = wt.get("daily_max_hours", 0)
-        intensity_score = min(100, round(daily_max / 4 * 100))
+        intensity_score = min(100, round(daily_max / WATCH_INTENSITY_MAX_HOURS * 100))
         scores["watch_intensity"] = intensity_score
         details["watch_intensity"] = {
             "score": intensity_score,
@@ -110,8 +103,8 @@ def _compute_wellbeing(youtube_data: dict, instagram_data: dict) -> dict:
 
         late = instagram_data.get("late_night") or {}
         late_ratio = late.get("late_ratio", 0)
-        if late_ratio > 0 or late.get("total_actions", 0) > 0:
-            late_score = min(100, round(late_ratio * 2))
+        if late.get("late_actions", 0) > 0:
+            late_score = min(100, round(late_ratio * LATE_NIGHT_SCORE_MULTIPLIER))
             scores["late_night"] = late_score
             details["late_night"] = {
                 "score": late_score,
@@ -123,29 +116,17 @@ def _compute_wellbeing(youtube_data: dict, instagram_data: dict) -> dict:
     if not scores:
         return {"score": 0, "available": False, "details": {}, "grade": ""}
 
-    weights = {
-        "dopamine": 30,
-        "binge": 15,
-        "watch_intensity": 15,
-        "lurker": 20,
-        "late_night": 20,
-    }
-    total_weight = sum(weights[k] for k in scores)
-    weighted_sum = sum(scores[k] * weights[k] for k in scores)
+    total_weight = sum(WELLBEING_WEIGHTS[k] for k in scores)
+    weighted_sum = sum(scores[k] * WELLBEING_WEIGHTS[k] for k in scores)
     composite = round(weighted_sum / total_weight) if total_weight > 0 else 0
 
     health_score = max(0, 100 - composite)
 
-    if health_score >= 80:
-        grade = "매우 건강"
-    elif health_score >= 60:
-        grade = "양호"
-    elif health_score >= 40:
-        grade = "주의"
-    elif health_score >= 20:
-        grade = "경고"
-    else:
-        grade = "위험"
+    grade = WELLBEING_GRADE_THRESHOLDS[-1][1]  # default to last
+    for threshold, label in WELLBEING_GRADE_THRESHOLDS:
+        if health_score >= threshold:
+            grade = label
+            break
 
     return {
         "score": health_score,

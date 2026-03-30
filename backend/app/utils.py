@@ -23,6 +23,19 @@ def chunk_list(items: list, size: int = DB_CHUNK_SIZE) -> Iterator[list]:
         yield items[i : i + size]
 
 
+def local_date_to_utc(local_date: str, end_of_day: bool = False) -> str:
+    """Convert local date string (YYYY-MM-DD) to UTC ISO-8601."""
+    if end_of_day:
+        local_dt = datetime.strptime(local_date, "%Y-%m-%d").replace(
+            hour=23, minute=59, second=59, tzinfo=USER_TZ
+        )
+    else:
+        local_dt = datetime.strptime(local_date, "%Y-%m-%d").replace(
+            hour=0, minute=0, second=0, tzinfo=USER_TZ
+        )
+    return local_dt.astimezone(timezone(timedelta(hours=0))).isoformat()
+
+
 def parse_period(timestamps: list[str]) -> str:
     if not timestamps:
         return ""

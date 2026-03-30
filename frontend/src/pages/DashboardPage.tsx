@@ -20,8 +20,7 @@ import { WeeklyReport } from "../components/WeeklyReport";
 import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { useYouTubeData } from "../contexts/YouTubeDataContext";
-
-const API_BASE = "http://localhost:8000";
+import { API_BASE } from "../config";
 
 export function DashboardPage() {
   const [params] = useSearchParams();

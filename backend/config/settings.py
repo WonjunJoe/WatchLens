@@ -72,3 +72,18 @@ INSTAGRAM_SOURCE_FILES = {
 }
 MAX_ZIP_SIZE_MB = 500
 MAX_ZIP_SIZE_BYTES = MAX_ZIP_SIZE_MB * 1024 * 1024
+
+# ---------------------------------------------------------------------------
+# Wellbeing
+# ---------------------------------------------------------------------------
+WELLBEING_WEIGHTS = {
+    "dopamine": 30,
+    "binge": 15,
+    "watch_intensity": 15,
+    "lurker": 20,
+    "late_night": 20,
+}
+WELLBEING_GRADE_THRESHOLDS = [(80, "매우 건강"), (60, "양호"), (40, "주의"), (20, "경고"), (0, "위험")]
+BINGE_SCORE_MULTIPLIER = 2
+WATCH_INTENSITY_MAX_HOURS = 4
+LATE_NIGHT_SCORE_MULTIPLIER = 2

@@ -1,30 +1,13 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { API_BASE } from "../config";
+import type { InstagramData } from "../types/instagram";
 
-const API_BASE = "http://localhost:8000";
-
-interface InstagramData {
-  summary: any;
-  top_accounts: any;
-  hourly: any;
-  day_of_week: any;
-  daily: any;
-  dm_analysis: any;
-  topics: any;
-  follow_network: any;
-  engagement_balance: any;
-  dm_balance: any;
-  following_cleanup: any;
-  lurker_index: any;
-  video_trend: any;
-  late_night: any;
-  unfollow_timeline: any;
-  insights: any;
-}
+export type { InstagramData };
 
 interface InstagramContextValue {
   data: Partial<InstagramData>;
   hasData: boolean;
-  setSection: (name: string, value: any) => void;
+  setSection: (name: string, value: InstagramData[keyof InstagramData]) => void;
   setAll: (data: InstagramData) => void;
   clear: () => void;
   fetchFromDb: () => Promise<boolean>;
@@ -35,7 +18,7 @@ const InstagramDataContext = createContext<InstagramContextValue | null>(null);
 export function InstagramDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Partial<InstagramData>>({});
 
-  const setSection = useCallback((name: string, value: any) => {
+  const setSection = useCallback((name: string, value: InstagramData[keyof InstagramData]) => {
     setData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
