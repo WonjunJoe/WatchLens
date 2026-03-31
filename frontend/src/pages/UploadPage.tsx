@@ -28,7 +28,6 @@ export function UploadPage() {
   const [zipUploading, setZipUploading] = useState(false);
   const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
-  const [zipDone, setZipDone] = useState(false);
   const [showJsonUploaders, setShowJsonUploaders] = useState(false);
 
   // On mount, check if YouTube data already exists in DB
@@ -57,7 +56,6 @@ export function UploadPage() {
 
   const handleYouTubeZipUpload = async (file: File) => {
     setZipError(null);
-    setZipDone(false);
     setZipUploading(true);
     setZipProgress({ step: "업로드 중...", percent: 2 });
 
@@ -71,7 +69,6 @@ export function UploadPage() {
           if (event === "progress") {
             setZipProgress({ step: payload.step, percent: payload.percent });
           } else if (event === "done") {
-            setZipDone(true);
             if (payload.watch) {
               setWatchResult({ type: "watch", ...payload.watch });
             }
