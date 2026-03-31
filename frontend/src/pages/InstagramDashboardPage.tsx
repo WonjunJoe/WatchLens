@@ -17,10 +17,14 @@ import { IgLurkerIndex } from "../components/instagram/IgLurkerIndex";
 import { IgVideoTrend } from "../components/instagram/IgVideoTrend";
 import { IgLateNight } from "../components/instagram/IgLateNight";
 import { IgUnfollowTimeline } from "../components/instagram/IgUnfollowTimeline";
-import { Loader2, RefreshCw, Upload } from "lucide-react";
+import { Loader2, RefreshCw, Upload, Share2 } from "lucide-react";
+import { ShareModal } from "../components/share/ShareModal";
+import { useYouTubeData } from "../contexts/YouTubeDataContext";
 
 export function InstagramDashboardPage() {
   const { data, fetchFromDb } = useInstagramData();
+  const { data: ytData } = useYouTubeData();
+  const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [noData, setNoData] = useState(false);
 
@@ -66,13 +70,22 @@ export function InstagramDashboardPage() {
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Instagram 대시보드</h1>
-        <Link
-          to="/upload"
-          className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <RefreshCw size={14} />
-          새 분석
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShareOpen(true)}
+            className="p-2 rounded-lg hover:bg-[var(--accent-light)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+            title="스토리 공유"
+          >
+            <Share2 size={18} />
+          </button>
+          <Link
+            to="/upload"
+            className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw size={14} />
+            새 분석
+          </Link>
+        </div>
       </header>
 
       {/* Insights */}
@@ -130,6 +143,13 @@ export function InstagramDashboardPage() {
         <IgTopics data={data.topics} />
         <IgFollowNetwork data={data.follow_network} />
       </div>
+
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        youtube={ytData}
+        instagram={data}
+      />
     </div>
   );
 }

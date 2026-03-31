@@ -17,9 +17,11 @@ import { TimeCost } from "../components/TimeCost";
 import { BingeSessions } from "../components/BingeSessions";
 import { SearchWatchFlow } from "../components/SearchWatchFlow";
 import { WeeklyReport } from "../components/WeeklyReport";
-import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
+import { CalendarDays, RefreshCw, Loader2, Share2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { useYouTubeData, type YouTubeData } from "../contexts/YouTubeDataContext";
+import { useInstagramData } from "../contexts/InstagramDataContext";
+import { ShareModal } from "../components/share/ShareModal";
 import { API_BASE } from "../config";
 
 export function DashboardPage() {
@@ -28,6 +30,8 @@ export function DashboardPage() {
   const paramTo = params.get("to") || "";
 
   const { data, period, setSection, clear, fetchPeriod } = useYouTubeData();
+  const { data: igData } = useInstagramData();
+  const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState({ loaded: 0, total: 19, step: "" });
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +157,10 @@ export function DashboardPage() {
     );
   }
 
+  const sharePeriod = dateFrom && dateTo
+    ? `${dateFrom.replace(/-/g, ".")} ~ ${dateTo.slice(5).replace(/-/g, ".")}`
+    : undefined;
+
   return (
     <div className="pb-12">
       {/* Header */}
@@ -164,13 +172,22 @@ export function DashboardPage() {
             <span className="text-[14px]">{dateFrom} ~ {dateTo}</span>
           </div>
         </div>
-        <Link
-          to="/upload"
-          className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <RefreshCw size={14} />
-          새 분석
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShareOpen(true)}
+            className="p-2 rounded-lg hover:bg-[var(--accent-light)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+            title="스토리 공유"
+          >
+            <Share2 size={18} />
+          </button>
+          <Link
+            to="/upload"
+            className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw size={14} />
+            새 분석
+          </Link>
+        </div>
       </header>
 
       {/* Insights — 핵심 요약 최상단 */}
@@ -235,6 +252,14 @@ export function DashboardPage() {
           <SearchWatchFlow data={data.search_watch_flow} />
         </div>
       )}
+
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        youtube={data}
+        instagram={igData}
+        period={sharePeriod}
+      />
     </div>
   );
 }

@@ -6,22 +6,26 @@
 
 ## Features
 
-- **Google Takeout 업로드** — watch-history.json, search-history.json 드래그앤드롭 업로드 (SSE 실시간 진행 표시)
-- **자동 파싱** — 시청 기록(영상 제목, 채널, Shorts 여부), 검색 기록 자동 분류
+- **Google Takeout 업로드** — JSON 또는 ZIP 파일 드래그앤드롭 업로드 (SSE 실시간 진행 표시)
+- **멀티 플랫폼** — YouTube + Instagram 데이터 분석
 - **YouTube Data API 연동** — 영상 메타데이터(카테고리, 길이) 자동 수집, Shorts 판별(≤180초)
 - **기간 선택** — 업로드 후 최근 30일 / 전체 기간 / 직접 선택 중 택 1
-- **대시보드 (SSE 스트리밍)** — 단일 API 호출로 14개 섹션 분석 스트리밍
+- **YouTube 대시보드 (SSE 스트리밍)** — 단일 API 호출로 14개 섹션 분석 스트리밍
   - 한눈에 보는 인사이트 (규칙 기반 자연어 요약, 카드별 색상 악센트)
   - 요약 카드 4종 (총 시청, 채널 수, 일 평균, Shorts 수)
   - 시간대별/일별/요일별 패턴 차트
   - Top 채널 (롱폼/쇼츠 분리), 카테고리 분포 (파이차트)
   - Shorts 분석 (비율, 일별 추이)
   - 시청 시간 추정 (gap-based + retention-rate 하이브리드)
-  - 주간 시청 시간 + 주간 비교
+  - 주간 시청 시간 + 주간 비교 + 주간 리포트
   - 도파민 지수 (Shorts 비율 40 + 심야 시청 30 + 짧은 영상 30)
   - 시청 유형 분류 (4축 MBTI 스타일: N/D, S/L, B/C, F/E → 16가지 유형)
   - GitHub 스타일 캘린더 히트맵
-  - 검색 키워드 클라우드
+  - 검색 키워드 클라우드 + 검색→시청 전환율
+- **Instagram 대시보드** — 팔로우 네트워크, 소통균형, 심야활동 분석, 언팔 타임라인
+- **크로스플랫폼 웰빙 대시보드** — YouTube + Instagram 통합 디지털 웰빙 뷰
+- **랜딩페이지** — Hero, Features Bento Grid, How-it-works, CTA
+- **스토리 공유 카드** — 1080×1920 인스타 스토리 사이즈, YouTube+Instagram 핵심 지표, 클립보드 복사/다운로드
 
 ## Tech Stack
 
@@ -154,49 +158,63 @@ WatchLens/
 - 기간 선택 UI, 인사이트, 주간 비교, 도파민 지수
 
 ### 2026-03-27
-- 몰아보기 세션/채널 다양성 제거 (직관성 문제)
-- 도파민 지수 3요소로 재설계 (40/30/30)
-- 새 기능: 시청 유형 분류(4축 16유형), 캘린더 히트맵, 요일별 차트
+- 도파민 지수 3요소 재설계 (40/30/30), 시청 유형 분류(4축 16유형), 캘린더 히트맵, 요일별 차트
 - 인사이트 시각화 개선 (카드형 + 핵심 숫자 강조)
-- 프론트엔드 전면 디자인 오버홀 (파스텔 디자인 시스템)
-  - Pretendard 폰트, Lucide React 아이콘
-  - 접이식 사이드바 + 중첩 라우팅
-  - 21개 컴포넌트 파스텔 테마 적용
-  - 미사용 컴포넌트 정리 (BingeSessions, DiversityIndex)
-- **[Step 2-1] 2026 High-End Aesthetic Transformation 시작**
-  - Blurmorphism (Glassmorphism 2.0) & Optical Depth 반영
-  - Tactile & Organic UI (Claymorphism) 적용
-  - Framer Motion 기반 Cinematic Motion 도입
-  - Bento Grid 2.0 레이아웃 리팩토링 및 Dual Theme(Light/Dark) 지원
+- 프론트엔드 전면 디자인 오버홀 (파스텔 → Blurmorphism + Claymorphism + Framer Motion)
+- Bento Grid 2.0, Dual Theme(Light/Dark), Share Card
+
+### 2026-03-28
+- 클린 라이트모드 대시보드 리디자인 (미사용 컴포넌트 제거)
+- 인사이트 상단 이동, 시청시간 기반 KPI, 카테고리 레이아웃 개선
+- 백엔드 스키마/파서 단순화 리팩토링
+
+### 2026-03-29
+- **Instagram 분석 대시보드 추가** (PR #1)
+- 소프트웨어 아키텍처 문서 작성
+
+### 2026-03-30
+- 백엔드 대규모 리팩토링: Repository → Service → Router 3계층 분리
+- SSE 에러 핸들링 표준화, `useSseStream` 훅 추출
+- YouTube/Instagram 대시보드 각 4~5개 신규 인사이트 기능 추가
+- Instagram 소통균형 리팩터, 심야활동 분석, 언팔 타임라인
+- YouTube 대시보드 캐시, 검색→시청 전환율, 주간 리포트
+- 크로스플랫폼 디지털 웰빙 대시보드 (YouTube + Instagram 통합 뷰)
+- 랜딩페이지 구현 (Hero, Features Bento Grid, How-it-works, CTA, Footer)
+- YouTube/Instagram 전체 데이터 인터페이스 TypeScript 타이핑
+- API_BASE 중앙화, 유틸 함수 추출, 설정값 settings.py 이동
+
+### 2026-03-31
+- TypeScript 빌드 에러 해결, 데이터 안전성 강화, 접근성 개선
+
+### 2026-04-01
+- Google Takeout ZIP 직접 업로드 지원 (YouTube)
+- 인스타 스토리 공유 카드 (1080×1920, YouTube+Instagram 핵심 지표, 클립보드 복사/다운로드)
 
 ---
 
 ## TODO
 
-### Step 1 — 데이터 업로드/파싱
+### Step 1 — 데이터 업로드/파싱 ✅
 - [x] Supabase 테이블 + 파서 구현
 - [x] 업로드 API + 프론트엔드 UI
 - [x] E2E 테스트 통과 (시청 10,533건 / 검색 3,228건)
+- [x] Google Takeout ZIP 직접 업로드 지원
 
-### Step 2 — 대시보드/분석
+### Step 2 — 대시보드/분석/디자인 ✅
 - [x] YouTube Data API 연동 (메타데이터 + duration)
 - [x] SSE 대시보드 단일 엔드포인트 (14개 섹션)
 - [x] 기간 선택 UI (최근 30일 / 전체 / 커스텀)
-- [x] 도파민 지수, 시청 유형, 캘린더 히트맵, 요일별 차트
-- [x] 프론트엔드 디자인 오버홀 (파스텔 시스템)
+- [x] 도파민 지수, 시청 유형(4축 16유형), 캘린더 히트맵, 요일별 차트
+- [x] 프론트엔드 디자인 오버홀 (Blurmorphism, Claymorphism, Framer Motion, Bento Grid, Dual Theme)
+- [x] Instagram 분석 대시보드 (팔로우 네트워크, 소통균형, 심야활동, 언팔 타임라인)
+- [x] YouTube/Instagram 각 4~5개 신규 인사이트 기능
+- [x] 크로스플랫폼 디지털 웰빙 대시보드 (통합 뷰)
+- [x] 랜딩페이지 (Hero, Features, How-it-works, CTA)
+- [x] 백엔드 3계층 리팩토링 (Repository → Service → Router)
+- [x] TypeScript 타이핑, SSE 훅 추출, API_BASE 중앙화
 
-### Step 2-1 — 2026 High-End Aesthetic
-- [x] Blurmorphism & Optical Depth (Glassmorphism 2.0)
-- [x] Tactile & Organic UI (Claymorphism & 2rem+ curves)
-- [x] Framer Motion (Staggered Layout, Magnetic Effect, Glow)
-- [x] Bento Grid 2.0 Layout (Top 3: 시청 시간, 최애 채널, 도파민 지수)
-- [x] Dual Theme (Light & Dark) 및 Ambient Mesh Gradient
-- [x] Share Card (9:16 Kinetic Typography View)
-- [x] **UI Stability Hotfixes:**
-  - `recharts` / `lucide-react` / `framer-motion` 라이브러리 임포트 최적화
-  - 신규 디자인 시스템에 따른 `UploadPage` 및 `Layout` 안정성 강화
-
-### Step 3 — 소셜 비교
+### Step 3 — 공유/소셜
+- [x] 인스타 스토리 공유 카드 (1080×1920, 클립보드 복사/다운로드)
 - [ ] 친구와 시청 습관/취향 비교 기능
 
 ### Step 4 — Polish & Launch
