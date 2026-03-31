@@ -32,27 +32,31 @@ export function useSseStream() {
       }
 
       const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+      try {
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
 
-        const blocks = buffer.split("\n\n");
-        buffer = blocks.pop() ?? "";
+          const blocks = buffer.split("\n\n");
+          buffer = blocks.pop() ?? "";
 
-        for (const block of blocks) {
-          const eventMatch = block.match(/^event: (.+)$/m);
-          const dataMatch = block.match(/^data: (.+)$/m);
-          if (!eventMatch || !dataMatch) continue;
-          try {
-            handler({ event: eventMatch[1], data: JSON.parse(dataMatch[1]) });
-          } catch {
-            // skip malformed JSON
+          for (const block of blocks) {
+            const eventMatch = block.match(/^event: (.+)$/m);
+            const dataMatch = block.match(/^data: (.+)$/m);
+            if (!eventMatch || !dataMatch) continue;
+            try {
+              handler({ event: eventMatch[1], data: JSON.parse(dataMatch[1]) });
+            } catch {
+              // skip malformed JSON
+            }
           }
         }
+      } finally {
+        reader.cancel();
       }
     },
     [],

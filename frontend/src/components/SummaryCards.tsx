@@ -37,7 +37,7 @@ const CARDS: CardDef[] = [
   { key: "shorts_count", label: "Shorts", icon: Zap, color: "var(--rose)", getValue: (s) => Math.round(s.shorts_count).toLocaleString(), unit: "건" },
 ];
 
-export function SummaryCards({ data, watchTime }: { data: any | null; watchTime?: WatchTimeData | null }) {
+export function SummaryCards({ data, watchTime }: { data: any | null; watchTime?: WatchTimeData | null | undefined }) {
   if (!data) return null;
 
   return (

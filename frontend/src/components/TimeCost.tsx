@@ -11,14 +11,14 @@ interface Props {
   data: {
     total_hours: number;
     equivalents: Equivalent[];
-  } | null;
+  } | null | undefined;
 }
 
 export function TimeCost({ data }: Props) {
   if (!data || data.total_hours === 0) return null;
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="시간 환산">
       <div className="flex items-center gap-2 mb-4">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">시간 비용 환산</h2>
       </div>

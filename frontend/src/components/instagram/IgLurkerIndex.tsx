@@ -9,7 +9,7 @@ interface Props {
     engagement_rate: number;
     lurker_score: number;
     trend: { month: string; viewed: number; engaged: number; rate: number }[];
-  } | null;
+  } | null | undefined;
 }
 
 function scoreColor(score: number) {
@@ -25,7 +25,7 @@ function scoreLabel(score: number) {
 }
 
 export function IgLurkerIndex({ data }: Props) {
-  if (!data || !data.total_viewed) return null;
+  if (!data || data.total_viewed == null) return null;
 
   const color = scoreColor(data.lurker_score);
 

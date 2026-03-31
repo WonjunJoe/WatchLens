@@ -8,7 +8,7 @@ interface Props {
     overall_change_pct: number;
     first_avg_min: number;
     last_avg_min: number;
-  } | null;
+  } | null | undefined;
 }
 
 export function AttentionTrend({ data }: Props) {
@@ -19,7 +19,7 @@ export function AttentionTrend({ data }: Props) {
   const Icon = declining ? TrendingDown : TrendingUp;
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="집중도 변화 추이">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">주의력 변화 트렌드</h2>
         <div className="flex items-center gap-1.5" style={{ color }}>
@@ -48,7 +48,7 @@ export function AttentionTrend({ data }: Props) {
           <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
           <YAxis yAxisId="left" tick={AXIS_TICK} tickLine={false} axisLine={false} width={35} />
           <YAxis yAxisId="right" orientation="right" tick={AXIS_TICK} tickLine={false} axisLine={false} width={35} domain={[0, 100]} />
-          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, name: string) => {
+          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, name: any) => {
             if (name === "avg_duration_min") return [`${v}분`, "평균 길이"];
             return [`${v}%`, "Shorts 비율"];
           }} />

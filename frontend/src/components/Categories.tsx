@@ -31,7 +31,7 @@ function CategoryPie({ title, data }: { title: string; data: CategoryCount[] }) 
     <div className="flex-1 min-w-0">
       <p className="text-[13px] text-[var(--text-secondary)] mb-1 text-center">{title}</p>
       <div className="flex flex-col items-center">
-        <div className="w-[140px] h-[140px]">
+        <div className="w-full max-w-[180px] h-[140px] mx-auto">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -66,11 +66,11 @@ function CategoryPie({ title, data }: { title: string; data: CategoryCount[] }) 
   );
 }
 
-export function Categories({ data }: { data: CategorySplit | null }) {
+export function Categories({ data }: { data: CategorySplit | null | undefined }) {
   if (!data) return null;
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="카테고리 분포">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">카테고리 분포</h2>
       <div className="flex flex-col md:flex-row gap-6">
         <CategoryPie title="일반 영상" data={data.longform} />

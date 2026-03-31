@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { TOOLTIP_STYLE, AXIS_TICK, GRID_STROKE } from "../utils/chartConfig";
+import { TOOLTIP_STYLE, AXIS_TICK } from "../utils/chartConfig";
 
 interface WeeklyItem {
   week_label: string;
@@ -14,12 +14,12 @@ interface WatchTimeItem {
   week_label: string;
   min_hours: number;
   max_hours: number;
-  change_pct: number;
+  change_pct: number | null;
 }
 
 interface Props {
-  weekly: WeeklyItem[] | null;
-  weeklyWatchTime: WatchTimeItem[] | null;
+  weekly: WeeklyItem[] | null | undefined;
+  weeklyWatchTime: WatchTimeItem[] | null | undefined;
 }
 
 export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
@@ -31,7 +31,7 @@ export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
   const increasing = changePct > 0;
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="주간 리포트">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">주간 시청 추이</h2>
         <div className="flex items-center gap-1.5" style={{ color: increasing ? "var(--rose)" : "var(--green)" }}>
@@ -46,7 +46,7 @@ export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
           <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={35} />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            formatter={(v: any, name: string) => {
+            formatter={(v: any, name: any) => {
               if (name === "shorts") return [`${v}개`, "Shorts"];
               if (name === "longform") return [`${v}개`, "롱폼"];
               return [`${v}`, name];
@@ -67,7 +67,7 @@ export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
               <div key={w.week_label} className="flex-shrink-0 text-center px-2">
                 <p className="text-[11px] text-[var(--text-tertiary)]">{w.week_label}</p>
                 <p className="text-[14px] font-semibold text-[var(--text-primary)]">{w.max_hours}h</p>
-                {w.change_pct !== 0 && (
+                {w.change_pct != null && w.change_pct !== 0 && (
                   <p className={`text-[10px] ${w.change_pct > 0 ? "text-[var(--rose)]" : "text-[var(--green)]"}`}>
                     {w.change_pct > 0 ? "+" : ""}{w.change_pct}%
                   </p>

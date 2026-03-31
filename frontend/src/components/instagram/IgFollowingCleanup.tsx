@@ -7,7 +7,7 @@ interface Props {
     no_interaction_pct: number;
     no_interaction_sample: string[];
     low_interaction: { username: string; count: number }[];
-  } | null;
+  } | null | undefined;
 }
 
 function pctColor(pct: number) {
@@ -17,7 +17,7 @@ function pctColor(pct: number) {
 }
 
 export function IgFollowingCleanup({ data }: Props) {
-  if (!data || !data.total_following) return null;
+  if (!data || data.total_following == null) return null;
 
   const color = pctColor(data.no_interaction_pct);
 

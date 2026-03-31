@@ -9,7 +9,7 @@ interface WatchTimeStats {
   estimated_count: number;
 }
 
-export function WatchTime({ data }: { data: WatchTimeStats | null }) {
+export function WatchTime({ data }: { data: WatchTimeStats | null | undefined }) {
   if (!data) return null;
 
   return (

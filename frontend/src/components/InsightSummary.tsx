@@ -20,11 +20,11 @@ function formatText(text: string) {
   });
 }
 
-export function InsightSummary({ data }: { data: InsightItem[] | null }) {
+export function InsightSummary({ data }: { data: InsightItem[] | null | undefined }) {
   if (!data || data.length === 0) return null;
 
   return (
-    <section className="card p-5">
+    <section className="card p-5" role="region" aria-label="인사이트 요약">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">인사이트</h2>
       <div className="space-y-3">
         {data.map((item, i) => (

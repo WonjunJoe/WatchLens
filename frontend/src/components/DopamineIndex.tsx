@@ -25,13 +25,13 @@ function scoreColor(score: number) {
   return "var(--green)";
 }
 
-export function DopamineIndex({ data }: { data: DopamineData | null }) {
+export function DopamineIndex({ data }: { data: DopamineData | null | undefined }) {
   if (!data || !data.breakdown) return null;
 
   const color = scoreColor(data.score);
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="도파민 지수">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">도파민 지수</h2>
         <span className="text-[12px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${color}15`, color }}>
@@ -56,7 +56,7 @@ export function DopamineIndex({ data }: { data: DopamineData | null }) {
           <div key={key}>
             <div className="flex justify-between items-center mb-1.5">
               <span className="text-[13px] text-[var(--text-secondary)]">{FACTOR_LABELS[key] || key}</span>
-              <span className="text-[13px] font-medium" style={{ color: scoreColor(item.score / item.weight * 100) }}>
+              <span className="text-[13px] font-medium" style={{ color: scoreColor(item.weight > 0 ? (item.score / item.weight * 100) : 0) }}>
                 {item.score}/{item.weight}
               </span>
             </div>
@@ -65,7 +65,7 @@ export function DopamineIndex({ data }: { data: DopamineData | null }) {
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${item.value * 100}%`,
-                  backgroundColor: scoreColor(item.score / item.weight * 100),
+                  backgroundColor: scoreColor(item.weight > 0 ? (item.score / item.weight * 100) : 0),
                 }}
               />
             </div>

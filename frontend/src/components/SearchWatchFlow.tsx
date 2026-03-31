@@ -21,14 +21,14 @@ interface Props {
     conversion_rate: number;
     top_converting: ConvertItem[];
     top_abandoned: AbandonItem[];
-  } | null;
+  } | null | undefined;
 }
 
 export function SearchWatchFlow({ data }: Props) {
   if (!data || data.total_searches === 0) return null;
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="검색-시청 전환">
       <div className="flex items-center gap-2 mb-4">
         <Search size={16} className="text-[var(--accent)]" />
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">검색 → 시청 전환</h2>

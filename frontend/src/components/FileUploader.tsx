@@ -52,31 +52,40 @@ export function FileUploader({ label, subtitle, accept, endpoint, onResult }: Fi
       const decoder = new TextDecoder();
       if (!reader) throw new Error("스트림을 읽을 수 없습니다");
 
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || "";
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || "";
 
-        for (const block of lines) {
-          const eventMatch = block.match(/^event: (.+)$/m);
-          const dataMatch = block.match(/^data: (.+)$/m);
-          if (!eventMatch || !dataMatch) continue;
+          for (const block of lines) {
+            const eventMatch = block.match(/^event: (.+)$/m);
+            const dataMatch = block.match(/^data: (.+)$/m);
+            if (!eventMatch || !dataMatch) continue;
 
-          const event = eventMatch[1];
-          const data = JSON.parse(dataMatch[1]);
+            const event = eventMatch[1];
+            let data: any;
+            try {
+              data = JSON.parse(dataMatch[1]);
+            } catch {
+              continue;
+            }
 
-          if (event === "progress") {
-            setProgress({ step: data.step, percent: data.percent });
-          } else if (event === "done") {
-            onResult(data);
-          } else if (event === "error") {
-            throw new Error(data.detail);
+            if (event === "progress") {
+              setProgress({ step: data.step, percent: data.percent });
+            } else if (event === "done") {
+              onResult(data);
+            } else if (event === "error") {
+              throw new Error(data.detail);
+            }
           }
         }
+      } finally {
+        reader.cancel();
       }
     } catch (e: any) {
       setError(e.message);

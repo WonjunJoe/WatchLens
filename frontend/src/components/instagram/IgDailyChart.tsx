@@ -12,7 +12,7 @@ export function IgDailyChart({ data }: Props) {
       <h3 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">일별 활동 트렌드</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
-          <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.slice(5)} />
+          <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(d) => d.length >= 10 ? d.slice(5) : d} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip />
           <Line type="monotone" dataKey="count" name="활동" stroke="var(--accent)" strokeWidth={1.5} dot={false} />

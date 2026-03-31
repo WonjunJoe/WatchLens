@@ -5,14 +5,14 @@ import { TOOLTIP_STYLE, GRID_STROKE, AXIS_TICK } from "../utils/chartConfig";
 
 interface HourlyCount { hour: number; count: number; }
 
-export function HourlyChart({ data }: { data: HourlyCount[] | null }) {
+export function HourlyChart({ data }: { data: HourlyCount[] | null | undefined }) {
   if (!data) return null;
 
   const formatted = data.map((d) => ({ ...d, label: `${d.hour}시` }));
   const maxCount = Math.max(...data.map(d => d.count)) || 1;
 
   return (
-    <section className="card p-5 h-[320px] flex flex-col">
+    <section className="card p-5 h-[320px] flex flex-col" role="region" aria-label="시간대별 시청 분포">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">시간대별 시청</h2>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">

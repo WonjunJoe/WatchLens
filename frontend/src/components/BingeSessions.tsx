@@ -8,7 +8,7 @@ interface Props {
     total_binge_videos: number;
     longest_binge: number;
     top_binge_channels: { channel: string; count: number }[];
-  } | null;
+  } | null | undefined;
 }
 
 function ratioColor(ratio: number) {
@@ -23,7 +23,7 @@ export function BingeSessions({ data }: Props) {
   const color = ratioColor(data.binge_ratio);
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="몰아보기 세션">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">몰아보기 감지</h2>
         <span

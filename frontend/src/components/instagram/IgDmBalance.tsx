@@ -8,7 +8,7 @@ interface DmBalanceItem {
 }
 
 interface Props {
-  data: DmBalanceItem[] | null;
+  data: DmBalanceItem[] | null | undefined;
 }
 
 export function IgDmBalance({ data }: Props) {

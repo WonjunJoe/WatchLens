@@ -10,7 +10,7 @@ interface Props {
     first_video_pct: number;
     last_video_pct: number;
     change_pct: number;
-  } | null;
+  } | null | undefined;
 }
 
 export function IgVideoTrend({ data }: Props) {
@@ -50,7 +50,7 @@ export function IgVideoTrend({ data }: Props) {
           <XAxis dataKey="month" tick={AXIS_TICK} tickLine={false} axisLine={false} />
           <YAxis yAxisId="left" tick={AXIS_TICK} tickLine={false} axisLine={false} width={35} />
           <YAxis yAxisId="right" orientation="right" tick={AXIS_TICK} tickLine={false} axisLine={false} width={35} domain={[0, 100]} />
-          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, name: string) => {
+          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, name: any) => {
             if (name === "video_pct") return [`${v}%`, "동영상 비율"];
             if (name === "videos") return [`${v}건`, "동영상"];
             return [`${v}건`, "게시물"];

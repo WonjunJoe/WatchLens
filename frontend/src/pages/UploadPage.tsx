@@ -40,7 +40,13 @@ export function UploadPage() {
     navigate(`/youtube/dashboard?from=${from}&to=${to}`);
   };
 
-  const { stream } = useSseStream();
+  const { stream, abort: abortStream } = useSseStream();
+
+  useEffect(() => {
+    return () => {
+      abortStream();
+    };
+  }, [abortStream]);
 
   const handleInstagramUpload = async (file: File) => {
     setIgError(null);

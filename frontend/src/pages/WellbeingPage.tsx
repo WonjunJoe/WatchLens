@@ -80,6 +80,7 @@ export function WellbeingPage() {
       setError(null);
       try {
         const res = await fetch(`${API_BASE}/api/wellbeing/compute`);
+        if (!res.ok) throw new Error("서버 오류가 발생했습니다.");
         const data = await res.json();
         setResult(data);
       } catch (e: any) {

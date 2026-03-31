@@ -19,7 +19,7 @@ import { SearchWatchFlow } from "../components/SearchWatchFlow";
 import { WeeklyReport } from "../components/WeeklyReport";
 import { CalendarDays, RefreshCw, Loader2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
-import { useYouTubeData } from "../contexts/YouTubeDataContext";
+import { useYouTubeData, type YouTubeData } from "../contexts/YouTubeDataContext";
 import { API_BASE } from "../config";
 
 export function DashboardPage() {
@@ -76,8 +76,8 @@ export function DashboardPage() {
           if (cacheRes.ok) {
             const cached = await cacheRes.json();
             if (cached.results && cached.date_from === dateFrom && cached.date_to === dateTo) {
-              for (const [key, value] of Object.entries(cached.results)) {
-                setSection(key, value);
+              for (const [key, value] of Object.entries(cached.results as Record<string, any>)) {
+                setSection(key, value as YouTubeData[keyof YouTubeData]);
               }
               setLoading(false);
               return;

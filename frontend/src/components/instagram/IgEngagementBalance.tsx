@@ -7,7 +7,7 @@ interface AccountItem {
 }
 
 interface Props {
-  data: { accounts: AccountItem[]; total_engagement: number } | null;
+  data: { accounts: AccountItem[]; total_engagement: number } | null | undefined;
 }
 
 export function IgEngagementBalance({ data }: Props) {
@@ -25,7 +25,7 @@ export function IgEngagementBalance({ data }: Props) {
           const pctOfMax = Math.round((item.total / max) * 100);
           const likesPct = item.total > 0 ? Math.round((item.likes / item.total) * 100) : 0;
           const storyPct = item.total > 0 ? Math.round((item.story_likes / item.total) * 100) : 0;
-          const dmPct = 100 - likesPct - storyPct;
+          const dmPct = Math.max(0, 100 - likesPct - storyPct);
 
           return (
             <div key={item.username}>

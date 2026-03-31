@@ -5,14 +5,14 @@ import { TOOLTIP_STYLE, GRID_STROKE, AXIS_TICK } from "../utils/chartConfig";
 
 interface DailyCount { date: string; count: number; }
 
-export function DailyChart({ data }: { data: DailyCount[] | null }) {
+export function DailyChart({ data }: { data: DailyCount[] | null | undefined }) {
   if (!data || data.length === 0) return null;
 
-  const formatted = data.map((d) => ({ ...d, label: d.date.slice(5) }));
+  const formatted = data.map((d) => ({ ...d, label: d.date.length >= 10 ? d.date.slice(5) : d.date }));
   const interval = Math.max(1, Math.floor(formatted.length / 8));
 
   return (
-    <section className="card p-5 h-[320px] flex flex-col">
+    <section className="card p-5 h-[320px] flex flex-col" role="region" aria-label="일별 시청 추이">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">일별 추이</h2>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">

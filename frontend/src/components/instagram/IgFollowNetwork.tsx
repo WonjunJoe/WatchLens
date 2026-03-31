@@ -29,8 +29,8 @@ export function IgFollowNetwork({ data }: Props) {
         <div className="mt-4">
           <h4 className="text-[13px] font-medium text-[var(--text-secondary)] mb-2">최근 언팔로우</h4>
           <div className="flex flex-wrap gap-2">
-            {unfollowed.map((u: any, i: number) => (
-              <span key={i} className="px-2 py-1 bg-gray-100 text-[12px] text-[var(--text-secondary)] rounded">
+            {unfollowed.map((u: any) => (
+              <span key={u.username} className="px-2 py-1 bg-gray-100 text-[12px] text-[var(--text-secondary)] rounded">
                 @{u.username}
               </span>
             ))}

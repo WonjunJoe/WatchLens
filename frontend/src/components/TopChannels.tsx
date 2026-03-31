@@ -35,11 +35,11 @@ function ChannelList({ title, data, color }: { title: string; data: ChannelCount
   );
 }
 
-export function TopChannels({ data }: { data: TopChannelsSplit | null }) {
+export function TopChannels({ data }: { data: TopChannelsSplit | null | undefined }) {
   if (!data) return null;
 
   return (
-    <section className="card p-5">
+    <section className="card p-5" role="region" aria-label="자주 본 채널">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-5">인기 채널</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ChannelList title="일반 영상" data={data.longform} color="#6366F1" />

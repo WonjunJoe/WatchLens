@@ -3,7 +3,7 @@ interface KeywordCount {
   count: number;
 }
 
-export function SearchKeywords({ data }: { data: KeywordCount[] | null }) {
+export function SearchKeywords({ data }: { data: KeywordCount[] | null | undefined }) {
   if (!data || data.length === 0) return null;
 
   const max = data[0].count;

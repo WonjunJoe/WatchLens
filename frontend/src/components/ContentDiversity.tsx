@@ -1,6 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Shuffle } from "lucide-react";
-import { TOOLTIP_STYLE, AXIS_TICK, GRID_STROKE } from "../utils/chartConfig";
+import { TOOLTIP_STYLE, AXIS_TICK } from "../utils/chartConfig";
 
 interface Props {
   data: {
@@ -8,7 +8,7 @@ interface Props {
     category_count: number;
     top_categories: { category: string; count: number; pct: number }[];
     monthly_trend: { month: string; score: number }[];
-  } | null;
+  } | null | undefined;
 }
 
 function scoreColor(score: number) {
@@ -29,7 +29,7 @@ export function ContentDiversity({ data }: Props) {
   const color = scoreColor(data.score);
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="콘텐츠 다양성">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">콘텐츠 다양성</h2>
         <span

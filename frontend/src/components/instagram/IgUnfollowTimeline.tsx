@@ -11,7 +11,7 @@ interface Props {
   data: {
     total_unfollowed: number;
     accounts: UnfollowAccount[];
-  } | null;
+  } | null | undefined;
 }
 
 function interactionColor(count: number) {

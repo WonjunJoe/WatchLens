@@ -10,7 +10,7 @@ interface Props {
     peak_hour: number;
     top_dm_partners: { name: string; count: number }[];
     trend: { month: string; total: number; late: number; late_pct: number }[];
-  } | null;
+  } | null | undefined;
 }
 
 function riskColor(ratio: number) {

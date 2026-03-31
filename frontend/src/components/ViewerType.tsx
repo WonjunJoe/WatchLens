@@ -13,11 +13,11 @@ interface ViewerTypeData {
   axes: Axis[];
 }
 
-export function ViewerType({ data }: { data: ViewerTypeData | null }) {
+export function ViewerType({ data }: { data: ViewerTypeData | null | undefined }) {
   if (!data || data.code === "----") return null;
 
   return (
-    <section className="card p-5 animate-fadeIn">
+    <section className="card p-5 animate-fadeIn" role="region" aria-label="시청자 유형">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-5">시청자 유형</h2>
 
       <div className="text-center mb-6">

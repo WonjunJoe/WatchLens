@@ -11,11 +11,11 @@ interface DayOfWeekData {
   weeks: number;
 }
 
-export function DayOfWeekChart({ data }: { data: DayOfWeekData[] | null }) {
+export function DayOfWeekChart({ data }: { data: DayOfWeekData[] | null | undefined }) {
   if (!data || data.length === 0) return null;
 
   return (
-    <section className="card p-5 h-[320px] flex flex-col">
+    <section className="card p-5 h-[320px] flex flex-col" role="region" aria-label="요일별 시청 분포">
       <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">요일별 평균</h2>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
