@@ -5,9 +5,14 @@ import { UploadResultCard, type UploadResult } from "../components/UploadResultC
 import { PeriodSelector } from "../components/PeriodSelector";
 import { useInstagramData } from "../contexts/InstagramDataContext";
 import { useYouTubeData } from "../contexts/YouTubeDataContext";
-import { Eye, Loader2 } from "lucide-react";
+import { Eye, Loader2, Upload, ChevronDown } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { API_BASE } from "../config";
+
+interface ZipProgress {
+  step: string;
+  percent: number;
+}
 
 export function UploadPage() {
   const navigate = useNavigate();
@@ -18,6 +23,13 @@ export function UploadPage() {
   const [watchResult, setWatchResult] = useState<UploadResult | null>(null);
   const [searchResult, setSearchResult] = useState<UploadResult | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState(false);
+
+  // YouTube ZIP state
+  const [zipUploading, setZipUploading] = useState(false);
+  const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
+  const [zipError, setZipError] = useState<string | null>(null);
+  const [zipDone, setZipDone] = useState(false);
+  const [showJsonUploaders, setShowJsonUploaders] = useState(false);
 
   // On mount, check if YouTube data already exists in DB
   useEffect(() => {
@@ -41,12 +53,52 @@ export function UploadPage() {
   };
 
   const { stream, abort: abortStream } = useSseStream();
+  const { stream: zipStream, abort: abortZipStream } = useSseStream();
+
+  const handleYouTubeZipUpload = async (file: File) => {
+    setZipError(null);
+    setZipDone(false);
+    setZipUploading(true);
+    setZipProgress({ step: "업로드 중...", percent: 2 });
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      await zipStream(
+        `${API_BASE}/api/upload/youtube-takeout`,
+        ({ event, data: payload }) => {
+          if (event === "progress") {
+            setZipProgress({ step: payload.step, percent: payload.percent });
+          } else if (event === "done") {
+            setZipDone(true);
+            if (payload.watch) {
+              setWatchResult({ type: "watch", ...payload.watch });
+            }
+            if (payload.search) {
+              setSearchResult({ type: "search", ...payload.search });
+            }
+            setLoadingPeriod(true);
+            fetchPeriod().finally(() => setLoadingPeriod(false));
+          } else if (event === "error") {
+            setZipError(payload.detail || payload.message);
+          }
+        },
+        { method: "POST", body: formData },
+      );
+    } catch (e: any) {
+      setZipError(e.message);
+    } finally {
+      setZipUploading(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
       abortStream();
+      abortZipStream();
     };
-  }, [abortStream]);
+  }, [abortStream, abortZipStream]);
 
   const handleInstagramUpload = async (file: File) => {
     setIgError(null);
@@ -99,23 +151,78 @@ export function UploadPage() {
         {/* YouTube */}
         <div className="card p-6">
           <h2 className="text-[16px] font-semibold text-[var(--text-primary)] mb-1">YouTube</h2>
-          <p className="text-[13px] text-[var(--text-tertiary)] mb-4">Google Takeout에서 내보낸 JSON 파일</p>
-          <div className="space-y-3">
-            <FileUploader
-              label="시청 기록"
-              accept=".json"
-              endpoint="/api/upload/watch-history"
-              onResult={handleWatchResult}
-              subtitle="watch-history.json"
-            />
-            <FileUploader
-              label="검색 기록"
-              accept=".json"
-              endpoint="/api/upload/search-history"
-              onResult={(data) => setSearchResult({ type: "search", ...data })}
-              subtitle="search-history.json"
-            />
+          <p className="text-[13px] text-[var(--text-tertiary)] mb-4">Google Takeout ZIP 파일을 그대로 업로드</p>
+
+          {/* ZIP Uploader */}
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files[0];
+              if (file) handleYouTubeZipUpload(file);
+            }}
+            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer border-gray-200 hover:border-[var(--accent)] hover:bg-[var(--accent-light)] transition-colors"
+          >
+            <label className="cursor-pointer block">
+              <div className="w-10 h-10 mx-auto mb-3 bg-[var(--accent-light)] rounded-lg flex items-center justify-center">
+                <Upload size={18} className="text-[var(--accent)]" />
+              </div>
+              <p className="text-[14px] font-medium text-[var(--text-primary)] mb-0.5">Takeout ZIP 파일</p>
+              <p className="text-[13px] text-[var(--text-tertiary)] mb-0.5">시청 기록 + 검색 기록 자동 감지</p>
+              <p className="text-[12px] text-[var(--text-tertiary)]">드래그 또는 클릭 (최대 500MB)</p>
+              <input
+                type="file"
+                accept=".zip"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleYouTubeZipUpload(file);
+                }}
+                className="hidden"
+                disabled={zipUploading}
+              />
+            </label>
           </div>
+
+          {zipUploading && zipProgress && (
+            <div className="mt-4">
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-[var(--accent)] rounded-full transition-all"
+                  style={{ width: `${zipProgress.percent}%` }}
+                />
+              </div>
+              <p className="text-[var(--accent)] text-[12px]">{zipProgress.step}</p>
+            </div>
+          )}
+          {zipError && <p className="text-[var(--rose)] text-[12px] mt-3">{zipError}</p>}
+
+          {/* JSON uploaders (collapsible) */}
+          <button
+            type="button"
+            onClick={() => setShowJsonUploaders(!showJsonUploaders)}
+            className="mt-4 flex items-center gap-1 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+          >
+            <ChevronDown size={14} className={`transition-transform ${showJsonUploaders ? "rotate-180" : ""}`} />
+            개별 JSON 파일로 업로드
+          </button>
+          {showJsonUploaders && (
+            <div className="space-y-3 mt-3">
+              <FileUploader
+                label="시청 기록"
+                accept=".json"
+                endpoint="/api/upload/watch-history"
+                onResult={handleWatchResult}
+                subtitle="watch-history.json"
+              />
+              <FileUploader
+                label="검색 기록"
+                accept=".json"
+                endpoint="/api/upload/search-history"
+                onResult={(data) => setSearchResult({ type: "search", ...data })}
+                subtitle="search-history.json"
+              />
+            </div>
+          )}
           {watchResult && (
             <div className="mt-4">
               <UploadResultCard result={watchResult} />
