@@ -15,8 +15,8 @@ interface ZipProgress {
 
 export function UploadPage() {
   const navigate = useNavigate();
-  const { setSection, hasData: igHasData } = useInstagramData();
-  const { period, fetchPeriod } = useYouTubeData();
+  const { setSection, hasData: igHasData, clear: clearInstagram } = useInstagramData();
+  const { period, fetchPeriod, clear: clearYouTube, setPeriod } = useYouTubeData();
 
   // YouTube state
   const [watchResult, setWatchResult] = useState<UploadResult | null>(null);
@@ -39,6 +39,17 @@ export function UploadPage() {
   const [igProgress, setIgProgress] = useState({ step: "", loaded: 0, total: 0 });
   const [igDone, setIgDone] = useState(false);
   const [igError, setIgError] = useState<string | null>(null);
+
+  const handleReset = () => {
+    clearYouTube();
+    clearInstagram();
+    setPeriod(null);
+    setWatchResult(null);
+    setSearchResult(null);
+    setIgDone(false);
+    setZipError(null);
+    setIgError(null);
+  };
 
   const ytDone = !!period || !!watchResult;
   const igReady = igDone || igHasData;
@@ -326,6 +337,12 @@ export function UploadPage() {
               전체 대시보드 보기 →
             </button>
           )}
+          <button
+            onClick={handleReset}
+            className="w-full py-2.5 text-[var(--rose)] text-[14px] font-medium hover:bg-[var(--rose-light)] rounded-lg transition-colors mt-2"
+          >
+            데이터 초기화
+          </button>
         </div>
       </section>
     </div>
