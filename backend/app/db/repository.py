@@ -2,7 +2,7 @@
 
 from app.db.supabase import get_supabase_client
 from app.utils import chunk_list
-from config.settings import DB_CHUNK_SIZE, DB_PAGE_SIZE, DEFAULT_USER_ID
+from config.settings import DB_CHUNK_SIZE, DB_PAGE_SIZE, DEFAULT_USER_ID, WATCH_TIME_CAP_SECONDS
 
 
 # ---------------------------------------------------------------------------
@@ -50,7 +50,11 @@ def fetch_search_records(user_id: str, date_from: str, date_to: str) -> list[dic
 
 
 def fetch_video_metadata(video_ids: list[str]) -> tuple[dict[str, int], dict[str, str]]:
-    """Fetch durations and categories in a single pass over video_metadata."""
+    """Fetch durations and categories in a single pass over video_metadata.
+
+    Durations are capped at WATCH_TIME_CAP_SECONDS (1h) at the source,
+    so all callers automatically receive safe values.
+    """
     sb = get_supabase_client()
     id_to_duration: dict[str, int] = {}
     id_to_category: dict[str, str] = {}
@@ -60,7 +64,7 @@ def fetch_video_metadata(video_ids: list[str]) -> tuple[dict[str, int], dict[str
         ).in_("video_id", chunk).execute()
         for r in meta.data:
             if r["duration_seconds"]:
-                id_to_duration[r["video_id"]] = r["duration_seconds"]
+                id_to_duration[r["video_id"]] = min(r["duration_seconds"], WATCH_TIME_CAP_SECONDS)
             id_to_category[r["video_id"]] = r["category_name"]
     return id_to_duration, id_to_category
 
@@ -137,6 +141,12 @@ def fetch_instagram_results(user_id: str) -> dict | None:
 # ---------------------------------------------------------------------------
 # YouTube dashboard results
 # ---------------------------------------------------------------------------
+
+def delete_youtube_cache(user_id: str) -> None:
+    """Delete cached YouTube dashboard results so next load triggers fresh computation."""
+    sb = get_supabase_client()
+    sb.table("youtube_dashboard_results").delete().eq("user_id", user_id).execute()
+
 
 def save_youtube_results(user_id: str, date_from: str, date_to: str, results: dict) -> None:
     """Upsert YouTube dashboard results for a user."""

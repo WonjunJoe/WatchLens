@@ -18,7 +18,7 @@ from app.utils import sse
 from app.parsers.watch_history import parse_watch_history
 from app.parsers.search_history import parse_search_history
 from app.services.youtube import fetch_and_store_metadata
-from app.db.repository import delete_user_records, batch_insert, store_original_file
+from app.db.repository import delete_user_records, batch_insert, store_original_file, delete_youtube_cache
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
@@ -50,6 +50,7 @@ def _watch_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
 
         yield sse("progress", {"step": f"DB 저장 중... ({result.period})", "percent": 30})
         delete_user_records("watch_records", DEFAULT_USER_ID)
+        delete_youtube_cache(DEFAULT_USER_ID)
         if result.records:
             batch_insert("watch_records", result.records)
         yield sse("progress", {"step": f"DB 저장 완료 — {result.total}건", "percent": 50})
@@ -164,6 +165,7 @@ def _youtube_takeout_stream(file_bytes: bytes) -> Generator[str, None, None]:
 
                 yield sse("progress", {"step": "시청 기록 DB 저장 중...", "percent": 30})
                 delete_user_records("watch_records", DEFAULT_USER_ID)
+                delete_youtube_cache(DEFAULT_USER_ID)
                 if result.records:
                     batch_insert("watch_records", result.records)
                 yield sse("progress", {"step": f"시청 기록 DB 저장 완료 — {result.total}건", "percent": 40})

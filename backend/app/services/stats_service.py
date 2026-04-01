@@ -10,22 +10,12 @@ from datetime import datetime
 
 from app.utils import to_local
 from config.settings import (
-    WATCH_TIME_CAP_SECONDS,
     AVG_RETENTION_SHORTS,
     AVG_RETENTION_LONGFORM,
     LATE_NIGHT_HOURS,
     BINGE_GAP_MINUTES,
     BINGE_MIN_COUNT,
 )
-
-
-def cap_durations(id_to_duration: dict[str, int]) -> dict[str, int]:
-    """Apply WATCH_TIME_CAP_SECONDS to all durations at the source.
-
-    Call this once in the router after fetching metadata — all downstream
-    functions then automatically receive capped values.
-    """
-    return {vid: min(dur, WATCH_TIME_CAP_SECONDS) for vid, dur in id_to_duration.items()}
 
 DAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
 

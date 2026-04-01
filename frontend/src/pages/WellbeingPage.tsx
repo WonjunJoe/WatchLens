@@ -113,13 +113,25 @@ export function WellbeingPage() {
   }
 
   if (!result || !result.available) {
+    const missing: string[] = [];
+    if (!result?.yt_available) missing.push("YouTube");
+    if (!result?.ig_available) missing.push("Instagram");
+
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="card p-8 text-center max-w-md">
           <Heart size={32} className="mx-auto mb-4 text-[var(--text-tertiary)]" />
-          <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">데이터가 필요합니다</p>
+          <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">
+            모든 플랫폼 데이터가 필요합니다
+          </p>
           <p className="text-[14px] text-[var(--text-secondary)] mb-6">
-            YouTube 또는 Instagram 대시보드를 먼저 생성해주세요.
+            디지털 웰빙 점수는 YouTube와 Instagram 데이터를 모두 분석하여 산출합니다.
+            {missing.length > 0 && (
+              <>
+                <br />
+                <span className="font-medium text-[var(--text-primary)]">{missing.join(", ")}</span> 데이터를 업로드해주세요.
+              </>
+            )}
           </p>
           <Link
             to="/upload"
