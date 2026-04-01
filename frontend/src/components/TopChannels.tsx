@@ -1,5 +1,11 @@
 interface ChannelCount { channel_name: string; count: number; }
-interface TopChannelsSplit { longform: ChannelCount[]; shorts: ChannelCount[]; }
+interface ChannelTime { channel_name: string; hours: number; count: number; }
+interface TopChannelsSplit {
+  longform: ChannelCount[];
+  shorts: ChannelCount[];
+  by_time?: ChannelTime[];
+  recent?: { longform: ChannelCount[]; shorts: ChannelCount[] };
+}
 
 function ChannelList({ title, data, color }: { title: string; data: ChannelCount[]; color: string }) {
   if (data.length === 0) return null;
@@ -35,16 +41,69 @@ function ChannelList({ title, data, color }: { title: string; data: ChannelCount
   );
 }
 
+function WatchTimeList({ data }: { data: ChannelTime[] }) {
+  if (!data || data.length === 0) return null;
+  const max = data[0]?.hours || 1;
+
+  return (
+    <div>
+      <h3 className="text-[13px] font-medium text-[var(--text-secondary)] mb-3">시청시간 기준</h3>
+      <div className="space-y-2.5">
+        {data.slice(0, 10).map((ch, i) => (
+          <div key={ch.channel_name} className="flex items-center gap-3">
+            <span className={`w-6 h-6 rounded text-[12px] font-semibold flex items-center justify-center flex-shrink-0 ${
+              i === 0 ? "bg-[var(--amber-light)] text-[var(--amber)]" : "bg-gray-100 text-[var(--text-secondary)]"
+            }`}>
+              {i + 1}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[14px] text-[var(--text-primary)] truncate">{ch.channel_name}</span>
+                <span className="text-[13px] text-[var(--text-secondary)] ml-2 flex-shrink-0">
+                  {ch.hours >= 1 ? `${ch.hours}시간` : `${Math.round(ch.hours * 60)}분`}
+                </span>
+              </div>
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${(ch.hours / max) * 100}%`, backgroundColor: "#10b981" }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function TopChannels({ data }: { data: TopChannelsSplit | null | undefined }) {
   if (!data) return null;
 
+  const hasRecent = data.recent && (data.recent.longform.length > 0 || data.recent.shorts.length > 0);
+
   return (
-    <section className="card p-5" role="region" aria-label="자주 본 채널">
-      <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-5">인기 채널</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ChannelList title="일반 영상" data={data.longform} color="#6366F1" />
-        <ChannelList title="Shorts" data={data.shorts} color="#F43F5E" />
-      </div>
-    </section>
+    <>
+      {/* Recent 1 month */}
+      {hasRecent && (
+        <section className="card p-5" role="region" aria-label="최근 한 달 인기 채널">
+          <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-5">최근 한 달 인기 채널</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ChannelList title="일반 영상" data={data.recent!.longform} color="#6366F1" />
+            <ChannelList title="Shorts" data={data.recent!.shorts} color="#F43F5E" />
+          </div>
+        </section>
+      )}
+
+      {/* Full period */}
+      <section className="card p-5" role="region" aria-label="전체 기간 인기 채널">
+        <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-5">인기 채널</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ChannelList title="일반 영상" data={data.longform} color="#6366F1" />
+          <ChannelList title="Shorts" data={data.shorts} color="#F43F5E" />
+          <WatchTimeList data={data.by_time ?? []} />
+        </div>
+      </section>
+    </>
   );
 }

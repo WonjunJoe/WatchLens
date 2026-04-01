@@ -77,7 +77,13 @@ export function DashboardPage() {
           const cacheRes = await fetch(`${API_BASE}/api/stats/dashboard/cached`);
           if (cacheRes.ok) {
             const cached = await cacheRes.json();
-            if (cached.results && cached.date_from === dateFrom && cached.date_to === dateTo) {
+            // Validate cache: must match period and contain latest fields (by_time)
+            if (
+              cached.results &&
+              cached.date_from === dateFrom &&
+              cached.date_to === dateTo &&
+              cached.results.top_channels?.by_time
+            ) {
               for (const [key, value] of Object.entries(cached.results as Record<string, any>)) {
                 setSection(key, value as YouTubeData[keyof YouTubeData]);
               }
@@ -221,9 +227,13 @@ export function DashboardPage() {
         <DailyChart data={data.daily} />
       </div>
 
-      {/* Row: Top Channels + Categories */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      {/* Top Channels (recent + full period) */}
+      <div className="flex flex-col gap-4 mb-4">
         <TopChannels data={data.top_channels} />
+      </div>
+
+      {/* Categories */}
+      <div className="mb-4">
         <Categories data={data.categories} />
       </div>
 

@@ -28,6 +28,8 @@ export function UploadPage() {
   const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [showJsonUploaders, setShowJsonUploaders] = useState(false);
+  const [ytFilename, setYtFilename] = useState<string | null>(null);
+  const [igFilename, setIgFilename] = useState<string | null>(null);
 
   // On mount, check if YouTube data already exists in DB
   useEffect(() => {
@@ -57,7 +59,7 @@ export function UploadPage() {
   const handleWatchResult = (data: any) => {
     setWatchResult({ type: "watch", ...data });
     setLoadingPeriod(true);
-    fetchPeriod().finally(() => setLoadingPeriod(false));
+    fetchPeriod(true).finally(() => setLoadingPeriod(false));
   };
 
   const { stream, abort: abortStream } = useSseStream();
@@ -67,6 +69,10 @@ export function UploadPage() {
     setZipError(null);
     setZipUploading(true);
     setZipProgress({ step: "업로드 중...", percent: 2 });
+    setYtFilename(file.name);
+    // Clear stale YouTube data so dashboard refetches after upload
+    clearYouTube();
+    setPeriod(null);
 
     try {
       const formData = new FormData();
@@ -85,7 +91,7 @@ export function UploadPage() {
               setSearchResult({ type: "search", ...payload.search });
             }
             setLoadingPeriod(true);
-            fetchPeriod().finally(() => setLoadingPeriod(false));
+            fetchPeriod(true).finally(() => setLoadingPeriod(false));
           } else if (event === "error") {
             setZipError(payload.detail || payload.message);
           }
@@ -111,6 +117,9 @@ export function UploadPage() {
     setIgDone(false);
     setIgUploading(true);
     setIgProgress({ step: "업로드 중...", loaded: 0, total: 0 });
+    setIgFilename(file.name);
+    // Clear stale Instagram data so dashboard refetches after upload
+    clearInstagram();
 
     try {
       const formData = new FormData();
@@ -301,9 +310,14 @@ export function UploadPage() {
             <div className={`w-6 h-6 rounded-full flex items-center justify-center ${ytDone ? 'bg-[var(--green-light)]' : 'bg-gray-100'}`}>
               {ytDone ? <Check size={14} className="text-[var(--green)]" /> : <div className="w-2 h-2 rounded-full bg-gray-300" />}
             </div>
-            <span className={`text-[14px] ${ytDone ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
-              YouTube {ytDone ? '업로드 완료' : '아직 업로드되지 않음'}
-            </span>
+            <div>
+              <span className={`text-[14px] ${ytDone ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
+                YouTube {ytDone ? '업로드 완료' : '아직 업로드되지 않음'}
+              </span>
+              {ytDone && ytFilename && (
+                <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5">{ytFilename}</p>
+              )}
+            </div>
           </div>
 
           {/* Instagram status */}
@@ -311,9 +325,14 @@ export function UploadPage() {
             <div className={`w-6 h-6 rounded-full flex items-center justify-center ${igReady ? 'bg-[var(--green-light)]' : 'bg-gray-100'}`}>
               {igReady ? <Check size={14} className="text-[var(--green)]" /> : <div className="w-2 h-2 rounded-full bg-gray-300" />}
             </div>
-            <span className={`text-[14px] ${igReady ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
-              Instagram {igReady ? '업로드 완료' : '아직 업로드되지 않음'}
-            </span>
+            <div>
+              <span className={`text-[14px] ${igReady ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
+                Instagram {igReady ? '업로드 완료' : '아직 업로드되지 않음'}
+              </span>
+              {igReady && igFilename && (
+                <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5">{igFilename}</p>
+              )}
+            </div>
           </div>
         </div>
 

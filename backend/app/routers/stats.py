@@ -38,6 +38,7 @@ from app.services.stats_service import (
     compute_time_cost,
     compute_binge_sessions,
     compute_search_watch_flow,
+    cap_durations,
 )
 from app.services.indices import calc_dopamine
 from app.services.insights import generate_insights
@@ -92,7 +93,8 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
         search_records = fetch_search_records(user_id, utc_from, utc_to)
 
         video_ids = list({r["video_id"] for r in records if r.get("video_id")})
-        id_to_duration, id_to_category = fetch_video_metadata(video_ids) if video_ids else ({}, {})
+        id_to_duration_raw, id_to_category = fetch_video_metadata(video_ids) if video_ids else ({}, {})
+        id_to_duration = cap_durations(id_to_duration_raw)
 
         # Compute and stream each section
         summary = compute_summary(records)
@@ -107,7 +109,7 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
         loaded += 1
         yield sse("section", {"name": "daily", "data": daily, "loaded": loaded, "total": total_sections})
 
-        top_channels = compute_top_channels(records)
+        top_channels = compute_top_channels(records, id_to_duration)
         loaded += 1
         yield sse("section", {"name": "top_channels", "data": top_channels, "loaded": loaded, "total": total_sections})
 

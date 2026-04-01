@@ -18,7 +18,7 @@ interface YouTubeContextValue {
   setAll: (data: YouTubeData) => void;
   setPeriod: (p: PeriodInfo | null) => void;
   clear: () => void;
-  fetchPeriod: () => Promise<void>;
+  fetchPeriod: (force?: boolean) => Promise<void>;
 }
 
 const YouTubeDataContext = createContext<YouTubeContextValue | null>(null);
@@ -26,15 +26,19 @@ const YouTubeDataContext = createContext<YouTubeContextValue | null>(null);
 export function YouTubeDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<YouTubeData>({});
   const [period, setPeriod] = useState<PeriodInfo | null>(null);
+  const [cleared, setCleared] = useState(false);
 
   const setSection = useCallback((name: string, value: YouTubeData[keyof YouTubeData]) => {
+    setCleared(false);
     setData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  const setAll = useCallback((d: YouTubeData) => setData(d), []);
-  const clear = useCallback(() => setData({}), []);
+  const setAll = useCallback((d: YouTubeData) => { setCleared(false); setData(d); }, []);
+  const clear = useCallback(() => { setData({}); setCleared(true); }, []);
 
-  const fetchPeriod = useCallback(async () => {
+  const fetchPeriod = useCallback(async (force?: boolean) => {
+    if (cleared && !force) return;
+    if (force) setCleared(false);
     try {
       const res = await fetch(`${API_BASE}/api/stats/period`);
       const d = await res.json();
@@ -42,7 +46,7 @@ export function YouTubeDataProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
-  }, []);
+  }, [cleared]);
 
   const hasData = period !== null;
 

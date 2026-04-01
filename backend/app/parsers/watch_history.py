@@ -1,7 +1,7 @@
 from urllib.parse import urlparse, parse_qs
 from app.models.schemas import ParseResult
 from app.utils import parse_period
-from config.settings import SUPPORTED_HEADERS, WATCH_TITLE_PREFIX, DEFAULT_USER_ID
+from config.settings import SUPPORTED_HEADERS, WATCH_TITLE_PREFIX, WATCH_TITLE_SUFFIX_KO, DEFAULT_USER_ID
 
 
 def extract_video_id(url: str) -> str | None:
@@ -28,15 +28,19 @@ def parse_watch_history(data: list[dict]) -> ParseResult:
             skipped += 1
             continue
         title = entry.get("title", "")
-        if not title.startswith(WATCH_TITLE_PREFIX):
-            skipped += 1
-            continue
         title_url = entry.get("titleUrl")
         if not title_url:
             skipped += 1
             continue
 
-        video_title = title[len(WATCH_TITLE_PREFIX):]
+        # Extract video title from English or Korean format
+        if title.startswith(WATCH_TITLE_PREFIX):
+            video_title = title[len(WATCH_TITLE_PREFIX):]
+        elif title.endswith(WATCH_TITLE_SUFFIX_KO):
+            video_title = title[: -len(WATCH_TITLE_SUFFIX_KO)]
+        else:
+            skipped += 1
+            continue
         video_id = extract_video_id(title_url)
 
         subtitles = entry.get("subtitles", [])

@@ -29,9 +29,16 @@ export interface ChannelCount {
   channel_name: string;
   count: number;
 }
+export interface ChannelTime {
+  channel_name: string;
+  hours: number;
+  count: number;
+}
 export interface TopChannelsData {
   longform: ChannelCount[];
   shorts: ChannelCount[];
+  by_time?: ChannelTime[];
+  recent?: { longform: ChannelCount[]; shorts: ChannelCount[] };
 }
 
 // --- Shorts ---

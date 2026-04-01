@@ -18,7 +18,7 @@ from app.db.repository import (
     fetch_watch_records,
     fetch_video_metadata,
 )
-from app.services.stats_service import compute_watch_time, compute_binge_sessions
+from app.services.stats_service import compute_watch_time, compute_binge_sessions, cap_durations
 from app.services.indices import calc_dopamine
 
 router = APIRouter(prefix="/api/wellbeing", tags=["wellbeing"])
@@ -41,7 +41,8 @@ def _fetch_youtube_signals(user_id: str) -> dict:
         return {}
 
     video_ids = list({r["video_id"] for r in records if r.get("video_id")})
-    id_to_duration, _ = fetch_video_metadata(video_ids) if video_ids else ({}, {})
+    id_to_duration_raw, _ = fetch_video_metadata(video_ids) if video_ids else ({}, {})
+    id_to_duration = cap_durations(id_to_duration_raw)
 
     return {
         "dopamine": calc_dopamine(records, id_to_duration),

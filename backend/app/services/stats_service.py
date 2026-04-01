@@ -18,6 +18,15 @@ from config.settings import (
     BINGE_MIN_COUNT,
 )
 
+
+def cap_durations(id_to_duration: dict[str, int]) -> dict[str, int]:
+    """Apply WATCH_TIME_CAP_SECONDS to all durations at the source.
+
+    Call this once in the router after fetching metadata — all downstream
+    functions then automatically receive capped values.
+    """
+    return {vid: min(dur, WATCH_TIME_CAP_SECONDS) for vid, dur in id_to_duration.items()}
+
 DAY_NAMES = ["월", "화", "수", "목", "금", "토", "일"]
 
 TYPE_NAMES = {
@@ -77,9 +86,22 @@ def compute_daily(records: list[dict]) -> list[dict]:
     )
 
 
-def compute_top_channels(records: list[dict]) -> dict:
+def compute_top_channels(
+    records: list[dict],
+    id_to_duration: dict[str, int] | None = None,
+) -> dict:
+    from datetime import datetime, timedelta, timezone
+
     longform_counts: Counter[str] = Counter()
     shorts_counts: Counter[str] = Counter()
+    # Watch-time accumulator (seconds per channel, longform only)
+    channel_time: Counter[str] = Counter()
+    # Recent 30 days
+    now_utc = datetime.now(timezone.utc)
+    cutoff = now_utc - timedelta(days=30)
+    recent_longform: Counter[str] = Counter()
+    recent_shorts: Counter[str] = Counter()
+
     for r in records:
         name = r["channel_name"]
         if not name:
@@ -88,11 +110,41 @@ def compute_top_channels(records: list[dict]) -> dict:
             shorts_counts[name] += 1
         else:
             longform_counts[name] += 1
+            # Accumulate watch time
+            if id_to_duration and r.get("video_id"):
+                dur = id_to_duration.get(r["video_id"], 0)
+                channel_time[name] += dur
 
-    def to_list(counter: Counter) -> list[dict]:
+        # Recent 30 days
+        watched_at = r.get("watched_at", "")
+        try:
+            ts = datetime.fromisoformat(watched_at.replace("Z", "+00:00"))
+            if ts >= cutoff:
+                if r["is_shorts"]:
+                    recent_shorts[name] += 1
+                else:
+                    recent_longform[name] += 1
+        except (ValueError, AttributeError):
+            pass
+
+    def to_count_list(counter: Counter) -> list[dict]:
         return [{"channel_name": ch, "count": c} for ch, c in counter.most_common(10)]
 
-    return {"longform": to_list(longform_counts), "shorts": to_list(shorts_counts)}
+    def to_time_list(counter: Counter) -> list[dict]:
+        return [
+            {"channel_name": ch, "hours": round(s / 3600, 1), "count": longform_counts[ch]}
+            for ch, s in counter.most_common(10) if s > 0
+        ]
+
+    return {
+        "longform": to_count_list(longform_counts),
+        "shorts": to_count_list(shorts_counts),
+        "by_time": to_time_list(channel_time),
+        "recent": {
+            "longform": to_count_list(recent_longform),
+            "shorts": to_count_list(recent_shorts),
+        },
+    }
 
 
 def compute_shorts(records: list[dict]) -> dict:
@@ -170,8 +222,6 @@ def compute_watch_time(records: list[dict], id_to_duration: dict[str, int]) -> d
         if duration == 0:
             continue
 
-        capped = min(duration, WATCH_TIME_CAP_SECONDS)
-
         if idx < len(sorted_records) - 1:
             current_dt = to_local(rec["watched_at"])
             next_dt = to_local(sorted_records[idx + 1]["watched_at"])
@@ -183,8 +233,8 @@ def compute_watch_time(records: list[dict], id_to_duration: dict[str, int]) -> d
                 continue
 
         retention = AVG_RETENTION_SHORTS if rec["is_shorts"] else AVG_RETENTION_LONGFORM
-        total_min_seconds += capped * retention
-        total_max_seconds += capped
+        total_min_seconds += duration * retention
+        total_max_seconds += duration
         estimated_count += 1
 
     active_days = len({to_local(r["watched_at"]).strftime("%Y-%m-%d") for r in records}) or 1
@@ -223,7 +273,6 @@ def compute_weekly_watch_time(records: list[dict], id_to_duration: dict[str, int
         if duration == 0:
             continue
 
-        capped = min(duration, WATCH_TIME_CAP_SECONDS)
         local = to_local(rec["watched_at"])
         week_key = _get_week_key(local)
         week_dates.setdefault(week_key, set()).add(local.strftime("%Y-%m-%d"))
@@ -238,8 +287,8 @@ def compute_weekly_watch_time(records: list[dict], id_to_duration: dict[str, int
                 continue
 
         retention = AVG_RETENTION_SHORTS if rec["is_shorts"] else AVG_RETENTION_LONGFORM
-        week_min[week_key] += capped * retention
-        week_max[week_key] += capped
+        week_min[week_key] += duration * retention
+        week_max[week_key] += duration
 
     result = []
     prev_max = None

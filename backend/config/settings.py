@@ -9,17 +9,24 @@ MAX_YOUTUBE_ZIP_SIZE_MB = 500
 MAX_YOUTUBE_ZIP_SIZE_BYTES = MAX_YOUTUBE_ZIP_SIZE_MB * 1024 * 1024
 
 # Paths inside Google Takeout ZIP to search for
+# English and Korean Takeout folder structures
 TAKEOUT_WATCH_HISTORY_PATTERNS = [
     "YouTube and YouTube Music/history/watch-history.json",
     "YouTube 및 YouTube Music/history/watch-history.json",
+    "YouTube and YouTube Music/시청 기록/시청 기록.json",
+    "YouTube 및 YouTube Music/시청 기록/시청 기록.json",
 ]
 TAKEOUT_SEARCH_HISTORY_PATTERNS = [
     "YouTube and YouTube Music/history/search-history.json",
     "YouTube 및 YouTube Music/history/search-history.json",
+    "YouTube and YouTube Music/시청 기록/검색 기록.json",
+    "YouTube 및 YouTube Music/시청 기록/검색 기록.json",
 ]
 
 WATCH_TITLE_PREFIX = "Watched "
+WATCH_TITLE_SUFFIX_KO = " 을(를) 시청했습니다."
 SEARCH_TITLE_PREFIX = "Searched for "
+SEARCH_TITLE_SUFFIX_KO = " 을(를) 검색했습니다."
 
 DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000"
 

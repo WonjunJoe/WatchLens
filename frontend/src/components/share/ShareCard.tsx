@@ -31,46 +31,78 @@ function dopamineGradient(score: number): string {
   return `linear-gradient(to right, #22c55e 0%, #eab308 30%, #f97316 60%, #ef4444 80%, #ef4444 ${pct}%, #374151 ${pct}%)`;
 }
 
-/** Axis spectrum bar with letters and percentage */
-function AxisBar({ axis }: { axis: ViewerTypeAxis }) {
-  const filled = Math.round(axis.value / 20); // 0~5 blocks
-  const blocks = 5;
-  const isLeftPick = axis.value <= 50;
+/** Letter mapping for each axis: [leftLetter, rightLetter] */
+const AXIS_LETTERS: Record<string, [string, string]> = {
+  "시간대": ["D", "N"],
+  "콘텐츠": ["L", "S"],
+  "패턴": ["C", "B"],
+  "채널": ["E", "F"],
+};
 
-  // Determine letters: the code only contains picked letters.
-  // For the non-picked side, we can't derive the letter from data.
-  // So we show the pick letter on its side, nothing on the other.
-  const pickLetter = axis.pick;
+/** Axis spectrum bar with both letters, position dot, and percentage */
+function AxisBar({ axis }: { axis: ViewerTypeAxis }) {
+  const [leftLetter, rightLetter] = AXIS_LETTERS[axis.axis] ?? ["?", "?"];
+  // Backend sends 0~1 ratio → convert to 0~100%
+  const pct = Math.min(100, Math.max(0, Math.round(axis.value * 100)));
+  const isLeftPick = axis.pick === leftLetter;
 
   return (
-    <div className="flex items-center gap-[8px] text-[20px]">
-      {/* Left letter */}
-      <span
-        className={`w-[24px] text-center ${isLeftPick ? "font-bold text-white" : "text-white/30"}`}
-      >
-        {isLeftPick ? pickLetter : ""}
-      </span>
-      <span className="text-white/50 w-[100px] text-right truncate text-[20px]">{axis.left}</span>
-      <div className="flex gap-[4px]">
-        {Array.from({ length: blocks }, (_, i) => (
+    <div className="flex flex-col gap-[2px]">
+      {/* Labels row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-[4px]">
+          <span
+            className="text-[18px] font-bold"
+            style={{ color: isLeftPick ? "#60a5fa" : "rgba(255,255,255,0.2)" }}
+          >
+            {leftLetter}
+          </span>
+          <span
+            className="text-[15px]"
+            style={{ color: isLeftPick ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)" }}
+          >
+            {axis.left}
+          </span>
+        </div>
+        <div className="flex items-center gap-[4px]">
+          <span
+            className="text-[15px]"
+            style={{ color: !isLeftPick ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)" }}
+          >
+            {axis.right}
+          </span>
+          <span
+            className="text-[18px] font-bold"
+            style={{ color: !isLeftPick ? "#60a5fa" : "rgba(255,255,255,0.2)" }}
+          >
+            {rightLetter}
+          </span>
+        </div>
+      </div>
+      {/* Bar row with percentage */}
+      <div className="flex items-center gap-[8px]">
+        <div className="relative flex-1 h-[8px] bg-white/10 rounded-full">
           <div
-            key={i}
-            className="rounded-[4px]"
+            className="absolute top-0 left-0 h-full rounded-full"
             style={{
-              width: 24,
-              height: 14,
-              backgroundColor: i < filled ? "#60a5fa" : "rgba(255,255,255,0.1)",
+              width: `${pct}%`,
+              background: "linear-gradient(to right, rgba(96,165,250,0.2), rgba(96,165,250,0.5))",
             }}
           />
-        ))}
+          <div
+            className="absolute top-1/2 rounded-full"
+            style={{
+              left: `${pct}%`,
+              transform: "translate(-50%, -50%)",
+              width: 12,
+              height: 12,
+              backgroundColor: "#60a5fa",
+              boxShadow: "0 0 6px rgba(96,165,250,0.5)",
+            }}
+          />
+        </div>
+        <span className="text-[15px] text-white/50 w-[40px] text-right shrink-0">{pct}%</span>
       </div>
-      <span className="text-white/50 w-[100px] truncate text-[20px]">{axis.right}</span>
-      {/* Right letter */}
-      <span
-        className={`w-[24px] text-center ${!isLeftPick ? "font-bold text-white" : "text-white/30"}`}
-      >
-        {!isLeftPick ? pickLetter : ""}
-      </span>
     </div>
   );
 }
@@ -102,7 +134,8 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
     const totalLikes = ig?.summary?.total_likes ?? 0;
     const totalConversations = ig?.summary?.total_conversations ?? 0;
     const totalMessages = ig?.summary?.total_messages ?? 0;
-    const lateRatio = ig?.late_night ? Math.round(ig.late_night.late_ratio * 100) : 0;
+    // late_ratio is already 0~100 from backend (multiplied by 100 server-side)
+    const lateRatio = ig?.late_night ? Math.round(ig.late_night.late_ratio) : 0;
     const followingCount = ig?.summary?.following_count ?? 0;
     const topAccounts = (ig?.top_accounts ?? []).slice(0, 2);
 
@@ -174,25 +207,37 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                     background: dopamineGradient(dopamineScore),
                   }}
                 />
-                {/* Breakdown */}
+                {/* Breakdown - visual mini bars */}
                 {dopamineBreakdown && (
-                  <p className="mt-[10px] text-[20px] text-white/40 leading-snug">
-                    {Object.entries(dopamineBreakdown).map(([key, item], i) => (
-                      <span key={key}>
-                        {i > 0 && " · "}
-                        {key} {item.score}
-                      </span>
+                  <div className="mt-[14px] flex flex-col gap-[8px]">
+                    {Object.entries(dopamineBreakdown).map(([, item]) => (
+                      <div key={item.description} className="flex flex-col gap-[2px]">
+                        <div className="flex justify-between text-[16px]">
+                          <span className="text-white/50">{item.description}</span>
+                          <span className="text-white/40">{item.score}</span>
+                        </div>
+                        <div className="h-[4px] bg-white/10 rounded-full">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${Math.min(100, Math.round(item.value * 100))}%`,
+                              backgroundColor: dopamineColor(dopamineScore),
+                              opacity: 0.7,
+                            }}
+                          />
+                        </div>
+                      </div>
                     ))}
-                  </p>
+                  </div>
                 )}
               </div>
 
               {/* Viewer Type */}
               <div className="bg-red-500/5 rounded-[20px] p-[24px]">
                 <p className="text-[24px] text-white/50 mb-[4px]">시청 유형</p>
-                <p className="text-[80px] font-bold leading-none">{viewerCode}</p>
-                {/* Axes */}
-                <div className="mt-[12px] flex flex-col gap-[6px]">
+                <p className="text-[72px] font-bold leading-none tracking-[0.08em]">{viewerCode}</p>
+                {/* Axes with position indicators */}
+                <div className="mt-[16px] flex flex-col gap-[10px]">
                   {viewerAxes.map((axis) => (
                     <AxisBar key={axis.axis} axis={axis} />
                   ))}
@@ -287,15 +332,15 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
 
             {/* Score Row */}
             <div className="grid grid-cols-2 gap-[20px] mb-[20px]">
-              <div className="bg-purple-500/5 rounded-[20px] p-[24px]">
-                <p className="text-[24px] text-white/50 mb-[4px]">팔로잉</p>
-                <p className="text-[36px] font-bold">
+              <div className="bg-purple-500/5 rounded-[20px] p-[24px] text-center">
+                <p className="text-[24px] text-white/50">팔로잉</p>
+                <p className="text-[36px] font-bold mt-[8px]">
                   {followingCount.toLocaleString()}명
                 </p>
               </div>
-              <div className="bg-purple-500/5 rounded-[20px] p-[24px]">
-                <p className="text-[24px] text-white/50 mb-[4px]">심야 활동</p>
-                <p className="text-[36px] font-bold">{lateRatio}%</p>
+              <div className="bg-purple-500/5 rounded-[20px] p-[24px] text-center">
+                <p className="text-[24px] text-white/50">심야 활동</p>
+                <p className="text-[36px] font-bold mt-[8px]">{lateRatio}%</p>
               </div>
             </div>
 
