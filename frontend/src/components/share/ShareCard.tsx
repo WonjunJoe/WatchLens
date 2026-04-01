@@ -103,7 +103,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
     const totalConversations = ig?.summary?.total_conversations ?? 0;
     const totalMessages = ig?.summary?.total_messages ?? 0;
     const lateRatio = ig?.late_night ? Math.round(ig.late_night.late_ratio * 100) : 0;
-    const lurkerScore = ig?.lurker_index?.lurker_score ?? 0;
+    const followingCount = ig?.summary?.following_count ?? 0;
     const topAccounts = (ig?.top_accounts ?? []).slice(0, 2);
 
     const hasYoutube = !!yt?.summary;
@@ -288,10 +288,9 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             {/* Score Row */}
             <div className="grid grid-cols-2 gap-[20px] mb-[20px]">
               <div className="bg-purple-500/5 rounded-[20px] p-[24px]">
-                <p className="text-[24px] text-white/50 mb-[4px]">Lurker 지수</p>
+                <p className="text-[24px] text-white/50 mb-[4px]">팔로잉</p>
                 <p className="text-[36px] font-bold">
-                  {lurkerScore}
-                  <span className="text-[24px] text-white/30 ml-[8px]">/ 100</span>
+                  {followingCount.toLocaleString()}명
                 </p>
               </div>
               <div className="bg-purple-500/5 rounded-[20px] p-[24px]">
