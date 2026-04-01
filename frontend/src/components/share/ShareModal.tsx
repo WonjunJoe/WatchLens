@@ -1,28 +1,30 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { toPng } from "html-to-image";
 import { X, Copy, Check, Download } from "lucide-react";
 import { ShareCard } from "./ShareCard";
-import type { YouTubeData } from "../../types/youtube";
-import type { InstagramData } from "../../types/instagram";
+import { useInstagramData } from "../../contexts/InstagramDataContext";
+import { useYouTubeData } from "../../contexts/YouTubeDataContext";
 
 interface ShareModalProps {
   open: boolean;
   onClose: () => void;
-  youtube?: YouTubeData;
-  instagram?: Partial<InstagramData>;
   period?: string;
 }
 
-export function ShareModal({
-  open,
-  onClose,
-  youtube,
-  instagram,
-  period,
-}: ShareModalProps) {
+export function ShareModal({ open, onClose, period }: ShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+
+  const { data: igData, fetchFromDb: fetchIg } = useInstagramData();
+  const { data: ytData, fetchPeriod } = useYouTubeData();
+
+  // Auto-fetch missing platform data when modal opens
+  useEffect(() => {
+    if (!open) return;
+    if (!igData.summary) fetchIg();
+    if (!ytData.summary) fetchPeriod();
+  }, [open]);
 
   const generateImage = useCallback(async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
@@ -108,8 +110,8 @@ export function ShareModal({
           >
             <ShareCard
               ref={cardRef}
-              youtube={youtube}
-              instagram={instagram}
+              youtube={ytData}
+              instagram={igData}
               period={period}
             />
           </div>

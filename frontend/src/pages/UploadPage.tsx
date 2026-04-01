@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUploader } from "../components/FileUploader";
 import { UploadResultCard, type UploadResult } from "../components/UploadResultCard";
-import { PeriodSelector } from "../components/PeriodSelector";
 import { useInstagramData } from "../contexts/InstagramDataContext";
 import { useYouTubeData } from "../contexts/YouTubeDataContext";
-import { Eye, Loader2, Upload, ChevronDown } from "lucide-react";
+import { Eye, Loader2, Upload, ChevronDown, Check } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { API_BASE } from "../config";
 
@@ -16,7 +15,7 @@ interface ZipProgress {
 
 export function UploadPage() {
   const navigate = useNavigate();
-  const { setSection } = useInstagramData();
+  const { setSection, hasData: igHasData } = useInstagramData();
   const { period, fetchPeriod } = useYouTubeData();
 
   // YouTube state
@@ -41,14 +40,13 @@ export function UploadPage() {
   const [igDone, setIgDone] = useState(false);
   const [igError, setIgError] = useState<string | null>(null);
 
+  const ytDone = !!period || !!watchResult;
+  const igReady = igDone || igHasData;
+
   const handleWatchResult = (data: any) => {
     setWatchResult({ type: "watch", ...data });
     setLoadingPeriod(true);
     fetchPeriod().finally(() => setLoadingPeriod(false));
-  };
-
-  const handlePeriodSelect = (from: string, to: string) => {
-    navigate(`/youtube/dashboard?from=${from}&to=${to}`);
   };
 
   const { stream, abort: abortStream } = useSseStream();
@@ -235,16 +233,6 @@ export function UploadPage() {
               <Loader2 size={20} className="text-[var(--accent)] animate-spin" />
             </div>
           )}
-          {period && !loadingPeriod && (
-            <div className="mt-4">
-              <PeriodSelector
-                dateFrom={period.date_from}
-                dateTo={period.date_to}
-                totalDays={period.total_days}
-                onSelect={handlePeriodSelect}
-              />
-            </div>
-          )}
         </div>
 
         {/* Instagram */}
@@ -289,23 +277,57 @@ export function UploadPage() {
             </div>
           )}
           {igError && <p className="text-[var(--rose)] text-[12px] mt-3">{igError}</p>}
-          {igDone && (
-            <div className="mt-4">
-              <button
-                onClick={() => navigate("/instagram/dashboard")}
-                className="w-full py-2.5 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity"
-              >
-                Instagram 대시보드 보기
-              </button>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Helper text */}
-      <p className="text-center text-[13px] text-[var(--text-tertiary)]">
-        둘 중 하나만 업로드해도 해당 대시보드가 생성됩니다.
-      </p>
+      {/* Upload Status */}
+      <section className="card p-6 max-w-5xl mx-auto">
+        <h3 className="text-[16px] font-semibold text-[var(--text-primary)] mb-4">업로드 현황</h3>
+
+        <div className="space-y-3 mb-6">
+          {/* YouTube status */}
+          <div className="flex items-center gap-3">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${ytDone ? 'bg-[var(--green-light)]' : 'bg-gray-100'}`}>
+              {ytDone ? <Check size={14} className="text-[var(--green)]" /> : <div className="w-2 h-2 rounded-full bg-gray-300" />}
+            </div>
+            <span className={`text-[14px] ${ytDone ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
+              YouTube {ytDone ? '업로드 완료' : '아직 업로드되지 않음'}
+            </span>
+          </div>
+
+          {/* Instagram status */}
+          <div className="flex items-center gap-3">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${igReady ? 'bg-[var(--green-light)]' : 'bg-gray-100'}`}>
+              {igReady ? <Check size={14} className="text-[var(--green)]" /> : <div className="w-2 h-2 rounded-full bg-gray-300" />}
+            </div>
+            <span className={`text-[14px] ${igReady ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-tertiary)]'}`}>
+              Instagram {igReady ? '업로드 완료' : '아직 업로드되지 않음'}
+            </span>
+          </div>
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="flex flex-col gap-2">
+          {ytDone && (
+            <button onClick={() => navigate('/youtube/dashboard')}
+              className="w-full py-2.5 border border-[var(--border)] text-[var(--text-secondary)] rounded-lg text-[14px] font-medium hover:bg-gray-50 transition-colors">
+              YouTube 대시보드 보기
+            </button>
+          )}
+          {igReady && (
+            <button onClick={() => navigate('/instagram/dashboard')}
+              className="w-full py-2.5 border border-[var(--border)] text-[var(--text-secondary)] rounded-lg text-[14px] font-medium hover:bg-gray-50 transition-colors">
+              Instagram 대시보드 보기
+            </button>
+          )}
+          {ytDone && igReady && (
+            <button onClick={() => navigate('/wellbeing')}
+              className="w-full py-3 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity">
+              전체 대시보드 보기 →
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

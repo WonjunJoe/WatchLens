@@ -20,7 +20,6 @@ import { WeeklyReport } from "../components/WeeklyReport";
 import { CalendarDays, RefreshCw, Loader2, Share2 } from "lucide-react";
 import { useSseStream } from "../hooks/useSseStream";
 import { useYouTubeData, type YouTubeData } from "../contexts/YouTubeDataContext";
-import { useInstagramData } from "../contexts/InstagramDataContext";
 import { ShareModal } from "../components/share/ShareModal";
 import { API_BASE } from "../config";
 
@@ -30,7 +29,6 @@ export function DashboardPage() {
   const paramTo = params.get("to") || "";
 
   const { data, period, setSection, clear, fetchPeriod } = useYouTubeData();
-  const { data: igData } = useInstagramData();
   const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState({ loaded: 0, total: 19, step: "" });
@@ -256,8 +254,6 @@ export function DashboardPage() {
       <ShareModal
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        youtube={data}
-        instagram={igData}
         period={sharePeriod}
       />
     </div>

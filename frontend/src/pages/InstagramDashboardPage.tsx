@@ -19,11 +19,8 @@ import { IgLateNight } from "../components/instagram/IgLateNight";
 import { IgUnfollowTimeline } from "../components/instagram/IgUnfollowTimeline";
 import { Loader2, RefreshCw, Upload, Share2 } from "lucide-react";
 import { ShareModal } from "../components/share/ShareModal";
-import { useYouTubeData } from "../contexts/YouTubeDataContext";
-
 export function InstagramDashboardPage() {
   const { data, fetchFromDb } = useInstagramData();
-  const { data: ytData } = useYouTubeData();
   const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [noData, setNoData] = useState(false);
@@ -147,8 +144,6 @@ export function InstagramDashboardPage() {
       <ShareModal
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        youtube={ytData}
-        instagram={data}
       />
     </div>
   );
