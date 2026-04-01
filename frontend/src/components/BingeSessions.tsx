@@ -23,9 +23,9 @@ export function BingeSessions({ data }: Props) {
   const color = ratioColor(data.binge_ratio);
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="몰아보기 세션">
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="몰아보기 세션">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">몰아보기 감지</h2>
+        <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">몰아보기 감지</h2>
         <span
           className="text-[12px] px-2 py-0.5 rounded-full font-medium"
           style={{ backgroundColor: `${color}15`, color }}
@@ -35,23 +35,23 @@ export function BingeSessions({ data }: Props) {
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-[22px] font-bold" style={{ color }}>
+        <div className="text-center p-3.5 bg-[var(--bg)] rounded-xl border border-[var(--border)]">
+          <p className="text-[24px] font-extrabold tracking-tight" style={{ color }}>
             {data.binge_sessions}
           </p>
-          <p className="text-[11px] text-[var(--text-tertiary)]">몰아보기 세션</p>
+          <p className="text-[11px] font-medium text-[var(--text-tertiary)] mt-0.5">몰아보기 세션</p>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-[22px] font-bold text-[var(--text-primary)]">
+        <div className="text-center p-3.5 bg-[var(--bg)] rounded-xl border border-[var(--border)]">
+          <p className="text-[24px] font-extrabold text-[var(--text-primary)] tracking-tight">
             {data.total_binge_videos}
           </p>
-          <p className="text-[11px] text-[var(--text-tertiary)]">몰아본 영상</p>
+          <p className="text-[11px] font-medium text-[var(--text-tertiary)] mt-0.5">몰아본 영상</p>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-[22px] font-bold text-[var(--text-primary)]">
+        <div className="text-center p-3.5 bg-[var(--bg)] rounded-xl border border-[var(--border)]">
+          <p className="text-[24px] font-extrabold text-[var(--text-primary)] tracking-tight">
             {data.longest_binge}
           </p>
-          <p className="text-[11px] text-[var(--text-tertiary)]">최장 연속</p>
+          <p className="text-[11px] font-medium text-[var(--text-tertiary)] mt-0.5">최장 연속</p>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export function BingeSessions({ data }: Props) {
             {data.binge_sessions}/{data.total_sessions}
           </span>
         </div>
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-2 bg-[var(--bg-subtle)] rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all"
             style={{ width: `${Math.min(data.binge_ratio, 100)}%`, backgroundColor: color }}

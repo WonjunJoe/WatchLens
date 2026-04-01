@@ -2,3 +2,4 @@ backend/.env
 backend/venv/
 __pycache__/
 node_modules/
+design-ralph-output/

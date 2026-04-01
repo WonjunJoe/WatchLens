@@ -31,9 +31,9 @@ export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
   const increasing = changePct > 0;
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="주간 리포트">
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="주간 리포트">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">주간 시청 추이</h2>
+        <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">주간 시청 추이</h2>
         <div className="flex items-center gap-1.5" style={{ color: increasing ? "var(--rose)" : "var(--green)" }}>
           {increasing ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
           <span className="text-[13px] font-medium">전주 대비 {changePct > 0 ? "+" : ""}{changePct}%</span>
@@ -52,9 +52,9 @@ export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
               return [`${v}`, name];
             }}
           />
-          <Legend formatter={(v) => v === "shorts" ? "Shorts" : "롱폼"} wrapperStyle={{ fontSize: "12px" }} />
-          <Bar dataKey="longform" stackId="a" fill="var(--accent)" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="shorts" stackId="a" fill="var(--rose)" radius={[4, 4, 0, 0]} />
+          <Legend formatter={(v) => v === "shorts" ? "Shorts" : "롱폼"} wrapperStyle={{ fontSize: "11px", fontWeight: 500, color: "#94A3B8" }} />
+          <Bar dataKey="longform" stackId="a" fill="#4F6EF7" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="shorts" stackId="a" fill="#7C3AED" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
 
@@ -62,13 +62,13 @@ export function WeeklyReport({ weekly, weeklyWatchTime }: Props) {
       {weeklyWatchTime && weeklyWatchTime.length >= 2 && (
         <div className="mt-4 pt-3 border-t border-[var(--border)]">
           <p className="text-[12px] text-[var(--text-tertiary)] mb-2">주간 시청 시간 (추정)</p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2.5 overflow-x-auto pb-1">
             {weeklyWatchTime.slice(-6).map((w) => (
-              <div key={w.week_label} className="flex-shrink-0 text-center px-2">
-                <p className="text-[11px] text-[var(--text-tertiary)]">{w.week_label}</p>
-                <p className="text-[14px] font-semibold text-[var(--text-primary)]">{w.max_hours}h</p>
+              <div key={w.week_label} className="flex-shrink-0 text-center px-3 py-2 bg-[var(--bg)] rounded-xl border border-[var(--border)]">
+                <p className="text-[10px] font-medium text-[var(--text-tertiary)] mb-0.5">{w.week_label}</p>
+                <p className="text-[15px] font-bold text-[var(--text-primary)]">{w.max_hours}h</p>
                 {w.change_pct != null && w.change_pct !== 0 && (
-                  <p className={`text-[10px] ${w.change_pct > 0 ? "text-[var(--rose)]" : "text-[var(--green)]"}`}>
+                  <p className={`text-[10px] font-medium ${w.change_pct > 0 ? "text-[var(--rose)]" : "text-[var(--green)]"}`}>
                     {w.change_pct > 0 ? "+" : ""}{w.change_pct}%
                   </p>
                 )}

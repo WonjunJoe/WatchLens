@@ -41,20 +41,27 @@ export function SummaryCards({ data, watchTime }: { data: any | null; watchTime?
   if (!data) return null;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
       {CARDS.map((card, i) => (
         <div
           key={card.key}
-          className="card p-5 hover:shadow-md transition-shadow duration-200"
+          className="card p-6 group relative overflow-hidden"
           style={{ animationDelay: `${i * 60}ms` }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <card.icon size={16} style={{ color: card.color }} />
-            <span className="text-[13px] text-[var(--text-secondary)]">{card.label}</span>
+          {/* Top accent line */}
+          <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${card.color}, ${card.color}60)` }} />
+          <div className="flex items-center gap-2.5 mb-4">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+              style={{ backgroundColor: `${card.color}15` }}
+            >
+              <card.icon size={16} style={{ color: card.color }} />
+            </div>
+            <span className="text-[11px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">{card.label}</span>
           </div>
-          <p className="text-[28px] font-bold text-[var(--text-primary)] leading-none">
+          <p className="text-[38px] font-extrabold text-[var(--text-primary)] leading-none tracking-tighter">
             {card.getValue(data, watchTime ?? null)}
-            <span className="text-[14px] font-medium text-[var(--text-tertiary)] ml-1">{card.unit}</span>
+            <span className="text-[14px] font-semibold text-[var(--text-tertiary)] ml-1.5">{card.unit}</span>
           </p>
         </div>
       ))}

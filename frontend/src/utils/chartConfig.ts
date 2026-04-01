@@ -1,26 +1,28 @@
 export const PASTEL_COLORS = [
-  "#6366F1", // indigo
-  "#10B981", // green
-  "#F59E0B", // amber
-  "#F43F5E", // rose
-  "#8B5CF6", // violet
+  "#4F6EF7", // primary blue
+  "#7C3AED", // violet
+  "#A78BFA", // light violet
   "#06B6D4", // cyan
-  "#EC4899", // pink
+  "#10B981", // emerald
+  "#F59E0B", // amber
+  "#94A3B8", // neutral slate
 ];
 
 export const TOOLTIP_STYLE: React.CSSProperties = {
-  backgroundColor: "#fff",
-  borderRadius: "8px",
-  border: "1px solid #E5E7EB",
-  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+  backgroundColor: "rgba(255, 255, 255, 0.95)",
+  backdropFilter: "blur(8px)",
+  borderRadius: "12px",
+  border: "1px solid rgba(0, 0, 0, 0.06)",
+  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04)",
   fontSize: "13px",
-  padding: "8px 12px",
-  color: "#111827",
+  padding: "10px 14px",
+  color: "#0F172A",
 };
 
-export const GRID_STROKE = "#F3F4F6";
+export const GRID_STROKE = "#F1F5F9";
 
 export const AXIS_TICK = {
-  fontSize: 12,
-  fill: "#9CA3AF",
+  fontSize: 11,
+  fill: "#94A3B8",
+  fontWeight: 500,
 };

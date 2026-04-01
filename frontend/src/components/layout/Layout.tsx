@@ -15,13 +15,13 @@ export function Layout() {
   }, [fetchPeriod, fetchFromDb]);
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg)]">
+    <div className="flex min-h-screen">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <main
         className="flex-1 min-w-0"
         style={{ marginLeft: collapsed ? 72 : 240 }}
       >
-        <div className="p-8 max-w-[1400px] mx-auto">
+        <div className="px-8 py-10 max-w-[1400px] mx-auto">
           <Outlet />
         </div>
       </main>

@@ -168,25 +168,25 @@ export function DashboardPage() {
   return (
     <div className="pb-12">
       {/* Header */}
-      <header className="flex items-center justify-between mb-8">
+      <header className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-[24px] font-bold text-[var(--text-primary)] mb-1">대시보드</h1>
-          <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <CalendarDays size={14} />
-            <span className="text-[14px]">{dateFrom} ~ {dateTo}</span>
+          <h1 className="text-[32px] font-extrabold text-[var(--text-primary)] tracking-tighter mb-1.5">대시보드</h1>
+          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+            <CalendarDays size={14} className="opacity-60" />
+            <span className="text-[13px] font-medium tracking-wide">{dateFrom} ~ {dateTo}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShareOpen(true)}
-            className="p-2 rounded-lg hover:bg-[var(--accent-light)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+            className="p-2.5 rounded-xl hover:bg-[var(--accent-light)] text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-all duration-200 hover:shadow-sm"
             title="스토리 공유"
           >
             <Share2 size={18} />
           </button>
           <Link
             to="/upload"
-            className="flex items-center gap-2 px-4 py-2 text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] hover:text-[var(--accent)] border border-[var(--border-strong)] rounded-xl hover:bg-[var(--accent-light)] hover:border-[var(--accent)]/20 transition-all duration-200"
           >
             <RefreshCw size={14} />
             새 분석
@@ -195,67 +195,67 @@ export function DashboardPage() {
       </header>
 
       {/* Insights — 핵심 요약 최상단 */}
-      <div className="mb-4">
+      <div className="mb-6">
         <InsightSummary data={data.insights} />
       </div>
 
       {/* KPI Cards */}
-      <div className="mb-6">
+      <div className="mb-8">
         <SummaryCards data={data.summary} watchTime={data.watch_time} />
       </div>
 
       {/* Row: Viewer Type + Dopamine + Watch Time — 핵심 정보 상단 배치 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
         <ViewerType data={data.viewer_type} />
         <DopamineIndex data={data.dopamine} />
         <WatchTime data={data.watch_time} />
       </div>
 
       {/* Row: Charts 2-col */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         <HourlyChart data={data.hourly} />
         <DayOfWeekChart data={data.day_of_week} />
       </div>
 
       {/* Weekly Report full-width */}
-      <div className="mb-4">
+      <div className="mb-6">
         <WeeklyReport weekly={data.weekly} weeklyWatchTime={data.weekly_watch_time} />
       </div>
 
       {/* Daily trend full-width */}
-      <div className="mb-4">
+      <div className="mb-6">
         <DailyChart data={data.daily} />
       </div>
 
       {/* Top Channels (recent + full period) */}
-      <div className="flex flex-col gap-4 mb-4">
+      <div className="flex flex-col gap-5 mb-6">
         <TopChannels data={data.top_channels} />
       </div>
 
       {/* Categories */}
-      <div className="mb-4">
+      <div className="mb-6">
         <Categories data={data.categories} />
       </div>
 
       {/* Row: Content Diversity + Binge Sessions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         <ContentDiversity data={data.content_diversity} />
         <BingeSessions data={data.binge_sessions} />
       </div>
 
       {/* Attention Trend full-width */}
-      <div className="mb-4">
+      <div className="mb-6">
         <AttentionTrend data={data.attention_trend} />
       </div>
 
       {/* Time Cost full-width */}
-      <div className="mb-4">
+      <div className="mb-6">
         <TimeCost data={data.time_cost} />
       </div>
 
       {/* Search Keywords + Search→Watch Flow */}
       {data.search_keywords && data.search_keywords.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
           <SearchKeywords data={data.search_keywords} />
           <SearchWatchFlow data={data.search_watch_flow} />
         </div>

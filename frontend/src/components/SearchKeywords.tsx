@@ -9,8 +9,8 @@ export function SearchKeywords({ data }: { data: KeywordCount[] | null | undefin
   const max = data[0].count;
 
   return (
-    <section className="card p-5">
-      <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">검색 키워드</h2>
+    <section className="card p-6">
+      <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider mb-4">검색 키워드</h2>
       <div className="flex flex-wrap gap-2">
         {data.map((kw) => {
           const ratio = kw.count / max;

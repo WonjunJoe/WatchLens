@@ -29,9 +29,9 @@ export function ContentDiversity({ data }: Props) {
   const color = scoreColor(data.score);
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="콘텐츠 다양성">
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="콘텐츠 다양성">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">콘텐츠 다양성</h2>
+        <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">콘텐츠 다양성</h2>
         <span
           className="text-[12px] px-2 py-0.5 rounded-full font-medium"
           style={{ backgroundColor: `${color}15`, color }}
@@ -41,15 +41,15 @@ export function ContentDiversity({ data }: Props) {
       </div>
 
       <div className="flex items-center gap-4 mb-5">
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}10` }}>
-          <Shuffle size={24} style={{ color }} />
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}12` }}>
+          <Shuffle size={22} style={{ color }} />
         </div>
         <div>
-          <p className="text-[40px] font-bold leading-none" style={{ color }}>
+          <p className="text-[44px] font-extrabold leading-none tracking-tighter" style={{ color }}>
             {data.score}
-            <span className="text-[16px] text-[var(--text-tertiary)] ml-1">/100</span>
+            <span className="text-[15px] font-semibold text-[var(--text-tertiary)] ml-1">/100</span>
           </p>
-          <p className="text-[12px] text-[var(--text-tertiary)] mt-1">{data.category_count}개 카테고리 시청</p>
+          <p className="text-[12px] font-medium text-[var(--text-tertiary)] mt-1">{data.category_count}개 카테고리 시청</p>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ export function ContentDiversity({ data }: Props) {
           {data.top_categories.map((cat) => (
             <div key={cat.category} className="flex items-center gap-2">
               <span className="text-[12px] text-[var(--text-secondary)] w-20 truncate">{cat.category}</span>
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-[var(--bg-subtle)] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full"
                   style={{ width: `${cat.pct}%`, backgroundColor: "var(--accent)" }}

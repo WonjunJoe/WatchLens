@@ -134,13 +134,14 @@ WatchLens/
 
 ## Design System
 
-파스텔 톤 기반 디자인 시스템 적용 (2026-03-27~)
+대시보드 디자인 시스템 v2 적용 (2026-04-02 Design Ralph 리디자인)
 
-- **컬러**: Lavender / Mint / Sky / Rose / Peach (CSS 변수 관리)
-- **폰트**: Pretendard, weight 400/500만 사용
-- **카드**: rounded-[16px], shadow 0 2px 8px, hover 시 translateY(-2px)
+- **컬러**: Primary #4F6EF7 (blue), Secondary #7C3AED (violet), 그라데이션 배경 (CSS 변수 관리)
+- **폰트**: Pretendard Variable, weight 400~800 활용, hero 숫자 38-44px extrabold
+- **카드**: rounded-16px, 3단계 그림자 시스템 (sm/md/lg), hover elevation, 컬러 accent top-line
+- **차트**: 통일 blue/violet 2-tone 팔레트, 6px bar radius, glass tooltip
 - **아이콘**: Lucide React (선형 outline)
-- **레이아웃**: 접이식 사이드바 (localStorage 상태 저장)
+- **레이아웃**: 접이식 사이드바 (shadow 분리), 섹션 간격 mb-6 통일
 
 ---
 
@@ -200,6 +201,15 @@ WatchLens/
 - 재업로드 시 YouTube 캐시 자동 무효화
 - 웰빙 대시보드: YouTube+Instagram 모두 업로드 필수, 미업로드 플랫폼 안내
 
+### 2026-04-02
+- **YouTube 대시보드 디자인 리디자인** (Design Ralph 자동 그라인드 루프, 7 iterations)
+  - 디자인 토큰 시스템: 그라데이션 배경, 3단계 그림자, accent 컬러 (#4F6EF7 / #7C3AED)
+  - 타이포그래피 계층: hero 숫자 38-44px extrabold, uppercase section heading
+  - 카드 시스템: accent top-line, hover elevation, 통일된 border-radius 16px
+  - 차트 통일: blue/violet 2-tone 팔레트, 6px bar radius, glass tooltip
+  - 리스트 가독성: zebra rows, gold medal badge, hover 상태
+  - 컴포넌트 22개 파일 수정, 평가 점수 19/60 → 37/60
+
 ---
 
 ## TODO
@@ -231,4 +241,5 @@ WatchLens/
 - [ ] 친구와 시청 습관/취향 비교 기능
 
 ### Step 4 — Polish & Launch
+- [x] YouTube 대시보드 디자인 리디자인 (Design Ralph — 19→37/60)
 - [ ] 배포

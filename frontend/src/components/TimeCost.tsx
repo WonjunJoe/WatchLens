@@ -18,9 +18,9 @@ export function TimeCost({ data }: Props) {
   if (!data || data.total_hours === 0) return null;
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="시간 환산">
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="시간 환산">
       <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">시간 비용 환산</h2>
+        <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">시간 비용 환산</h2>
       </div>
 
       <div className="flex items-center gap-3 mb-5 p-3 rounded-lg" style={{ backgroundColor: "var(--accent-light)" }}>
@@ -35,12 +35,12 @@ export function TimeCost({ data }: Props) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {data.equivalents.map((eq) => (
-          <div key={eq.label} className="p-3 bg-gray-50 rounded-lg text-center">
-            <p className="text-[22px] font-bold text-[var(--text-primary)]">
-              {eq.value}<span className="text-[12px] text-[var(--text-tertiary)] ml-0.5">{eq.unit}</span>
+          <div key={eq.label} className="p-3.5 bg-[var(--bg)] rounded-xl border border-[var(--border)] text-center">
+            <p className="text-[24px] font-extrabold text-[var(--text-primary)] tracking-tight">
+              {eq.value}<span className="text-[12px] font-semibold text-[var(--text-tertiary)] ml-0.5">{eq.unit}</span>
             </p>
-            <p className="text-[12px] font-medium text-[var(--text-secondary)] mt-1">{eq.label}</p>
-            <p className="text-[10px] text-[var(--text-tertiary)]">{eq.desc}</p>
+            <p className="text-[12px] font-semibold text-[var(--text-secondary)] mt-1">{eq.label}</p>
+            <p className="text-[10px] font-medium text-[var(--text-tertiary)]">{eq.desc}</p>
           </div>
         ))}
       </div>

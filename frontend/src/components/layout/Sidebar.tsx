@@ -33,16 +33,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className="fixed top-0 left-0 h-screen flex flex-col bg-white border-r border-[var(--border)] z-50 transition-all duration-200"
+      className="fixed top-0 left-0 h-screen flex flex-col bg-white border-r border-[var(--border-strong)] z-50 transition-all duration-300 ease-out shadow-[4px_0_24px_rgba(0,0,0,0.04)]"
       style={{ width: collapsed ? 72 : 240 }}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-[var(--border)]">
-        <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-gradient-to-br from-[var(--accent)] to-[#7C3AED] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
           <Eye size={16} className="text-white" />
         </div>
         {!collapsed && (
-          <span className="text-[16px] font-bold text-[var(--text-primary)]">
+          <span className="text-[16px] font-extrabold text-[var(--text-primary)] tracking-tight">
             WatchLens
           </span>
         )}
@@ -59,10 +59,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <Link
               key={item.path}
               to={item.path}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
                 active
-                  ? "bg-[var(--accent-light)] text-[var(--accent)] font-semibold"
-                  : "text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)]"
+                  ? "bg-gradient-to-r from-[var(--accent-light)] to-[var(--accent-glow)] text-[var(--accent)] font-bold shadow-sm border border-[var(--accent)]/10"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--bg)] hover:text-[var(--text-primary)] hover:shadow-sm border border-transparent"
               }`}
             >
               <item.icon size={18} className="flex-shrink-0" />

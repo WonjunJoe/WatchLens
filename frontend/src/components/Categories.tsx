@@ -52,12 +52,12 @@ function CategoryPie({ title, data }: { title: string; data: CategoryCount[] }) 
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="w-full mt-3 space-y-1">
+        <div className="w-full mt-3 space-y-1.5">
           {chartData.map((item, i) => (
-            <div key={item.category_name} className="flex items-center gap-2 text-[12px]">
-              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PASTEL_COLORS[i % PASTEL_COLORS.length] }} />
-              <span className="text-[var(--text-secondary)] truncate">{item.category_name}</span>
-              <span className="text-[var(--text-tertiary)] ml-auto flex-shrink-0">{Math.round(item.count / total * 100)}%</span>
+            <div key={item.category_name} className="flex items-center gap-2.5 text-[12px]">
+              <span className="w-3 h-3 rounded flex-shrink-0" style={{ backgroundColor: PASTEL_COLORS[i % PASTEL_COLORS.length] }} />
+              <span className="text-[var(--text-secondary)] font-medium truncate">{item.category_name}</span>
+              <span className="text-[var(--text-tertiary)] font-semibold ml-auto flex-shrink-0">{Math.round(item.count / total * 100)}%</span>
             </div>
           ))}
         </div>
@@ -70,8 +70,8 @@ export function Categories({ data }: { data: CategorySplit | null | undefined })
   if (!data) return null;
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="카테고리 분포">
-      <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">카테고리 분포</h2>
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="카테고리 분포">
+      <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider mb-4">카테고리 분포</h2>
       <div className="flex flex-col md:flex-row gap-6">
         <CategoryPie title="일반 영상" data={data.longform} />
         <CategoryPie title="Shorts" data={data.shorts} />

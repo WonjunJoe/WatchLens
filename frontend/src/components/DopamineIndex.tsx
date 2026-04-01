@@ -31,22 +31,22 @@ export function DopamineIndex({ data }: { data: DopamineData | null | undefined 
   const color = scoreColor(data.score);
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="도파민 지수">
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="도파민 지수">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">도파민 지수</h2>
+        <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">도파민 지수</h2>
         <span className="text-[12px] px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${color}15`, color }}>
           {data.grade}
         </span>
       </div>
 
       <div className="flex items-center gap-4 mb-6">
-        <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}10` }}>
-          <Brain size={24} style={{ color }} />
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}12` }}>
+          <Brain size={22} style={{ color }} />
         </div>
         <div>
-          <p className="text-[40px] font-bold leading-none" style={{ color }}>
+          <p className="text-[44px] font-extrabold leading-none tracking-tighter" style={{ color }}>
             {data.score}
-            <span className="text-[16px] text-[var(--text-tertiary)] ml-1">/100</span>
+            <span className="text-[15px] font-semibold text-[var(--text-tertiary)] ml-1">/100</span>
           </p>
         </div>
       </div>
@@ -60,9 +60,9 @@ export function DopamineIndex({ data }: { data: DopamineData | null | undefined 
                 {item.score}/{item.weight}
               </span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-[var(--bg-subtle)] rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${item.value * 100}%`,
                   backgroundColor: scoreColor(item.weight > 0 ? (item.score / item.weight * 100) : 0),

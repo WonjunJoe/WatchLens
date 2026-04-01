@@ -15,8 +15,8 @@ export function DayOfWeekChart({ data }: { data: DayOfWeekData[] | null | undefi
   if (!data || data.length === 0) return null;
 
   return (
-    <section className="card p-5 h-[320px] flex flex-col" role="region" aria-label="요일별 시청 분포">
-      <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">요일별 평균</h2>
+    <section className="card p-6 h-[340px] flex flex-col" role="region" aria-label="요일별 시청 분포">
+      <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider mb-4">요일별 평균</h2>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -27,9 +27,9 @@ export function DayOfWeekChart({ data }: { data: DayOfWeekData[] | null | undefi
               contentStyle={TOOLTIP_STYLE}
               formatter={(v: any, _: any, entry: any) => [`${v}건 (${entry.payload.weeks}주 평균)`, "일평균"]}
             />
-            <Bar dataKey="avg" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="avg" radius={[6, 6, 0, 0]}>
               {data.map((d) => (
-                <Cell key={d.day} fill={d.day_index >= 5 ? "#F43F5E" : "#10B981"} fillOpacity={0.7} />
+                <Cell key={d.day} fill={d.day_index >= 5 ? "#7C3AED" : "#4F6EF7"} fillOpacity={d.day_index >= 5 ? 0.8 : 0.65} />
               ))}
             </Bar>
           </BarChart>

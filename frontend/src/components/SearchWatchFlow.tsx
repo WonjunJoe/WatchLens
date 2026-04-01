@@ -28,10 +28,10 @@ export function SearchWatchFlow({ data }: Props) {
   if (!data || data.total_searches === 0) return null;
 
   return (
-    <section className="card p-5 animate-fadeIn" role="region" aria-label="검색-시청 전환">
+    <section className="card p-6 animate-fadeIn" role="region" aria-label="검색-시청 전환">
       <div className="flex items-center gap-2 mb-4">
         <Search size={16} className="text-[var(--accent)]" />
-        <h2 className="text-[15px] font-semibold text-[var(--text-primary)]">검색 → 시청 전환</h2>
+        <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">검색 → 시청 전환</h2>
       </div>
 
       {/* Summary */}

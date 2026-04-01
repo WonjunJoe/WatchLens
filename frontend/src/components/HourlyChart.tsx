@@ -12,8 +12,8 @@ export function HourlyChart({ data }: { data: HourlyCount[] | null | undefined }
   const maxCount = Math.max(...data.map(d => d.count)) || 1;
 
   return (
-    <section className="card p-5 h-[320px] flex flex-col" role="region" aria-label="시간대별 시청 분포">
-      <h2 className="text-[15px] font-semibold text-[var(--text-primary)] mb-4">시간대별 시청</h2>
+    <section className="card p-6 h-[340px] flex flex-col" role="region" aria-label="시간대별 시청 분포">
+      <h2 className="text-[13px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider mb-4">시간대별 시청</h2>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={formatted} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -21,9 +21,9 @@ export function HourlyChart({ data }: { data: HourlyCount[] | null | undefined }
             <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} interval={2} />
             <YAxis allowDecimals={false} tick={AXIS_TICK} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [`${v}건`, "시청"]} />
-            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="count" radius={[6, 6, 0, 0]}>
               {formatted.map((entry, i) => (
-                <Cell key={i} fill="#6366F1" fillOpacity={0.3 + (entry.count / maxCount) * 0.7} />
+                <Cell key={i} fill="#4F6EF7" fillOpacity={0.3 + (entry.count / maxCount) * 0.7} />
               ))}
             </Bar>
           </BarChart>
