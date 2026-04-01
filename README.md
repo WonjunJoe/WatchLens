@@ -196,6 +196,9 @@ WatchLens/
 - Top Channels 확장: 시청시간 기준 랭킹, 최근 30일 인기 채널
 - Duration cap 중앙화, 공유 카드 스펙트럼 바/도파민 breakdown 개선
 - 재업로드 시 stale 데이터 방지 (cleared 상태), 파일명 표시
+- Duration cap(1h)을 fetch_video_metadata 내부로 이동 (아키텍처 robust화)
+- 재업로드 시 YouTube 캐시 자동 무효화
+- 웰빙 대시보드: YouTube+Instagram 모두 업로드 필수, 미업로드 플랫폼 안내
 
 ---
 
