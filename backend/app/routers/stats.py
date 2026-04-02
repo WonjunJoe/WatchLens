@@ -4,10 +4,10 @@ import logging
 from datetime import datetime, timezone
 from collections.abc import Generator
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 
-from config.settings import DEFAULT_USER_ID
+from app.auth import get_current_user
 from app.utils import to_local, sse, USER_TZ, local_date_to_utc
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ router = APIRouter(prefix="/api/stats", tags=["stats"])
 # ---------------------------------------------------------------------------
 
 @router.get("/period", response_model=PeriodInfo)
-def get_period(user_id: str = Query(default=DEFAULT_USER_ID)):
+def get_period(user_id: str = Depends(get_current_user)):
     earliest, latest = fetch_period(user_id)
     if not earliest:
         return PeriodInfo(date_from="", date_to="", total_days=0)
@@ -193,7 +193,7 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
 
 
 @router.get("/dashboard/cached")
-def get_cached_dashboard(user_id: str = Query(default=DEFAULT_USER_ID)):
+def get_cached_dashboard(user_id: str = Depends(get_current_user)):
     """Return cached YouTube dashboard results (instant load)."""
     cached = fetch_youtube_results(user_id)
     if not cached:
@@ -205,7 +205,7 @@ def get_cached_dashboard(user_id: str = Query(default=DEFAULT_USER_ID)):
 def get_dashboard(
     date_from: str = Query(...),
     date_to: str = Query(...),
-    user_id: str = Query(default=DEFAULT_USER_ID),
+    user_id: str = Depends(get_current_user),
 ):
     return StreamingResponse(
         _dashboard_stream(user_id, date_from, date_to),

@@ -1,7 +1,7 @@
 import json
 from collections import Counter
 from collections.abc import Generator
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from app.parsers.instagram import parse_instagram_zip
 from app.services.instagram_stats import (
@@ -23,7 +23,8 @@ from app.services.instagram_stats import (
 from app.services.instagram_insights import generate_ig_insights
 from app.db.repository import save_instagram_results, fetch_instagram_results
 from app.utils import sse
-from config.settings import MAX_ZIP_SIZE_BYTES, DEFAULT_USER_ID
+from config.settings import MAX_ZIP_SIZE_BYTES
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/instagram", tags=["instagram"])
 
@@ -46,7 +47,7 @@ def _detect_my_username(messages: list[dict]) -> str:
     return ""
 
 
-def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
+def _instagram_upload_stream(zip_bytes: bytes, user_id: str) -> Generator[str, None, None]:
     try:
         total_sections = 16
         loaded = 0
@@ -170,7 +171,7 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
             "insights": insights,
         }
         try:
-            save_instagram_results(DEFAULT_USER_ID, all_results)
+            save_instagram_results(user_id, all_results)
         except Exception:
             yield sse("warning", {"message": "대시보드 결과 캐시 저장 실패 (분석 결과에는 영향 없음)"})
 
@@ -180,17 +181,17 @@ def _instagram_upload_stream(zip_bytes: bytes) -> Generator[str, None, None]:
 
 
 @router.post("/upload")
-async def upload_instagram(file: UploadFile = File(...)):
+async def upload_instagram(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     if not file.filename or not file.filename.endswith(".zip"):
         raise HTTPException(400, "ZIP 파일만 업로드 가능합니다")
     file_bytes = await file.read()
     if len(file_bytes) > MAX_ZIP_SIZE_BYTES:
         raise HTTPException(413, f"파일 크기가 {MAX_ZIP_SIZE_BYTES // (1024*1024)}MB를 초과합니다")
-    return StreamingResponse(_instagram_upload_stream(file_bytes), media_type="text/event-stream")
+    return StreamingResponse(_instagram_upload_stream(file_bytes, user_id), media_type="text/event-stream")
 
 
 @router.get("/dashboard")
-def get_instagram_dashboard(user_id: str = Query(default=DEFAULT_USER_ID)):
+def get_instagram_dashboard(user_id: str = Depends(get_current_user)):
     results = fetch_instagram_results(user_id)
     if not results:
         raise HTTPException(404, "저장된 Instagram 대시보드가 없습니다")

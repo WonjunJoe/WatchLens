@@ -5,7 +5,7 @@ from app.db.supabase import get_supabase_client
 from app.utils import chunk_list
 from config.settings import (
     YOUTUBE_API_URL, YOUTUBE_BATCH_SIZE, YOUTUBE_CATEGORY_MAP,
-    SHORTS_MAX_DURATION_SECONDS, DEFAULT_USER_ID,
+    SHORTS_MAX_DURATION_SECONDS,
 )
 
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
@@ -60,7 +60,7 @@ def _fetch_batch(video_ids: list[str]) -> list[dict]:
     return response.json().get("items", [])
 
 
-def fetch_and_store_metadata(video_ids: list[str], user_id: str = DEFAULT_USER_ID):
+def fetch_and_store_metadata(video_ids: list[str]):
     unique_ids = [vid for vid in set(video_ids) if vid]
     if not unique_ids:
         return
@@ -98,7 +98,7 @@ def fetch_and_store_metadata(video_ids: list[str], user_id: str = DEFAULT_USER_I
         )
 
     for chunk in chunk_list(unique_ids):
-        sb.table("watch_records").update({"is_shorts": False}).eq("user_id", user_id).in_("video_id", chunk).execute()
+        sb.table("watch_records").update({"is_shorts": False}).in_("video_id", chunk).execute()
 
     for chunk in chunk_list(shorts_ids):
-        sb.table("watch_records").update({"is_shorts": True}).eq("user_id", user_id).in_("video_id", chunk).execute()
+        sb.table("watch_records").update({"is_shorts": True}).in_("video_id", chunk).execute()

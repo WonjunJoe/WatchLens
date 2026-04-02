@@ -28,8 +28,6 @@ WATCH_TITLE_SUFFIX_KO = " 을(를) 시청했습니다."
 SEARCH_TITLE_PREFIX = "Searched for "
 SEARCH_TITLE_SUFFIX_KO = " 을(를) 검색했습니다."
 
-DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000"
-
 SUPABASE_STORAGE_BUCKET = "takeout-backups"
 
 # Timezone offset (hours from UTC). KST = +9

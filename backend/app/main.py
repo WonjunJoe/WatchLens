@@ -1,4 +1,4 @@
-# backend/app/main.py
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.upload import router as upload_router
@@ -8,9 +8,15 @@ from app.routers.wellbeing import router as wellbeing_router
 
 app = FastAPI(title="WatchLens API")
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+
+_origins = ["http://localhost:5173", "http://localhost:5174"]
+if FRONTEND_URL:
+    _origins.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

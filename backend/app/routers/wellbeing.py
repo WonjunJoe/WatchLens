@@ -1,10 +1,10 @@
 """Cross-platform digital wellbeing dashboard endpoint."""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
+from app.auth import get_current_user
 from config.settings import (
-    DEFAULT_USER_ID,
     WELLBEING_WEIGHTS,
     WELLBEING_GRADE_THRESHOLDS,
     BINGE_SCORE_MULTIPLIER,
@@ -147,7 +147,7 @@ def _compute_wellbeing(youtube_data: dict, instagram_data: dict) -> dict:
 
 
 @router.get("/compute")
-def compute_wellbeing_score(user_id: str = Query(default=DEFAULT_USER_ID)):
+def compute_wellbeing_score(user_id: str = Depends(get_current_user)):
     """Compute wellbeing score by reading both platforms' data from DB."""
     youtube_data = _fetch_youtube_signals(user_id)
 

@@ -2,7 +2,7 @@
 
 from app.db.supabase import get_supabase_client
 from app.utils import chunk_list
-from config.settings import DB_CHUNK_SIZE, DB_PAGE_SIZE, DEFAULT_USER_ID, WATCH_TIME_CAP_SECONDS
+from config.settings import DB_CHUNK_SIZE, DB_PAGE_SIZE, WATCH_TIME_CAP_SECONDS
 
 
 # ---------------------------------------------------------------------------

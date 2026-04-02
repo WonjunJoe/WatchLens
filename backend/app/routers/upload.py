@@ -6,14 +6,15 @@ import zipfile
 from collections.abc import Generator
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 
 from config.settings import (
-    MAX_FILE_SIZE_BYTES, DEFAULT_USER_ID, SUPABASE_STORAGE_BUCKET,
+    MAX_FILE_SIZE_BYTES, SUPABASE_STORAGE_BUCKET,
     MAX_YOUTUBE_ZIP_SIZE_BYTES,
     TAKEOUT_WATCH_HISTORY_PATTERNS, TAKEOUT_SEARCH_HISTORY_PATTERNS,
 )
+from app.auth import get_current_user
 from app.utils import sse
 from app.parsers.watch_history import parse_watch_history
 from app.parsers.search_history import parse_search_history
@@ -37,7 +38,7 @@ def _parse_json(file_bytes: bytes) -> list | None:
     return data
 
 
-def _watch_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
+def _watch_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, None, None]:
     try:
         yield sse("progress", {"step": "파싱 중...", "percent": 10})
         data = _parse_json(file_bytes)
@@ -45,12 +46,12 @@ def _watch_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
             yield sse("error", {"detail": "유효한 YouTube Takeout JSON이 아닙니다"})
             return
 
-        result = parse_watch_history(data)
+        result = parse_watch_history(data, user_id)
         yield sse("progress", {"step": f"파싱 완료 — {result.total}건 발견 ({result.period})", "percent": 20})
 
         yield sse("progress", {"step": f"DB 저장 중... ({result.period})", "percent": 30})
-        delete_user_records("watch_records", DEFAULT_USER_ID)
-        delete_youtube_cache(DEFAULT_USER_ID)
+        delete_user_records("watch_records", user_id)
+        delete_youtube_cache(user_id)
         if result.records:
             batch_insert("watch_records", result.records)
         yield sse("progress", {"step": f"DB 저장 완료 — {result.total}건", "percent": 50})
@@ -74,7 +75,7 @@ def _watch_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
         yield sse("error", {"detail": f"업로드 처리 중 오류: {str(e)}"})
 
 
-def _search_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
+def _search_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, None, None]:
     try:
         yield sse("progress", {"step": "파싱 중...", "percent": 15})
         data = _parse_json(file_bytes)
@@ -82,11 +83,11 @@ def _search_history_stream(file_bytes: bytes) -> Generator[str, None, None]:
             yield sse("error", {"detail": "유효한 YouTube Takeout JSON이 아닙니다"})
             return
 
-        result = parse_search_history(data)
+        result = parse_search_history(data, user_id)
         yield sse("progress", {"step": f"파싱 완료 — {result.total}건 발견 ({result.period})", "percent": 40})
 
         yield sse("progress", {"step": f"DB 저장 중... ({result.period})", "percent": 50})
-        delete_user_records("search_records", DEFAULT_USER_ID)
+        delete_user_records("search_records", user_id)
         if result.records:
             batch_insert("search_records", result.records)
         yield sse("progress", {"step": f"DB 저장 완료 — {result.total}건", "percent": 80})
@@ -123,7 +124,7 @@ def _read_json_from_zip(zf: zipfile.ZipFile, path: str) -> list | None:
     return data
 
 
-def _youtube_takeout_stream(file_bytes: bytes) -> Generator[str, None, None]:
+def _youtube_takeout_stream(file_bytes: bytes, user_id: str) -> Generator[str, None, None]:
     try:
         yield sse("progress", {"step": "ZIP 파일 열기...", "percent": 5})
         try:
@@ -160,12 +161,12 @@ def _youtube_takeout_stream(file_bytes: bytes) -> Generator[str, None, None]:
             if watch_data is None:
                 yield sse("progress", {"step": "⚠ 시청 기록 JSON 파싱 실패, 건너뜀", "percent": 20})
             else:
-                result = parse_watch_history(watch_data)
+                result = parse_watch_history(watch_data, user_id)
                 yield sse("progress", {"step": f"시청 기록 파싱 완료 — {result.total}건 ({result.period})", "percent": 25})
 
                 yield sse("progress", {"step": "시청 기록 DB 저장 중...", "percent": 30})
-                delete_user_records("watch_records", DEFAULT_USER_ID)
-                delete_youtube_cache(DEFAULT_USER_ID)
+                delete_user_records("watch_records", user_id)
+                delete_youtube_cache(user_id)
                 if result.records:
                     batch_insert("watch_records", result.records)
                 yield sse("progress", {"step": f"시청 기록 DB 저장 완료 — {result.total}건", "percent": 40})
@@ -187,11 +188,11 @@ def _youtube_takeout_stream(file_bytes: bytes) -> Generator[str, None, None]:
             if search_data is None:
                 yield sse("progress", {"step": "⚠ 검색 기록 JSON 파싱 실패, 건너뜀", "percent": 75})
             else:
-                result = parse_search_history(search_data)
+                result = parse_search_history(search_data, user_id)
                 yield sse("progress", {"step": f"검색 기록 파싱 완료 — {result.total}건 ({result.period})", "percent": 80})
 
                 yield sse("progress", {"step": "검색 기록 DB 저장 중...", "percent": 85})
-                delete_user_records("search_records", DEFAULT_USER_ID)
+                delete_user_records("search_records", user_id)
                 if result.records:
                     batch_insert("search_records", result.records)
                 yield sse("progress", {"step": f"검색 기록 DB 저장 완료 — {result.total}건", "percent": 90})
@@ -210,24 +211,24 @@ def _youtube_takeout_stream(file_bytes: bytes) -> Generator[str, None, None]:
 
 
 @router.post("/youtube-takeout")
-async def upload_youtube_takeout(file: UploadFile = File(...)):
+async def upload_youtube_takeout(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     file_bytes = await file.read()
     if len(file_bytes) > MAX_YOUTUBE_ZIP_SIZE_BYTES:
         raise HTTPException(413, "파일 크기가 500MB를 초과합니다")
-    return StreamingResponse(_youtube_takeout_stream(file_bytes), media_type="text/event-stream")
+    return StreamingResponse(_youtube_takeout_stream(file_bytes, user_id), media_type="text/event-stream")
 
 
 @router.post("/watch-history")
-async def upload_watch_history(file: UploadFile = File(...)):
+async def upload_watch_history(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     file_bytes = await file.read()
     if len(file_bytes) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(413, "파일 크기가 50MB를 초과합니다")
-    return StreamingResponse(_watch_history_stream(file_bytes), media_type="text/event-stream")
+    return StreamingResponse(_watch_history_stream(file_bytes, user_id), media_type="text/event-stream")
 
 
 @router.post("/search-history")
-async def upload_search_history(file: UploadFile = File(...)):
+async def upload_search_history(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     file_bytes = await file.read()
     if len(file_bytes) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(413, "파일 크기가 50MB를 초과합니다")
-    return StreamingResponse(_search_history_stream(file_bytes), media_type="text/event-stream")
+    return StreamingResponse(_search_history_stream(file_bytes, user_id), media_type="text/event-stream")
