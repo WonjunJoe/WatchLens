@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { API_BASE } from "../config";
+import { supabase } from "../lib/supabase";
 import type { YouTubeData } from "../types/youtube";
 
 export type { YouTubeData };
@@ -40,7 +41,11 @@ export function YouTubeDataProvider({ children }: { children: ReactNode }) {
     if (cleared && !force) return;
     if (force) setCleared(false);
     try {
-      const res = await fetch(`${API_BASE}/api/stats/period`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+      const res = await fetch(`${API_BASE}/api/stats/period`, { headers });
       const d = await res.json();
       if (d.date_from) setPeriod(d);
     } catch {

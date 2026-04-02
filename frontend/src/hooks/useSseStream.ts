@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { supabase } from "../lib/supabase";
 
 interface SseEvent {
   event: string;
@@ -20,10 +21,15 @@ export function useSseStream() {
       const controller = new AbortController();
       abortRef.current = controller;
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders: Record<string, string> = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+
       const res = await fetch(url, {
         method: options?.method ?? "GET",
         body: options?.body,
-        headers: options?.headers,
+        headers: { ...authHeaders, ...options?.headers },
         signal: controller.signal,
       });
 
