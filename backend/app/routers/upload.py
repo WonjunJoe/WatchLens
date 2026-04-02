@@ -59,7 +59,7 @@ def _watch_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, Non
         video_ids = [r["video_id"] for r in result.records if r.get("video_id")]
         if video_ids:
             yield sse("progress", {"step": "YouTube API 메타데이터 조회 중...", "percent": 55})
-            fetch_and_store_metadata(video_ids)
+            fetch_and_store_metadata(video_ids, user_id)
             yield sse("progress", {"step": "메타데이터 + Shorts 판별 완료", "percent": 90})
 
         timestamp = _upload_timestamp()
@@ -174,7 +174,7 @@ def _youtube_takeout_stream(file_bytes: bytes, user_id: str) -> Generator[str, N
                 video_ids = [r["video_id"] for r in result.records if r.get("video_id")]
                 if video_ids:
                     yield sse("progress", {"step": "YouTube API 메타데이터 조회 중...", "percent": 45})
-                    fetch_and_store_metadata(video_ids)
+                    fetch_and_store_metadata(video_ids, user_id)
                     yield sse("progress", {"step": "메타데이터 + Shorts 판별 완료", "percent": 65})
 
                 watch_bytes = zf.read(watch_path)

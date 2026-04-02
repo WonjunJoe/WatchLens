@@ -22,6 +22,7 @@ import { useSseStream } from "../hooks/useSseStream";
 import { useYouTubeData, type YouTubeData } from "../contexts/YouTubeDataContext";
 import { ShareModal } from "../components/share/ShareModal";
 import { API_BASE } from "../config";
+import { supabase } from "../lib/supabase";
 
 export function DashboardPage() {
   const [params] = useSearchParams();
@@ -74,7 +75,11 @@ export function DashboardPage() {
       // Try cache first (instant) — only when using default period (no explicit URL params)
       if (!paramFrom && !paramTo) {
         try {
-          const cacheRes = await fetch(`${API_BASE}/api/stats/dashboard/cached`);
+          const { data: { session } } = await supabase.auth.getSession();
+          const authHeaders: Record<string, string> = session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {};
+          const cacheRes = await fetch(`${API_BASE}/api/stats/dashboard/cached`, { headers: authHeaders });
           if (cacheRes.ok) {
             const cached = await cacheRes.json();
             // Validate cache: must match period and contain latest fields (by_time)

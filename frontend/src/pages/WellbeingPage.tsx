@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Loader2, AlertCircle } from "lucide-react";
 import { API_BASE } from "../config";
+import { supabase } from "../lib/supabase";
 
 interface WellbeingDetail {
   score: number;
@@ -79,7 +80,11 @@ export function WellbeingPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/api/wellbeing/compute`);
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+        const res = await fetch(`${API_BASE}/api/wellbeing/compute`, { headers });
         if (!res.ok) throw new Error("서버 오류가 발생했습니다.");
         const data = await res.json();
         setResult(data);

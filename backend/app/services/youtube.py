@@ -60,7 +60,7 @@ def _fetch_batch(video_ids: list[str]) -> list[dict]:
     return response.json().get("items", [])
 
 
-def fetch_and_store_metadata(video_ids: list[str]):
+def fetch_and_store_metadata(video_ids: list[str], user_id: str):
     unique_ids = [vid for vid in set(video_ids) if vid]
     if not unique_ids:
         return
@@ -98,7 +98,7 @@ def fetch_and_store_metadata(video_ids: list[str]):
         )
 
     for chunk in chunk_list(unique_ids):
-        sb.table("watch_records").update({"is_shorts": False}).in_("video_id", chunk).execute()
+        sb.table("watch_records").update({"is_shorts": False}).eq("user_id", user_id).in_("video_id", chunk).execute()
 
     for chunk in chunk_list(shorts_ids):
-        sb.table("watch_records").update({"is_shorts": True}).in_("video_id", chunk).execute()
+        sb.table("watch_records").update({"is_shorts": True}).eq("user_id", user_id).in_("video_id", chunk).execute()

@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Upload } from "lucide-react";
 import { API_BASE } from "../config";
+import { supabase } from "../lib/supabase";
 
 interface FileUploaderProps {
   label: string;
@@ -38,9 +39,15 @@ export function FileUploader({ label, subtitle, accept, endpoint, onResult }: Fi
       const formData = new FormData();
       formData.append("file", file);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders: Record<string, string> = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+
       const res = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
         body: formData,
+        headers: authHeaders,
       });
 
       if (!res.ok) {
