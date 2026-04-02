@@ -55,7 +55,7 @@ export function LandingPage() {
             <a href="#how-it-works" className="hover:text-[var(--text-primary)]" style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}>사용법</a>
           </div>
           <Link
-            to="/upload"
+            to="/login"
             className="bg-[var(--accent)] hover:opacity-90 text-white text-[13px] font-medium px-5 py-2 rounded-full flex items-center gap-2 active:scale-[0.98] hover:scale-[1.02]"
             style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
           >
@@ -83,7 +83,7 @@ export function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 animate-fadeInUp stagger-3">
                 <Link
-                  to="/upload"
+                  to="/login"
                   className="group bg-[var(--accent)] hover:opacity-90 text-white font-medium px-6 py-3 rounded-full text-sm flex items-center justify-center gap-2.5 active:scale-[0.98] hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]"
                   style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
                 >
@@ -272,7 +272,7 @@ export function LandingPage() {
                 업로드하고, 분석하고, 나만의 인사이트를 발견하세요.
               </p>
               <Link
-                to="/upload"
+                to="/login"
                 className="group inline-flex items-center gap-2.5 bg-[var(--accent)] hover:opacity-90 text-white font-medium px-6 py-3 rounded-full text-sm active:scale-[0.98] hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]"
                 style={{ transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }}
               >
