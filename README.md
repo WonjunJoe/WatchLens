@@ -6,6 +6,7 @@
 
 ## Features
 
+- **Google 로그인** — Supabase Auth 기반 Google OAuth 원클릭 로그인, JWT 인증, RLS 데이터 격리
 - **Google Takeout 업로드** — JSON 또는 ZIP 파일 드래그앤드롭 업로드 (SSE 실시간 진행 표시)
 - **멀티 플랫폼** — YouTube + Instagram 데이터 분석
 - **YouTube Data API 연동** — 영상 메타데이터(카테고리, 길이) 자동 수집, Shorts 판별(≤180초)
@@ -209,6 +210,11 @@ WatchLens/
   - 차트 통일: blue/violet 2-tone 팔레트, 6px bar radius, glass tooltip
   - 리스트 가독성: zebra rows, gold medal badge, hover 상태
   - 컴포넌트 22개 파일 수정, 평가 점수 19/60 → 37/60
+- **Google OAuth 인증 + 유저 데이터 격리** (Supabase Auth)
+  - Backend: JWT 인증 모듈, 모든 API 엔드포인트 보호, `DEFAULT_USER_ID` 전면 제거
+  - Frontend: AuthContext, LoginPage (Google 원클릭), ProtectedRoute, 모든 API 호출에 Authorization 헤더
+  - DB: RLS 정책 4개 테이블 적용 (defense-in-depth)
+  - 코드 리뷰 반영: cross-user is_shorts 버그 수정, 빈 JWT secret startup guard
 
 ---
 
@@ -242,15 +248,16 @@ WatchLens/
 
 ### Step 4 — Polish & Launch
 - [x] YouTube 대시보드 디자인 리디자인 (Design Ralph — 19→37/60)
-- [ ] 배포
+- [ ] 배포 (Vercel + Supabase Google OAuth 콘솔 설정)
 
-### Step 5 — 인증 (진행 중)
+### Step 5 — 인증 ✅
 - [x] Supabase RLS 마이그레이션 (watch_records, search_records, instagram_dashboard_results, youtube_dashboard_results)
-- [x] Backend JWT 인증 모듈 (`app/auth.py` — `get_current_user` Depends)
+- [x] Backend JWT 인증 모듈 (`app/auth.py` — `get_current_user` Depends, 빈 시크릿 시 startup 차단)
 - [x] Backend Parsers `user_id` 파라미터화 (watch_history, search_history)
 - [x] Backend Routers 인증 적용 (upload, stats, instagram, wellbeing) — `DEFAULT_USER_ID` 전면 제거
-- [ ] Frontend Supabase 클라이언트 + AuthContext
-- [ ] Frontend LoginPage + ProtectedRoute
-- [ ] Frontend API 요청에 Authorization 헤더 추가
-- [ ] Frontend Sidebar 로그아웃 버튼
-- [ ] 환경변수 정리 + 최종 E2E 검증
+- [x] Frontend Supabase 클라이언트 + AuthContext (Google OAuth)
+- [x] Frontend LoginPage + ProtectedRoute (미인증 시 /login 리다이렉트)
+- [x] Frontend API 요청에 Authorization 헤더 추가 (useSseStream, Contexts, FileUploader, DashboardPage, WellbeingPage)
+- [x] Frontend Sidebar 유저 프로필(아바타/이름) + 로그아웃 버튼
+- [x] 환경변수 정리 (.env.example) + 빌드 검증 통과
+- [x] 코드 리뷰: cross-user is_shorts 버그 수정, auth bypass guard 추가
