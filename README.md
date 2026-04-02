@@ -243,3 +243,14 @@ WatchLens/
 ### Step 4 — Polish & Launch
 - [x] YouTube 대시보드 디자인 리디자인 (Design Ralph — 19→37/60)
 - [ ] 배포
+
+### Step 5 — 인증 (진행 중)
+- [x] Supabase RLS 마이그레이션 (watch_records, search_records, instagram_dashboard_results, youtube_dashboard_results)
+- [x] Backend JWT 인증 모듈 (`app/auth.py` — `get_current_user` Depends)
+- [x] Backend Parsers `user_id` 파라미터화 (watch_history, search_history)
+- [x] Backend Routers 인증 적용 (upload, stats, instagram, wellbeing) — `DEFAULT_USER_ID` 전면 제거
+- [ ] Frontend Supabase 클라이언트 + AuthContext
+- [ ] Frontend LoginPage + ProtectedRoute
+- [ ] Frontend API 요청에 Authorization 헤더 추가
+- [ ] Frontend Sidebar 로그아웃 버튼
+- [ ] 환경변수 정리 + 최종 E2E 검증
