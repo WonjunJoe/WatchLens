@@ -1,7 +1,7 @@
 from urllib.parse import urlparse, parse_qs
 from app.models.schemas import ParseResult
 from app.utils import parse_period
-from config.settings import SUPPORTED_HEADERS, WATCH_TITLE_PREFIX, WATCH_TITLE_SUFFIX_KO, DEFAULT_USER_ID
+from config.settings import SUPPORTED_HEADERS, WATCH_TITLE_PREFIX, WATCH_TITLE_SUFFIX_KO
 
 
 def extract_video_id(url: str) -> str | None:
@@ -18,7 +18,7 @@ def extract_video_id(url: str) -> str | None:
     return None
 
 
-def parse_watch_history(data: list[dict]) -> ParseResult:
+def parse_watch_history(data: list[dict], user_id: str) -> ParseResult:
     records = []
     skipped = 0
     timestamps = []
@@ -51,7 +51,7 @@ def parse_watch_history(data: list[dict]) -> ParseResult:
         timestamps.append(time_str)
 
         records.append({
-            "user_id": DEFAULT_USER_ID,
+            "user_id": user_id,
             "video_id": video_id,
             "video_title": video_title,
             "channel_name": channel_name,

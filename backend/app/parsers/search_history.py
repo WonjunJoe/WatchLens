@@ -1,9 +1,9 @@
 from app.models.schemas import ParseResult
 from app.utils import parse_period
-from config.settings import SUPPORTED_HEADERS, SEARCH_TITLE_PREFIX, SEARCH_TITLE_SUFFIX_KO, DEFAULT_USER_ID
+from config.settings import SUPPORTED_HEADERS, SEARCH_TITLE_PREFIX, SEARCH_TITLE_SUFFIX_KO
 
 
-def parse_search_history(data: list[dict]) -> ParseResult:
+def parse_search_history(data: list[dict], user_id: str) -> ParseResult:
     records = []
     skipped = 0
     timestamps = []
@@ -29,7 +29,7 @@ def parse_search_history(data: list[dict]) -> ParseResult:
         timestamps.append(time_str)
 
         records.append({
-            "user_id": DEFAULT_USER_ID,
+            "user_id": user_id,
             "query": query,
             "search_url": search_url,
             "searched_at": time_str,
