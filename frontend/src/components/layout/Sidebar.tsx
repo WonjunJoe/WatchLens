@@ -1,7 +1,8 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, BarChart3, PanelLeftClose, PanelLeftOpen, Eye, Upload, Heart } from "lucide-react";
+import { Home, BarChart3, PanelLeftClose, PanelLeftOpen, Eye, Upload, Heart, LogOut } from "lucide-react";
 import { useYouTubeData } from "../../contexts/YouTubeDataContext";
 import { useInstagramData } from "../../contexts/InstagramDataContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -18,8 +19,15 @@ const MENU = [
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { pathname } = useLocation();
-  const { hasData: ytReady } = useYouTubeData();
-  const { hasData: igReady } = useInstagramData();
+  const { hasData: ytReady, clear: clearYt } = useYouTubeData();
+  const { hasData: igReady, clear: clearIg } = useInstagramData();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    clearYt();
+    clearIg();
+    await signOut();
+  };
 
   const statusMap: Record<string, boolean> = {
     youtube: ytReady,
@@ -93,6 +101,40 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* User */}
+      <div className="px-3 pb-2 border-t border-[var(--border)]">
+        <div className="flex items-center gap-3 px-3 py-3">
+          {user?.user_metadata?.avatar_url ? (
+            <img
+              src={user.user_metadata.avatar_url}
+              alt=""
+              className="w-8 h-8 rounded-full flex-shrink-0"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[var(--accent-light)] flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-bold text-[var(--accent)]">
+                {user?.email?.[0]?.toUpperCase() ?? "?"}
+              </span>
+            </div>
+          )}
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium text-[var(--text-primary)] truncate">
+                {user?.user_metadata?.full_name ?? user?.email ?? ""}
+              </p>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[var(--text-tertiary)] hover:bg-red-50 hover:text-red-500 transition-colors text-[13px]"
+        >
+          <LogOut size={16} className="flex-shrink-0" />
+          {!collapsed && <span>로그아웃</span>}
+        </button>
+      </div>
 
       {/* Toggle */}
       <div className="px-3 pb-4">
