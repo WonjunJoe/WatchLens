@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WatchLens — Architecture</title>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+
+    :root {
+      --bg: #f8f9fc;
+      --surface: #ffffff;
+      --text: #1a1d26;
+      --text2: #4a5068;
+      --text3: #8891a5;
+      --accent: #4F6EF7;
+      --accent2: #7C3AED;
+      --border: #e8ecf2;
+      --code-bg: #f1f3f9;
+      --gradient: linear-gradient(135deg, #4F6EF7 0%, #7C3AED 100%);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+      --radius: 16px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hero */
+    .hero {
+      background: var(--gradient);
+      color: #fff;
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 48px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; }
+    .hero p { font-size: 18px; opacity: .85; max-width: 560px; margin: 0 auto; }
+
+    /* Layout */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    .content { padding: 48px 0 80px; }
+
+    /* Navigation */
+    .toc {
+      position: sticky; top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 40px;
+    }
+    .toc h3 { font-size: 14px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .toc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+    .toc a {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(79,110,247,.06);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all .2s;
+    }
+    .toc a:hover { background: rgba(79,110,247,.14); }
+
+    /* Section */
+    section { margin-bottom: 48px; }
+    section > h2 {
+      font-size: 28px; font-weight: 800; letter-spacing: -.5px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+    section > h2 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    h3 { font-size: 18px; font-weight: 700; margin: 28px 0 12px; color: var(--text); }
+    h4 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; color: var(--text2); }
+    p { color: var(--text2); margin-bottom: 12px; font-size: 15px; }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+      transition: box-shadow .2s;
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
+    .card h4 { margin-top: 0; }
+    .card h4 .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .badge-be { background: #dbeafe; color: #1e40af; }
+    .badge-fe { background: #fce7f3; color: #9d174d; }
+    .badge-db { background: #d1fae5; color: #065f46; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    /* Code */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      overflow-x: auto;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent2);
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    th {
+      text-align: left;
+      font-weight: 700;
+      padding: 10px 16px;
+      background: var(--code-bg);
+      border-bottom: 2px solid var(--border);
+      color: var(--text);
+    }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+    }
+    tr:hover td { background: rgba(79,110,247,.02); }
+
+    /* Flow diagram */
+    .flow {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .flow pre {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.8;
+      white-space: pre;
+    }
+    .flow-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 16px;
+    }
+
+    /* Metric list */
+    .metrics { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .metric {
+      display: inline-block;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--code-bg);
+      border-radius: 8px;
+      color: var(--text2);
+    }
+
+    /* Accent line card */
+    .accent-card {
+      border-top: 3px solid;
+      border-image: var(--gradient) 1;
+    }
+
+    ul { padding-left: 20px; margin-bottom: 12px; }
+    li { color: var(--text2); font-size: 14px; margin-bottom: 4px; }
+    li strong { color: var(--text); }
+
+    .footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text3);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container">
+    <h1>WatchLens Architecture</h1>
+    <p>YouTube + Instagram 시청 습관 분석 웹앱의 전체 아키텍처 문서</p>
+  </div>
+</div>
+
+<div class="container content">
+
+  <!-- TOC -->
+  <nav class="toc">
+    <h3>목차</h3>
+    <ul>
+      <li><a href="#overview">시스템 개요</a></li>
+      <li><a href="#tech-stack">기술 스택</a></li>
+      <li><a href="#project-structure">프로젝트 구조</a></li>
+      <li><a href="#backend">백엔드 아키텍처</a></li>
+      <li><a href="#frontend">프론트엔드 아키텍처</a></li>
+      <li><a href="#database">데이터베이스</a></li>
+      <li><a href="#data-flows">데이터 플로우</a></li>
+      <li><a href="#auth">인증 아키텍처</a></li>
+      <li><a href="#patterns">설계 패턴</a></li>
+    </ul>
+  </nav>
+
+  <!-- 1. Overview -->
+  <section id="overview">
+    <h2><span>시스템 개요</span></h2>
+    <div class="card accent-card">
+      <p style="font-size:16px; color:var(--text);">
+        WatchLens는 Google Takeout 데이터(YouTube 시청/검색 기록, Instagram 활동 기록)를 업로드하면,
+        시청 습관과 디지털 웰빙을 시각적으로 분석해주는 풀스택 웹 애플리케이션입니다.
+      </p>
+      <p>
+        유튜브가 제공하지 않는 인사이트 — 카테고리별 분석, Shorts 중독도, 도파민 지수, 시청 유형 분류(16가지),
+        콘텐츠 다양성, 폭식 세션, 검색→시청 전환율 등 — 을 19개 섹션으로 실시간 스트리밍합니다.
+      </p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-title">High-Level Architecture</div>
+      <pre>
+┌─────────────┐     ┌──────────────────────────────────────────────┐     ┌────────────┐
+│             │     │              FastAPI Backend                 │     │            │
+│   React     │────▶│  Upload Router ──▶ Parser ──▶ Repository    │────▶│  Supabase  │
+│   Frontend  │ SSE │  Stats Router  ──▶ Service ──▶ Repository   │     │ PostgreSQL │
+│  (Vite+TS)  │◀────│  Instagram Router                           │◀────│ + Storage  │
+│             │     │  Wellbeing Router                            │     │            │
+└─────────────┘     └──────────┬───────────────────────────────────┘     └────────────┘
+                               │
+                    ┌──────────▼───────────┐
+                    │  YouTube Data API    │
+                    │  (메타데이터 수집)     │
+                    └──────────────────────┘
+
+                    ┌──────────────────────┐
+                    │  Supabase Auth       │
+                    │  (Google OAuth)      │
+                    └──────────────────────┘</pre>
+    </div>
+  </section>
+
+  <!-- 2. Tech Stack -->
+  <section id="tech-stack">
+    <h2><span>기술 스택</span></h2>
+    <table>
+      <thead>
+        <tr><th>계층</th><th>기술</th><th>용도</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Backend</td><td>FastAPI 0.115</td><td>비동기 API 프레임워크</td></tr>
+        <tr><td>Backend</td><td>Python 3.13</td><td>서버 로직</td></tr>
+        <tr><td>Backend</td><td>Supabase Python SDK</td><td>DB + Auth 클라이언트</td></tr>
+        <tr><td>Backend</td><td>httpx</td><td>YouTube API 호출</td></tr>
+        <tr><td>Frontend</td><td>React 19</td><td>UI 프레임워크</td></tr>
+        <tr><td>Frontend</td><td>TypeScript 5.9</td><td>타입 안전성</td></tr>
+        <tr><td>Frontend</td><td>Vite 8</td><td>빌드 도구</td></tr>
+        <tr><td>Frontend</td><td>Tailwind CSS 4</td><td>스타일링</td></tr>
+        <tr><td>Frontend</td><td>Recharts 3.8</td><td>차트 라이브러리</td></tr>
+        <tr><td>Frontend</td><td>Lucide React</td><td>아이콘</td></tr>
+        <tr><td>Database</td><td>PostgreSQL (Supabase)</td><td>관계형 DB + RLS</td></tr>
+        <tr><td>Storage</td><td>Supabase Storage</td><td>원본 파일 백업</td></tr>
+        <tr><td>Auth</td><td>Supabase Auth + Google OAuth</td><td>사용자 인증</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. Project Structure -->
+  <section id="project-structure">
+    <h2><span>프로젝트 구조</span></h2>
+    <pre>
+WatchLens/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  # FastAPI 앱 초기화, CORS, 라우터 등록
+│   │   ├── auth.py                  # Supabase 토큰 인증
+│   │   ├── utils.py                 # SSE 헬퍼, 타임존, 청킹
+│   │   ├── db/
+│   │   │   ├── supabase.py          # 싱글턴 Supabase 클라이언트
+│   │   │   └── repository.py        # 데이터 액세스 레이어
+│   │   ├── models/schemas.py        # Pydantic 모델
+│   │   ├── parsers/
+│   │   │   ├── watch_history.py     # YouTube 시청 기록 파서
+│   │   │   ├── search_history.py    # YouTube 검색 기록 파서
+│   │   │   └── instagram.py         # Instagram ZIP 파서
+│   │   ├── routers/
+│   │   │   ├── upload.py            # 업로드 API (SSE)
+│   │   │   ├── stats.py             # 대시보드 API (SSE)
+│   │   │   ├── instagram.py         # Instagram API
+│   │   │   └── wellbeing.py         # 웰빙 API
+│   │   └── services/
+│   │       ├── stats_service.py     # YouTube 통계 계산 (17개 함수)
+│   │       ├── youtube.py           # YouTube Data API 연동
+│   │       ├── indices.py           # 도파민 지수
+│   │       ├── insights.py          # 자연어 인사이트
+│   │       ├── instagram_stats.py   # Instagram 통계 (14개 함수)
+│   │       └── instagram_insights.py
+│   ├── config/settings.py           # 전역 설정 (임계값, 가중치, API 키)
+│   └── tests/
+│
+├── frontend/src/
+│   ├── App.tsx                      # 라우팅 (6개 경로)
+│   ├── config.ts                    # API_BASE, Supabase 설정
+│   ├── contexts/
+│   │   ├── AuthContext.tsx           # Google OAuth 인증 상태
+│   │   ├── YouTubeDataContext.tsx    # YouTube 대시보드 데이터
+│   │   └── InstagramDataContext.tsx  # Instagram 대시보드 데이터
+│   ├── pages/                       # 6개 페이지
+│   ├── components/                  # 42개 컴포넌트
+│   ├── hooks/useSseStream.ts        # SSE 스트리밍 훅
+│   ├── lib/supabase.ts              # Supabase 클라이언트
+│   └── types/                       # TypeScript 인터페이스
+│
+├── supabase/migrations/             # DB 마이그레이션 SQL (5개)
+└── dev.sh                           # 개발 서버 실행 스크립트</pre>
+  </section>
+
+  <!-- 4. Backend Architecture -->
+  <section id="backend">
+    <h2><span>백엔드 아키텍처</span></h2>
+    <p>백엔드는 <strong>Router → Service → Repository</strong> 3계층으로 분리되어 있습니다.
+      Service 레이어의 모든 함수는 순수 함수(side-effect 없음)로, DB 호출 없이 데이터를 받아 계산 결과만 반환합니다.</p>
+
+    <div class="flow">
+      <div class="flow-title">Backend Layer Architecture</div>
+      <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│  Routers (API 엔드포인트)                                        │
+│  ┌──────────┐ ┌──────────┐ ┌────────────┐ ┌──────────────┐     │
+│  │ upload   │ │ stats    │ │ instagram  │ │ wellbeing    │     │
+│  │ 3 POST   │ │ 3 GET    │ │ 1 POST     │ │ 1 GET        │     │
+│  │          │ │          │ │ 1 GET      │ │              │     │
+│  └────┬─────┘ └────┬─────┘ └─────┬──────┘ └──────┬───────┘     │
+│       │             │             │               │             │
+├───────▼─────────────▼─────────────▼───────────────▼─────────────┤
+│  Services (순수 계산)                                             │
+│  ┌──────────────┐ ┌──────────┐ ┌────────────────┐               │
+│  │stats_service │ │ indices  │ │instagram_stats │               │
+│  │ 17 compute_* │ │ dopamine │ │ 14 compute_ig_*│               │
+│  └──────────────┘ └──────────┘ └────────────────┘               │
+│  ┌──────────┐ ┌────────────────┐                                │
+│  │ insights │ │instagram_insigh│                                │
+│  └──────────┘ └────────────────┘                                │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Parsers (데이터 파싱)                                            │
+│  ┌──────────────┐ ┌───────────────┐ ┌───────────┐              │
+│  │watch_history │ │search_history │ │ instagram │              │
+│  └──────────────┘ └───────────────┘ └───────────┘              │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Repository (데이터 액세스)             │  External APIs          │
+│  ┌────────────────────────────┐       │  ┌──────────────────┐  │
+│  │ repository.py              │       │  │ youtube.py       │  │
+│  │ fetch / insert / delete    │       │  │ Data API v3      │  │
+│  │ cache (save/fetch results) │       │  │ 50 videos/batch  │  │
+│  └─────────────┬──────────────┘       │  └──────────────────┘  │
+│                │                                                │
+└────────────────▼────────────────────────────────────────────────┘
+           ┌─────────────┐
+           │  Supabase   │
+           │  PostgreSQL  │
+           └─────────────┘</pre>
+    </div>
+
+    <h3>API 엔드포인트</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Upload Router <span class="badge badge-be">Backend</span></h4>
+        <table>
+          <tr><td><code>POST /api/upload/youtube-takeout</code></td><td>ZIP 업로드 (SSE)</td></tr>
+          <tr><td><code>POST /api/upload/watch-history</code></td><td>시청 기록 JSON</td></tr>
+          <tr><td><code>POST /api/upload/search-history</code></td><td>검색 기록 JSON</td></tr>
+        </table>
+        <p style="font-size:13px;">ZIP 내에서 한국어/영어 경로 모두 자동 탐지. 파서 → DB 저장 → YouTube API 메타데이터 수집 → Storage 백업까지 SSE로 진행률 스트리밍.</p>
+      </div>
+      <div class="card">
+        <h4>Stats Router <span class="badge badge-be">Backend</span></h4>
+        <table>
+          <tr><td><code>GET /api/stats/period</code></td><td>데이터 기간 조회</td></tr>
+          <tr><td><code>GET /api/stats/dashboard</code></td><td>대시보드 생성 (SSE)</td></tr>
+          <tr><td><code>GET /api/stats/dashboard/cached</code></td><td>캐시된 결과 반환</td></tr>
+        </table>
+        <p style="font-size:13px;">19개 섹션을 순차 계산하며 각각 SSE 이벤트로 전송. 완료 후 결과를 DB에 캐싱.</p>
+      </div>
+      <div class="card">
+        <h4>Instagram Router <span class="badge badge-be">Backend</span></h4>
+        <table>
+          <tr><td><code>POST /api/instagram/upload</code></td><td>ZIP 업로드 + 분석 (SSE)</td></tr>
+          <tr><td><code>GET /api/instagram/dashboard</code></td><td>캐시된 결과 반환</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h4>Wellbeing Router <span class="badge badge-be">Backend</span></h4>
+        <table>
+          <tr><td><code>GET /api/wellbeing/compute</code></td><td>크로스플랫폼 웰빙 점수</td></tr>
+        </table>
+        <p style="font-size:13px;">YouTube + Instagram 데이터 모두 필요. 도파민·폭식·시청강도·러커·심야활동 5개 축으로 종합 점수 산출.</p>
+      </div>
+    </div>
+
+    <h3>YouTube 대시보드 — 19개 섹션</h3>
+    <div class="metrics">
+      <span class="metric">summary</span>
+      <span class="metric">hourly</span>
+      <span class="metric">daily</span>
+      <span class="metric">top_channels</span>
+      <span class="metric">shorts</span>
+      <span class="metric">categories</span>
+      <span class="metric">watch_time</span>
+      <span class="metric">weekly_watch_time</span>
+      <span class="metric">weekly</span>
+      <span class="metric">dopamine</span>
+      <span class="metric">day_of_week</span>
+      <span class="metric">viewer_type</span>
+      <span class="metric">search_keywords</span>
+      <span class="metric">content_diversity</span>
+      <span class="metric">attention_trend</span>
+      <span class="metric">time_cost</span>
+      <span class="metric">binge_sessions</span>
+      <span class="metric">search_watch_flow</span>
+      <span class="metric">insights</span>
+    </div>
+
+    <h3>Instagram 대시보드 — 16개 섹션</h3>
+    <div class="metrics">
+      <span class="metric">summary</span>
+      <span class="metric">top_accounts</span>
+      <span class="metric">hourly</span>
+      <span class="metric">daily</span>
+      <span class="metric">day_of_week</span>
+      <span class="metric">dm_analysis</span>
+      <span class="metric">topics</span>
+      <span class="metric">follow_network</span>
+      <span class="metric">engagement_balance</span>
+      <span class="metric">dm_balance</span>
+      <span class="metric">following_cleanup</span>
+      <span class="metric">lurker_index</span>
+      <span class="metric">video_trend</span>
+      <span class="metric">late_night</span>
+      <span class="metric">unfollow_timeline</span>
+      <span class="metric">insights</span>
+    </div>
+
+    <h3>핵심 설정값 (config/settings.py)</h3>
+    <div class="card">
+      <table>
+        <tr><td><code>SHORTS_MAX_DURATION_SECONDS</code></td><td>180초 (3분 이하 = Shorts)</td></tr>
+        <tr><td><code>WATCH_TIME_CAP_SECONDS</code></td><td>3600초 (시청 시간 추정 상한)</td></tr>
+        <tr><td><code>BINGE_GAP_MINUTES</code></td><td>30분 (폭식 세션 판별 간격)</td></tr>
+        <tr><td><code>BINGE_MIN_COUNT</code></td><td>5개 (최소 연속 시청 수)</td></tr>
+        <tr><td><code>DOPAMINE_WEIGHTS</code></td><td>Shorts 비율 40 + 심야 30 + 짧은 영상 30</td></tr>
+        <tr><td><code>WELLBEING_WEIGHTS</code></td><td>도파민 30 + 폭식 15 + 강도 15 + 러커 20 + 심야 20</td></tr>
+        <tr><td><code>USER_TZ_OFFSET_HOURS</code></td><td>9 (KST)</td></tr>
+        <tr><td><code>DB_CHUNK_SIZE</code></td><td>500 (배치 삽입 단위)</td></tr>
+        <tr><td><code>YOUTUBE_BATCH_SIZE</code></td><td>50 (API 요청 당 영상 수)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5. Frontend Architecture -->
+  <section id="frontend">
+    <h2><span>프론트엔드 아키텍처</span></h2>
+
+    <div class="flow">
+      <div class="flow-title">Component Tree</div>
+      <pre>
+&lt;AuthProvider&gt;
+  &lt;YouTubeDataProvider&gt;
+    &lt;InstagramDataProvider&gt;
+      &lt;BrowserRouter&gt;
+        &lt;Routes&gt;
+          /             → LandingPage         (public)
+          /login        → LoginPage           (public)
+          &lt;ProtectedRoute&gt;
+            &lt;Layout&gt;  (Sidebar + Content)
+              /upload              → UploadPage
+              /youtube/dashboard   → DashboardPage        (19 sections)
+              /instagram/dashboard → InstagramDashboardPage (16 sections)
+              /wellbeing           → WellbeingPage
+            &lt;/Layout&gt;
+          &lt;/ProtectedRoute&gt;
+        &lt;/Routes&gt;
+      &lt;/BrowserRouter&gt;
+    &lt;/InstagramDataProvider&gt;
+  &lt;/YouTubeDataProvider&gt;
+&lt;/AuthProvider&gt;</pre>
+    </div>
+
+    <h3>Context 기반 상태 관리</h3>
+    <div class="grid-3">
+      <div class="card">
+        <h4>AuthContext <span class="badge badge-fe">Context</span></h4>
+        <ul>
+          <li><strong>user</strong> — Supabase User 객체</li>
+          <li><strong>session</strong> — access_token 포함</li>
+          <li><strong>loading</strong> — 초기 인증 확인 중</li>
+          <li><code>signInWithGoogle()</code></li>
+          <li><code>signOut()</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>YouTubeData <span class="badge badge-fe">Context</span></h4>
+        <ul>
+          <li><strong>data</strong> — 19개 섹션 데이터</li>
+          <li><strong>period</strong> — date_from/to</li>
+          <li><strong>periodLoaded</strong> — 로딩 완료 여부</li>
+          <li><code>setSection()</code> — SSE 수신 시</li>
+          <li><code>fetchPeriod()</code> — 기간 조회</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>InstagramData <span class="badge badge-fe">Context</span></h4>
+        <ul>
+          <li><strong>data</strong> — 16개 섹션 데이터</li>
+          <li><strong>hasData</strong> — 데이터 존재 여부</li>
+          <li><code>setSection()</code> — SSE 수신 시</li>
+          <li><code>fetchFromDb()</code> — 캐시 로드</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>SSE 스트리밍 훅 — useSseStream</h3>
+    <div class="card">
+      <p>업로드와 대시보드 생성 모두 <strong>Server-Sent Events</strong>를 사용합니다.
+        커스텀 훅 <code>useSseStream</code>이 인증 토큰 주입, 이벤트 파싱, 취소(AbortController)를 처리합니다.</p>
+      <pre>
+// 사용 예시
+const { stream } = useSseStream();
+
+await stream(url, ({ event, data }) => {
+  if (event === "progress") setProgress(data);
+  if (event === "section")  setSection(data.name, data.data);
+  if (event === "done")     setLoading(false);
+  if (event === "error")    setError(data.message);
+});</pre>
+      <p style="font-size:13px;">SSE 이벤트 형식: <code>event: section\ndata: {"name":"summary","data":{...},"loaded":1,"total":19}\n\n</code></p>
+    </div>
+
+    <h3>컴포넌트 구성 (42개 파일)</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>YouTube 컴포넌트</h4>
+        <ul>
+          <li><strong>SummaryCards</strong> — 총 시청, 채널 수, 일 평균, Shorts 수</li>
+          <li><strong>InsightSummary</strong> — 규칙 기반 자연어 인사이트 카드</li>
+          <li><strong>HourlyChart / DailyChart / DayOfWeekChart</strong> — 시간 패턴</li>
+          <li><strong>WeeklyReport</strong> — 주간 시청 시간 + 비교</li>
+          <li><strong>TopChannels</strong> — 롱폼/쇼츠 분리, 최근 30일, 시청시간 기준</li>
+          <li><strong>Categories</strong> — 카테고리 파이차트</li>
+          <li><strong>DopamineIndex</strong> — 도파민 점수 게이지</li>
+          <li><strong>ViewerType</strong> — 16유형 MBTI 스타일 분류</li>
+          <li><strong>ContentDiversity</strong> — 허핀달 기반 다양성 점수</li>
+          <li><strong>BingeSessions</strong> — 폭식 세션 감지</li>
+          <li><strong>SearchWatchFlow</strong> — 검색→시청 전환율</li>
+          <li><strong>AttentionTrend</strong> — 월별 평균 시청 시간 추이</li>
+          <li><strong>TimeCost</strong> — 총 시청 시간 + 현실 환산</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Instagram 컴포넌트 (16개)</h4>
+        <ul>
+          <li><strong>IgSummaryCards</strong> — 좋아요, 메시지, 팔로잉 요약</li>
+          <li><strong>IgTopAccounts</strong> — 상호작용 기준 랭킹</li>
+          <li><strong>IgDmAnalysis / IgDmBalance</strong> — DM 분석 + 균형</li>
+          <li><strong>IgFollowNetwork</strong> — 월별 팔로우 추이</li>
+          <li><strong>IgEngagementBalance</strong> — 계정별 소통 균형</li>
+          <li><strong>IgFollowingCleanup</strong> — 무소통 계정 목록</li>
+          <li><strong>IgLurkerIndex</strong> — 콘텐츠 소비 vs 참여 비율</li>
+          <li><strong>IgLateNight</strong> — 심야(22-04시) 활동 패턴</li>
+          <li><strong>IgUnfollowTimeline</strong> — 언팔 타임라인</li>
+          <li><strong>IgVideoTrend</strong> — 월별 비디오 시청 추이</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Database -->
+  <section id="database">
+    <h2><span>데이터베이스</span></h2>
+
+    <h3>테이블 스키마</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>watch_records <span class="badge badge-db">Table</span></h4>
+        <table>
+          <tr><td><code>id</code></td><td>BIGSERIAL PK</td></tr>
+          <tr><td><code>user_id</code></td><td>TEXT (indexed, RLS)</td></tr>
+          <tr><td><code>video_id</code></td><td>TEXT</td></tr>
+          <tr><td><code>video_title</code></td><td>TEXT</td></tr>
+          <tr><td><code>channel_name</code></td><td>TEXT</td></tr>
+          <tr><td><code>watched_at</code></td><td>TIMESTAMPTZ (indexed)</td></tr>
+          <tr><td><code>is_shorts</code></td><td>BOOLEAN</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h4>search_records <span class="badge badge-db">Table</span></h4>
+        <table>
+          <tr><td><code>id</code></td><td>BIGSERIAL PK</td></tr>
+          <tr><td><code>user_id</code></td><td>TEXT (indexed, RLS)</td></tr>
+          <tr><td><code>query</code></td><td>TEXT</td></tr>
+          <tr><td><code>searched_at</code></td><td>TIMESTAMPTZ (indexed)</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h4>video_metadata <span class="badge badge-db">Table</span></h4>
+        <table>
+          <tr><td><code>video_id</code></td><td>TEXT PK</td></tr>
+          <tr><td><code>category_id</code></td><td>INT (indexed)</td></tr>
+          <tr><td><code>category_name</code></td><td>TEXT</td></tr>
+          <tr><td><code>duration_seconds</code></td><td>INT</td></tr>
+          <tr><td><code>view_count</code></td><td>BIGINT</td></tr>
+          <tr><td><code>published_at</code></td><td>TIMESTAMPTZ</td></tr>
+        </table>
+        <p style="font-size:12px; color:var(--text3);">전역 공유 테이블 — 모든 사용자가 같은 영상 메타데이터를 참조</p>
+      </div>
+      <div class="card">
+        <h4>캐시 테이블 <span class="badge badge-db">Table</span></h4>
+        <p><strong>youtube_dashboard_results</strong></p>
+        <table>
+          <tr><td><code>user_id</code></td><td>UUID PK (RLS)</td></tr>
+          <tr><td><code>date_from / date_to</code></td><td>TEXT</td></tr>
+          <tr><td><code>results</code></td><td>JSONB (19개 섹션)</td></tr>
+        </table>
+        <p><strong>instagram_dashboard_results</strong></p>
+        <table>
+          <tr><td><code>user_id</code></td><td>UUID PK (RLS)</td></tr>
+          <tr><td><code>results</code></td><td>JSONB (16개 섹션)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>Row-Level Security (RLS)</h3>
+    <div class="card">
+      <p>4개 테이블에 RLS 정책이 적용되어, 각 사용자는 자신의 데이터만 접근할 수 있습니다. 백엔드 쿼리의 <code>user_id</code> 필터와 이중으로 보호합니다 (defense-in-depth).</p>
+      <pre>
+-- 예시: watch_records RLS
+ALTER TABLE watch_records ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users access own watch_records" ON watch_records
+  FOR ALL USING (user_id = auth.uid()::text);</pre>
+    </div>
+  </section>
+
+  <!-- 7. Data Flows -->
+  <section id="data-flows">
+    <h2><span>데이터 플로우</span></h2>
+
+    <div class="flow">
+      <div class="flow-title">1. Upload Flow</div>
+      <pre>
+사용자: ZIP/JSON 파일 드래그앤드롭
+  │
+  ▼
+FileUploader (frontend)
+  │  supabase.auth.getSession() → Bearer 토큰 획득
+  │  POST /api/upload/youtube-takeout
+  │
+  ▼
+upload.py (backend)
+  │  ZIP 열기 → watch-history.json + search-history.json 탐색
+  │  ├── SSE "progress" → ZIP 열기...
+  │
+  ├── parse_watch_history(data, user_id)
+  │   └── video_id, title, channel_name, watched_at 추출
+  │       (한국어/영어 Takeout 형식 모두 지원)
+  │
+  ├── DELETE 기존 watch_records (user_id)
+  ├── DELETE YouTube 캐시 (user_id)
+  ├── batch_insert (500건/배치)
+  │   ├── SSE "progress" → DB 저장 중...
+  │
+  ├── fetch_and_store_metadata(video_ids, user_id)
+  │   ├── YouTube Data API (50건/요청)
+  │   ├── duration_seconds → is_shorts 판별 (≤180초)
+  │   ├── SSE "progress" → 메타데이터 조회 중...
+  │
+  ├── store_original_file → Supabase Storage
+  │   └── 경로: takeout/{user_id}/{timestamp}/...
+  │
+  └── SSE "done" → {total, skipped, period}
+        │
+        ▼
+  UploadResultCard (frontend) — 결과 요약 표시</pre>
+    </div>
+
+    <div class="flow">
+      <div class="flow-title">2. Dashboard Flow</div>
+      <pre>
+DashboardPage 로드
+  │
+  ├── 1. 캐시 확인: GET /api/stats/dashboard/cached
+  │   └── 캐시 HIT → 즉시 렌더링 (끝)
+  │
+  ├── 2. 캐시 MISS → GET /api/stats/dashboard?date_from=...&date_to=...
+  │
+  ▼
+stats.py (backend)
+  │  fetch_watch_records(user_id, date_from, date_to) — 페이지네이션
+  │  fetch_search_records(user_id, date_from, date_to)
+  │  fetch_video_metadata(video_ids) — 배치
+  │
+  ├── compute_summary()         → SSE "section" {name: "summary", loaded: 1/19}
+  ├── compute_hourly()          → SSE "section" {name: "hourly", loaded: 2/19}
+  ├── compute_daily()           → SSE "section" {name: "daily", loaded: 3/19}
+  │   ... (17개 compute_* 함수 순차 실행)
+  ├── compute_insights()        → SSE "section" {name: "insights", loaded: 19/19}
+  │
+  ├── save_youtube_results()    → DB 캐시 저장
+  └── SSE "done"
+        │
+        ▼
+  useSseStream (frontend)
+    → setSection(name, data) — 각 섹션 점진적 렌더링
+    → 프로그레스 바: loaded/total 업데이트</pre>
+    </div>
+  </section>
+
+  <!-- 8. Auth Architecture -->
+  <section id="auth">
+    <h2><span>인증 아키텍처</span></h2>
+
+    <div class="flow">
+      <div class="flow-title">Google OAuth Flow</div>
+      <pre>
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   사용자      │    │   Supabase   │    │    Google    │    │   FastAPI    │
+│  (Browser)   │    │    Auth      │    │   OAuth 2.0  │    │   Backend    │
+└──────┬───────┘    └──────┬───────┘    └──────┬───────┘    └──────┬───────┘
+       │                   │                   │                   │
+       │  1. 로그인 클릭    │                   │                   │
+       │──────────────────▶│                   │                   │
+       │                   │  2. OAuth redirect │                   │
+       │◀──────────────────│──────────────────▶│                   │
+       │                   │                   │                   │
+       │  3. Google 로그인  │                   │                   │
+       │──────────────────────────────────────▶│                   │
+       │                   │                   │                   │
+       │  4. Authorization code                │                   │
+       │◀──────────────────────────────────────│                   │
+       │                   │                   │                   │
+       │  5. Code → Supabase                   │                   │
+       │──────────────────▶│                   │                   │
+       │                   │  6. access_token   │                   │
+       │◀──────────────────│                   │                   │
+       │                   │                   │                   │
+       │  7. API 요청 (Bearer token)            │                   │
+       │─────────────────────────────────────────────────────────▶│
+       │                   │                   │                   │
+       │                   │  8. auth.get_user(token)              │
+       │                   │◀──────────────────────────────────────│
+       │                   │  9. user_id 반환   │                   │
+       │                   │──────────────────────────────────────▶│
+       │                   │                   │                   │
+       │  10. 응답 (user_id로 필터링된 데이터)    │                   │
+       │◀─────────────────────────────────────────────────────────│</pre>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4>Backend — auth.py</h4>
+        <pre>
+def get_current_user(credentials):
+    token = credentials.credentials
+    res = supabase.auth.get_user(token)
+    if not res.user:
+        raise HTTPException(401)
+    return res.user.id  # → user_id</pre>
+        <p style="font-size:13px;">모든 라우터에서 <code>Depends(get_current_user)</code>로 주입. PyJWT 대신 Supabase SDK로 직접 검증하여 JWT Secret이 불필요.</p>
+      </div>
+      <div class="card">
+        <h4>Frontend — AuthContext</h4>
+        <pre>
+// 로그인
+supabase.auth.signInWithOAuth({
+  provider: 'google',
+  options: { redirectTo: '/upload' }
+})
+
+// 상태 동기화
+supabase.auth.onAuthStateChange(
+  (event, session) => {
+    setUser(session?.user ?? null);
+    setSession(session);
+  }
+)</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>보안 계층 (Defense-in-Depth)</h4>
+      <table>
+        <tr><th>계층</th><th>메커니즘</th><th>역할</th></tr>
+        <tr><td>1. 프론트엔드</td><td>ProtectedRoute</td><td>미인증 사용자 접근 차단</td></tr>
+        <tr><td>2. API 헤더</td><td>Bearer Token 주입</td><td>모든 API 호출에 인증 정보 포함</td></tr>
+        <tr><td>3. 백엔드</td><td>Depends(get_current_user)</td><td>토큰 검증 + user_id 추출</td></tr>
+        <tr><td>4. 쿼리 필터</td><td>.eq("user_id", user_id)</td><td>데이터 접근 범위 제한</td></tr>
+        <tr><td>5. DB</td><td>Row-Level Security (RLS)</td><td>DB 레벨 데이터 격리 (최종 방어선)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9. Design Patterns -->
+  <section id="patterns">
+    <h2><span>설계 패턴</span></h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4>SSE 스트리밍</h4>
+        <p>업로드와 대시보드 생성 모두 WebSocket 대신 <strong>Server-Sent Events</strong>를 사용합니다.
+          단방향 스트리밍으로 충분한 유스케이스에서 구현 복잡도를 낮추면서 실시간 진행률을 제공합니다.</p>
+      </div>
+      <div class="card">
+        <h4>Context 기반 상태 관리</h4>
+        <p>Redux 없이 React Context API로 전역 상태를 관리합니다.
+          SSE 이벤트가 도착할 때마다 <code>setSection()</code>으로 점진적 업데이트하여
+          컴포넌트가 데이터가 도착하는 즉시 렌더링됩니다.</p>
+      </div>
+      <div class="card">
+        <h4>Repository 패턴</h4>
+        <p>모든 DB 쿼리가 <code>repository.py</code> 한 곳에 집중되어 있습니다.
+          Service 레이어는 DB를 직접 호출하지 않고, 데이터를 받아 순수 계산만 수행합니다.
+          테스트와 DB 교체가 용이합니다.</p>
+      </div>
+      <div class="card">
+        <h4>순수 함수 계산 레이어</h4>
+        <p>stats_service.py의 17개 <code>compute_*</code> 함수와
+          instagram_stats.py의 14개 <code>compute_ig_*</code> 함수는
+          모두 side-effect가 없는 순수 함수입니다. 입력 데이터만으로 결과를 계산합니다.</p>
+      </div>
+      <div class="card">
+        <h4>캐싱 전략</h4>
+        <p>대시보드 결과를 JSONB 컬럼에 캐싱하여 재방문 시 즉시 로드합니다.
+          새 파일 업로드 시 캐시를 자동 무효화하여 stale 데이터를 방지합니다.</p>
+      </div>
+      <div class="card">
+        <h4>중앙화된 설정</h4>
+        <p>모든 임계값, 가중치, 매핑 테이블이 <code>config/settings.py</code>에
+          집중되어 있어 핵심 로직 수정 없이 파라미터만 조정할 수 있습니다.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="footer">
+  <div class="container">
+    WatchLens Architecture Documentation &middot; Last updated: 2026-04-03
+  </div>
+</footer>
+
+</body>
+</html>
