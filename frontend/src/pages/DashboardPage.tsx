@@ -29,7 +29,7 @@ export function DashboardPage() {
   const paramFrom = params.get("from") || "";
   const paramTo = params.get("to") || "";
 
-  const { data, period, setSection, clear, fetchPeriod } = useYouTubeData();
+  const { data, period, periodLoaded, setSection, clear, fetchPeriod } = useYouTubeData();
   const [shareOpen, setShareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState({ loaded: 0, total: 19, step: "" });
@@ -53,7 +53,7 @@ export function DashboardPage() {
     if (fetchedRef.current) return;
 
     if (!dateFrom || !dateTo) {
-      if (!paramFrom && !paramTo && !period) {
+      if (!paramFrom && !paramTo && !periodLoaded) {
         return; // Period fetch still in progress
       }
       setError("데이터가 없습니다. YouTube 시청 기록을 먼저 업로드해주세요.");
@@ -128,7 +128,7 @@ export function DashboardPage() {
     }
 
     loadDashboard();
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, periodLoaded]);
 
   // Loading state
   if (loading) {
@@ -150,16 +150,19 @@ export function DashboardPage() {
     );
   }
 
-  // Error state
+  // Error / no-data state
   if (error) {
+    const isNoData = error.includes("업로드");
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="card p-8 text-center max-w-sm">
-          <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">오류 발생</p>
+          <p className="text-[16px] font-semibold text-[var(--text-primary)] mb-2">
+            {isNoData ? "아직 데이터가 없어요" : "오류 발생"}
+          </p>
           <p className="text-[14px] text-[var(--text-secondary)] mb-6">{error}</p>
           <Link to="/upload" className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-[14px] font-medium hover:opacity-90 transition-opacity">
             <RefreshCw size={14} />
-            다시 시도
+            {isNoData ? "업로드하기" : "다시 시도"}
           </Link>
         </div>
       </div>

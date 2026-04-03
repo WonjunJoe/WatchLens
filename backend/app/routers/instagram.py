@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import Counter
 from collections.abc import Generator
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
@@ -26,6 +27,7 @@ from app.utils import sse
 from config.settings import MAX_ZIP_SIZE_BYTES
 from app.auth import get_current_user
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/instagram", tags=["instagram"])
 
 
@@ -177,7 +179,8 @@ def _instagram_upload_stream(zip_bytes: bytes, user_id: str) -> Generator[str, N
 
         yield sse("done", {"loaded": total_sections, "total": total_sections})
     except Exception as e:
-        yield sse("error", {"message": f"Instagram 분석 중 오류: {str(e)}"})
+        logger.exception("Instagram 분석 실패")
+        yield sse("error", {"message": "Instagram 분석 중 오류가 발생했습니다"})
 
 
 @router.post("/upload")

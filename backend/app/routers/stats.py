@@ -189,7 +189,8 @@ def _dashboard_stream(user_id: str, date_from: str, date_to: str) -> Generator[s
 
         yield sse("done", {"loaded": total_sections, "total": total_sections})
     except Exception as e:
-        yield sse("error", {"message": f"대시보드 생성 중 오류: {str(e)}"})
+        logger.exception("대시보드 생성 실패")
+        yield sse("error", {"message": "대시보드 생성 중 오류가 발생했습니다"})
 
 
 @router.get("/dashboard/cached")

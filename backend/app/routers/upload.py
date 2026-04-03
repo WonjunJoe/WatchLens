@@ -2,6 +2,7 @@
 
 import io
 import json
+import logging
 import zipfile
 from collections.abc import Generator
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ from app.parsers.search_history import parse_search_history
 from app.services.youtube import fetch_and_store_metadata
 from app.db.repository import delete_user_records, batch_insert, store_original_file, delete_youtube_cache
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
 
@@ -63,7 +65,7 @@ def _watch_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, Non
             yield sse("progress", {"step": "메타데이터 + Shorts 판별 완료", "percent": 90})
 
         timestamp = _upload_timestamp()
-        path = f"takeout/{timestamp}/watch-history.json"
+        path = f"takeout/{user_id}/{timestamp}/watch-history.json"
         store_original_file(SUPABASE_STORAGE_BUCKET, path, file_bytes)
 
         yield sse("done", {
@@ -72,7 +74,8 @@ def _watch_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, Non
             "period": result.period,
         })
     except Exception as e:
-        yield sse("error", {"detail": f"업로드 처리 중 오류: {str(e)}"})
+        logger.exception("시청 기록 업로드 처리 실패")
+        yield sse("error", {"detail": "업로드 처리 중 오류가 발생했습니다"})
 
 
 def _search_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, None, None]:
@@ -93,7 +96,7 @@ def _search_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, No
         yield sse("progress", {"step": f"DB 저장 완료 — {result.total}건", "percent": 80})
 
         timestamp = _upload_timestamp()
-        path = f"takeout/{timestamp}/search-history.json"
+        path = f"takeout/{user_id}/{timestamp}/search-history.json"
         store_original_file(SUPABASE_STORAGE_BUCKET, path, file_bytes)
 
         yield sse("done", {
@@ -102,7 +105,8 @@ def _search_history_stream(file_bytes: bytes, user_id: str) -> Generator[str, No
             "period": result.period,
         })
     except Exception as e:
-        yield sse("error", {"detail": f"업로드 처리 중 오류: {str(e)}"})
+        logger.exception("검색 기록 업로드 처리 실패")
+        yield sse("error", {"detail": "업로드 처리 중 오류가 발생했습니다"})
 
 
 def _find_in_zip(zf: zipfile.ZipFile, patterns: list[str]) -> str | None:
@@ -178,7 +182,7 @@ def _youtube_takeout_stream(file_bytes: bytes, user_id: str) -> Generator[str, N
                     yield sse("progress", {"step": "메타데이터 + Shorts 판별 완료", "percent": 65})
 
                 watch_bytes = zf.read(watch_path)
-                store_original_file(SUPABASE_STORAGE_BUCKET, f"takeout/{timestamp}/watch-history.json", watch_bytes)
+                store_original_file(SUPABASE_STORAGE_BUCKET, f"takeout/{user_id}/{timestamp}/watch-history.json", watch_bytes)
                 results["watch"] = {"total": result.total, "skipped": result.skipped, "period": result.period}
 
         # Process search history
@@ -198,16 +202,17 @@ def _youtube_takeout_stream(file_bytes: bytes, user_id: str) -> Generator[str, N
                 yield sse("progress", {"step": f"검색 기록 DB 저장 완료 — {result.total}건", "percent": 90})
 
                 search_bytes = zf.read(search_path)
-                store_original_file(SUPABASE_STORAGE_BUCKET, f"takeout/{timestamp}/search-history.json", search_bytes)
+                store_original_file(SUPABASE_STORAGE_BUCKET, f"takeout/{user_id}/{timestamp}/search-history.json", search_bytes)
                 results["search"] = {"total": result.total, "skipped": result.skipped, "period": result.period}
 
         # Store original ZIP
         yield sse("progress", {"step": "원본 ZIP 백업 중...", "percent": 95})
-        store_original_file(SUPABASE_STORAGE_BUCKET, f"takeout/{timestamp}/takeout.zip", file_bytes)
+        store_original_file(SUPABASE_STORAGE_BUCKET, f"takeout/{user_id}/{timestamp}/takeout.zip", file_bytes)
 
         yield sse("done", results)
     except Exception as e:
-        yield sse("error", {"detail": f"업로드 처리 중 오류: {str(e)}"})
+        logger.exception("YouTube Takeout 업로드 처리 실패")
+        yield sse("error", {"detail": "업로드 처리 중 오류가 발생했습니다"})
 
 
 @router.post("/youtube-takeout")

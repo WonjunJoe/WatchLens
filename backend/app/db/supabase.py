@@ -6,7 +6,11 @@ load_dotenv()
 
 _url = os.getenv("SUPABASE_URL", "")
 _key = os.getenv("SUPABASE_KEY", "")
+_client: Client | None = None
 
 
 def get_supabase_client() -> Client:
-    return create_client(_url, _key)
+    global _client
+    if _client is None:
+        _client = create_client(_url, _key)
+    return _client

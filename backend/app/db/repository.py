@@ -89,8 +89,13 @@ def fetch_period(user_id: str) -> tuple[str, str]:
 # Upload helpers
 # ---------------------------------------------------------------------------
 
+_DELETABLE_TABLES = {"watch_records", "search_records"}
+
+
 def delete_user_records(table: str, user_id: str) -> None:
     """Delete all records for a user from the given table."""
+    if table not in _DELETABLE_TABLES:
+        raise ValueError(f"Invalid table: {table}")
     sb = get_supabase_client()
     sb.table(table).delete().eq("user_id", user_id).execute()
 

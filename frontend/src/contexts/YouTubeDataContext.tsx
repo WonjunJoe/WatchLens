@@ -14,6 +14,7 @@ interface PeriodInfo {
 interface YouTubeContextValue {
   data: YouTubeData;
   period: PeriodInfo | null;
+  periodLoaded: boolean;
   hasData: boolean;
   setSection: (name: string, value: YouTubeData[keyof YouTubeData]) => void;
   setAll: (data: YouTubeData) => void;
@@ -27,6 +28,7 @@ const YouTubeDataContext = createContext<YouTubeContextValue | null>(null);
 export function YouTubeDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<YouTubeData>({});
   const [period, setPeriod] = useState<PeriodInfo | null>(null);
+  const [periodLoaded, setPeriodLoaded] = useState(false);
   const [cleared, setCleared] = useState(false);
 
   const setSection = useCallback((name: string, value: YouTubeData[keyof YouTubeData]) => {
@@ -50,13 +52,15 @@ export function YouTubeDataProvider({ children }: { children: ReactNode }) {
       if (d.date_from) setPeriod(d);
     } catch {
       // ignore
+    } finally {
+      setPeriodLoaded(true);
     }
   }, [cleared]);
 
   const hasData = period !== null;
 
   return (
-    <YouTubeDataContext.Provider value={{ data, period, hasData, setSection, setAll, setPeriod, clear, fetchPeriod }}>
+    <YouTubeDataContext.Provider value={{ data, period, periodLoaded, hasData, setSection, setAll, setPeriod, clear, fetchPeriod }}>
       {children}
     </YouTubeDataContext.Provider>
   );
