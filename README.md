@@ -224,6 +224,10 @@ WatchLens/
   - `.env.example`에 service-role-key 명시
   - Supabase 클라이언트 싱글턴 패턴 적용 (매 요청 재생성 → 캐싱)
   - `delete_user_records` 테이블 화이트리스트 검증
+- **전체 아키텍처 문서** — `docs/architecture.html` (인터랙티브 HTML)
+- **디자인 토큰 동기화 시스템** — `tokens/tokens.json` + `npm run tokens:sync`
+  - Figma Tokens Studio ↔ Code 양방향 워크플로우 구축
+  - JSON → CSS 변수 + chartConfig.ts 자동 변환 스크립트
 
 ---
 
@@ -257,6 +261,9 @@ WatchLens/
 
 ### Step 4 — Polish & Launch
 - [x] YouTube 대시보드 디자인 리디자인 (Design Ralph — 19→37/60)
+- [x] 전체 아키텍처 문서 (docs/architecture.html)
+- [x] 디자인 토큰 동기화 시스템 (Figma ↔ Code)
+- [ ] Figma 풀 디자인 관리 (builder.io 연동 — 후순위)
 - [ ] 배포 (Vercel + Supabase Google OAuth 콘솔 설정)
 
 ### Step 5 — 인증 ✅
