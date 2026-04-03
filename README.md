@@ -216,6 +216,15 @@ WatchLens/
   - DB: RLS 정책 4개 테이블 적용 (defense-in-depth)
   - 코드 리뷰 반영: cross-user is_shorts 버그 수정, 빈 JWT secret startup guard
 
+### 2026-04-03
+- **대시보드 무한로딩 버그 수정** — 신규 유저(데이터 없음) 접근 시 무한 스피너 → "아직 데이터가 없어요" 안내
+- **보안 코드 리뷰 반영** (Critical 3건 + Important 3건)
+  - Storage 경로에 user_id 추가 (사용자 간 파일 충돌 방지)
+  - SSE 에러 메시지 내부 정보 노출 차단 (generic 메시지 + 서버 로그)
+  - `.env.example`에 service-role-key 명시
+  - Supabase 클라이언트 싱글턴 패턴 적용 (매 요청 재생성 → 캐싱)
+  - `delete_user_records` 테이블 화이트리스트 검증
+
 ---
 
 ## TODO
