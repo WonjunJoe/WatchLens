@@ -5,4 +5,3 @@ supabase==2.*
 python-dotenv==1.*
 pytest==8.*
 httpx==0.28.*
-PyJWT[crypto]==2.*
