@@ -264,7 +264,14 @@ WatchLens/
 - [x] 전체 아키텍처 문서 (docs/architecture.html)
 - [x] 디자인 토큰 동기화 시스템 (Figma ↔ Code)
 - [ ] Figma 풀 디자인 관리 (builder.io 연동 — 후순위)
-- [ ] 배포 (Vercel + Supabase Google OAuth 콘솔 설정)
+- [ ] 배포
+  - [x] 배포 설정 파일 추가 (render.yaml, vercel.json, runtime.txt)
+  - [x] feat/google-auth → main 머지
+  - [ ] Backend 배포 (Render — Web Service, Python, root: backend)
+  - [ ] Frontend 배포 (Vercel — Vite, root: frontend)
+  - [ ] 환경변수 설정 (SUPABASE_URL, SUPABASE_KEY, YOUTUBE_API_KEY, FRONTEND_URL, VITE_*)
+  - [ ] Google OAuth 프로덕션 설정 (승인된 JS 원본 + 리디렉션 URI 추가)
+  - [ ] Supabase Auth URL 설정 (Site URL + Redirect URLs을 프로덕션 도메인으로)
 
 ### Step 5 — 인증 ✅
 - [x] Supabase RLS 마이그레이션 (watch_records, search_records, instagram_dashboard_results, youtube_dashboard_results)
